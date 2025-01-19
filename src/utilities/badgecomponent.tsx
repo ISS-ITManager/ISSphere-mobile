@@ -8,6 +8,7 @@ import {
   FaHardHat as HardHat,
   FaCheck as Check,
   FaLock as Lock,
+  FaTimes as X,
 } from "react-icons/fa"; // Example imports
 import { MdCheckCircle as CheckCheck } from "react-icons/md"; // Example imports
 
@@ -46,6 +47,11 @@ const BadgeComponent: React.FC<BadgeComponentProps> = ({ status }) => {
       color: "white",
       backgroundColor: "#1c1917",
       icon: <Lock className="h-4 w-4" />,
+    },
+    cancelled: {
+      color: "white",
+      backgroundColor: "red",
+      icon: <X className="h-4 w-4" />,
     },
   };
 

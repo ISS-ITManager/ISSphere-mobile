@@ -10,6 +10,8 @@ import {
   IonList,
   IonText,
   IonSpinner,
+  IonRow,
+  IonCol,
 } from "@ionic/react";
 import { Bar } from "react-chartjs-2";
 import {
@@ -21,7 +23,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import Header from "../../components/Header";
+import Header from "../../components/HeaderDashboard";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import {
@@ -30,9 +32,13 @@ import {
   calendarOutline,
   calendarClearOutline,
   checkmarkCircleOutline,
+  briefcaseOutline,
 } from "ionicons/icons";
 import { getUserData, getWorkOrders } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
+import Loading from "../../utilities/loadingpage";
+import "./dashboard.css";
+import FloatingTabButtons from "../../components/FloatingButtons";
 
 // Registering chart.js components
 ChartJS.register(
@@ -44,19 +50,14 @@ ChartJS.register(
   Legend
 );
 
-const Dashboard: React.FC = () => {
+const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   const [userData, setUserData] = useState<any>(null);
   const [currentTime, setCurrentTime] = useState<string>("");
   const [workOrders, setWorkOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const history = useHistory();
-  const OPEN = "open";
-  const INPROGRESS = "in-progress";
-  const COMPLETED = "completed";
-  const CLOSED = "closed";
-  const CANCELLED = "cancelled";
-  const PENDING = "pending";
+  const [barColor, setBarColor] = useState("");
 
   // Update the date and time
   const updateDateTime = () => {
@@ -70,6 +71,28 @@ const Dashboard: React.FC = () => {
     setCurrentTime(now.toLocaleDateString("en-US", options));
   };
 
+  // Get theme from localStorage initially
+  const storedTheme = localStorage.getItem("theme") || "default";
+
+  useEffect(() => {
+    // Set bar color based on the theme
+    const themeColors: Record<string, string> = {
+      default: "#050594",
+      "theme-dark": "#ff5722",
+      "theme-green": "#4caf50",
+      "theme-blue": "#2196f3",
+    };
+
+    // Apply the color based on the selected theme
+    setBarColor(themeColors[storedTheme] || "#050594");
+
+    // Set body class for the theme
+    document.body.classList.remove("theme-dark", "theme-green", "theme-blue");
+    if (storedTheme !== "default") {
+      document.body.classList.add(storedTheme);
+    }
+  }, [storedTheme]); // Effect depends on the theme
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -80,8 +103,6 @@ const Dashboard: React.FC = () => {
         const interval = setInterval(updateDateTime, 60000);
 
         const workOrdersData = await getWorkOrders(user.user.id);
-
-        // Extract relevant data for work orders
         const workOrdersArray = workOrdersData.success
           ? workOrdersData.data.data
           : [];
@@ -99,11 +120,7 @@ const Dashboard: React.FC = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div style={{ textAlign: "center", marginTop: "50px" }}>
-        <IonSpinner name="bubbles" />
-      </div>
-    );
+    return <Loading />;
   }
 
   if (error) {
@@ -123,8 +140,11 @@ const Dashboard: React.FC = () => {
       {
         label: "Work Orders Completed",
         data: [50, 70, 80, 60, 90, 40],
-        backgroundColor: "rgba(0, 0, 0, 0.6)",
-        borderRadius: 5,
+        // Alternate colors for each bar
+        backgroundColor: barColor,
+        borderRadius: [30, 30, 30, 30], // Fully rounded corners
+        borderWidth: 0, // Border width
+        barThickness: 20, // Set bar thickness (make it thinner)
       },
     ],
   };
@@ -147,238 +167,110 @@ const Dashboard: React.FC = () => {
         border: { display: false },
       },
     },
-    elements: { bar: { borderWidth: 0 } },
+    elements: {
+      bar: {
+        borderWidth: 0, // Remove any borders around the bars
+      },
+    },
   };
-
-  const categories = [
-    { amount: "- $165", label: "Food" },
-    { amount: "- $5600", label: "Furniture" },
-    { amount: "- $2700", label: "Subscription" },
-  ];
 
   return (
     <IonApp>
       <IonPage>
-        <Header title="Dashboard" />
-        <IonContent
-          className="ion-padding"
-          style={{ backgroundColor: "var(--ion-color-light)" }}
-        >
-          {/* User Information Card */}
-          <IonCard
-            className="ion-padding"
-            style={{
-              marginBottom: "20px",
-              borderRadius: "12px",
-              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
-              backgroundColor: "var(--ion-color-tertiary)",
-            }}
-          >
-            <IonCardContent
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-start",
-                gap: "12px",
-              }}
-            >
-              <IonIcon
-                icon={personCircleOutline}
-                style={{
-                  fontSize: "40px",
-                  color: "var(--ion-color-secondary)",
-                }}
-              />
-              <div>
-                <h3
-                  className="ion-margin-0"
-                  style={{
-                    fontSize: "20px",
-                    fontWeight: "bold",
-                    color: "var(--ion-color-dark)",
-                  }}
-                >
-                  Hello, {userName}!
-                </h3>
-                <p
-                  className="ion-text-muted ion-margin-top"
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--ion-color-secondary)",
-                  }}
-                >
-                  {currentTime}
-                </p>
-              </div>
-            </IonCardContent>
-          </IonCard>
+        <Header title="Dashboard" userName={userName} />
 
+        {/* Overlapping Container Above the Header */}
+        <div
+          className="overlapping-container"
+          style={{ borderTop: "5px solid var(--ion-color-primary)" }}
+        >
+          {/* This container overlaps the bottom of the header */}
+        </div>
+
+        {/* IonContent (Content of the Page) */}
+        <IonContent className="dashboard-content">
           {/* Work Orders Chart */}
-          <h2
-            className="ion-no-margin ion-text-dark"
-            style={{ fontSize: "24px", marginBottom: "15px" }}
+          <h2 className="section-title">Work Orders Completed</h2>
+          <IonCard
+            className="minimal-work-order-card fade-in"
+            style={{ backgroundColor: "var(--ion-color-secondary)" }}
           >
-            Work Orders Completed
-          </h2>
-          <IonCard className="ion-padding" style={{ marginBottom: "20px" }}>
             <IonCardContent>
-              <p
-                className="ion-margin-top ion-text-muted"
-                style={{ fontSize: "14px", marginBottom: "20px" }}
-              >
-                Weekly progress
-              </p>
-              <div style={{ marginTop: "20px" }}>
+              <p className="chart-description">Weekly progress</p>
+              <div className="chart-container">
                 <Bar data={chartData} options={chartOptions} />
               </div>
             </IonCardContent>
           </IonCard>
 
-          {/* Categories Section */}
-          {/* <div className="ion-margin-top">
-            <h2
-              className="ion-no-margin ion-text-dark"
-              style={{ fontSize: "24px", marginBottom: "15px" }}
-            >
-              Category
-            </h2>
-            <Swiper
-              spaceBetween={10}
-              slidesPerView="auto"
-              style={{ paddingBottom: "20px", paddingLeft: "20px" }}
-            >
-              {categories.map((item, index) => (
-                <SwiperSlide key={index} style={{ width: "auto" }}>
-                  <IonCard
-                    className="ion-padding ion-text-center"
-                    style={{ maxWidth: "150px", margin: "0 auto" }}
-                  >
-                    <IonCardContent>
-                      <p
-                        className="ion-margin-0 ion-font-weight-bold"
-                        style={{ fontSize: "18px" }}
-                      >
-                        {item.amount}
-                      </p>
-                      <p
-                        className="ion-margin-0 ion-text-muted"
-                        style={{ fontSize: "14px" }}
-                      >
-                        {item.label}
-                      </p>
-                    </IonCardContent>
-                  </IonCard>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div> */}
-
           {/* Work Orders List */}
-          <div className="ion-margin-top">
-            <h2
-              className="ion-no-margin ion-text-dark"
-              style={{
-                fontSize: "24px",
-                marginBottom: "15px",
-                // fontWeight: "600",
-                color: "#333",
-              }}
-            >
-              My Work Orders
-            </h2>
+          <div className="work-orders-section">
+            <h2 className="section-title">My Work Orders</h2>
             <IonList>
               {Array.isArray(workOrders) && workOrders.length === 0 ? (
-                <IonText
-                  color="medium"
-                  style={{ fontSize: "16px", fontStyle: "italic" }}
-                >
+                <IonText className="no-work-orders">
                   No work orders available
                 </IonText>
               ) : (
                 workOrders.map((order, index) => (
                   <IonCard
                     key={index}
-                    className="ion-padding"
-                    style={{
-                      marginBottom: "15px",
-                      borderRadius: "12px",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                    }}
+                    className="minimal-work-order-card bounce-in-left"
                     onClick={() => history.push(`/work-orders/${order.id}`)}
                   >
-                    <IonCardContent style={{ padding: "20px" }}>
-                      <h3
-                        style={{
-                          fontSize: "18px",
-                          fontWeight: "bold",
-                          color: "var(--ion-color-dark)",
-                        }}
-                      >
-                        {`Work Order: ${order.work_order_reference_number}`}
-                      </h3>
-                      <div className="ion-grid">
-                        <div className="ion-row">
-                          <div className="ion-col-6">
-                            <p
-                              style={{
-                                fontSize: "14px",
-                                color: "var(--ion-color-dark)",
-                                marginTop: "10px",
-                              }}
-                            >
+                    <IonCardContent className="work-order-content">
+                      {/* Header */}
+                      <div className="work-order-header">
+                        <h1 className="work-order-title">
+                          <IonIcon
+                            icon={briefcaseOutline}
+                            className="icon-title"
+                          />
+                          {order.work_order_reference_number}
+                        </h1>
+                        <BadgeComponent status={order.status} />
+                      </div>
+
+                      {/* Details */}
+                      <div className="work-order-grid">
+                        <IonRow className="work-order-item">
+                          {/* Start and End Dates in the same row */}
+                          <IonCol size="auto">
+                            <IonIcon icon={calendarOutline} className="icon" />
+                            <span>
+                              <strong>Start:</strong>{" "}
+                              {new Date(order.start_date).toLocaleDateString(
+                                "en-US"
+                              )}
+                            </span>
+                          </IonCol>
+                          <IonCol size="auto">
+                            <IonIcon
+                              icon={calendarClearOutline}
+                              className="icon"
+                            />
+                            <span>
+                              <strong>End:</strong>{" "}
+                              {new Date(order.end_date).toLocaleDateString(
+                                "en-US"
+                              )}
+                            </span>
+                          </IonCol>
+                        </IonRow>
+
+                        <div className="work-order-item">
+                          <IonRow className="work-order-item">
+                            <IonCol size="auto">
                               <IonIcon
                                 icon={informationCircleOutline}
-                                style={{ marginRight: "8px" }}
+                                className="icon"
                               />
-                              <strong>Description:</strong>{" "}
-                              {order.work_order_description || "N/A"}
-                            </p>
-                            <p
-                              style={{
-                                fontSize: "14px",
-                                color: "var(--ion-color-dark)",
-                              }}
-                            >
-                              <IonIcon
-                                icon={calendarOutline}
-                                style={{ marginRight: "8px" }}
-                              />
-                              <strong>Start Date:</strong>{" "}
-                              {new Date(order.start_date).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                }
-                              )}
-                            </p>
-                          </div>
-                          <div className="ion-col-6">
-                            <p
-                              style={{
-                                fontSize: "14px",
-                                color: "var(--ion-color-dark)",
-                              }}
-                            >
-                              <IonIcon
-                                icon={calendarClearOutline}
-                                style={{ marginRight: "8px" }}
-                              />
-                              <strong>End Date:</strong>{" "}
-                              {new Date(order.end_date).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                }
-                              )}
-                            </p>
-                            <p>
-                              <BadgeComponent status={order.status} />
-                            </p>
-                          </div>
+                              <span>
+                                {order.work_order_description ||
+                                  "No Description"}
+                              </span>
+                            </IonCol>
+                          </IonRow>
                         </div>
                       </div>
                     </IonCardContent>
@@ -388,6 +280,8 @@ const Dashboard: React.FC = () => {
             </IonList>
           </div>
         </IonContent>
+        {/* Floating Tab Buttons */}
+        <FloatingTabButtons />
       </IonPage>
     </IonApp>
   );

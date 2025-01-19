@@ -1,4 +1,5 @@
 import { Redirect, Route } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import { ModuleProvider } from "./utilities/ModuleProvider";
@@ -6,7 +7,8 @@ import { ModuleProvider } from "./utilities/ModuleProvider";
 import Login from "./pages/auth/login";
 import Dashboard from "./pages/dashboard/dashboard";
 import Home from "./pages/Home";
-import WorkOrderDetails from "./pages/work-orders/workorderdetails";
+import WorkOrder from "./pages/work-orders/workorder";
+import Settings from "./utilities/settings";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -40,29 +42,45 @@ import "./theme/variables.css";
 
 setupIonicReact();
 
-const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet>
-        {/* Make Login the first page */}
-        <Route exact path="/login">
-          <Login />
-        </Route>
-        <Route exact path="/home">
-          <Home />
-        </Route>
-        <Route exact path="/dashboard">
-          <Dashboard />
-        </Route>
-        <Route exact path="/work-orders/:id">
-          <WorkOrderDetails />
-        </Route>
-        <Route exact path="/">
-          <Redirect to="/login" />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
-  </IonApp>
-);
+const App: React.FC = () => {
+  const [selectedTheme, setSelectedTheme] = useState(
+    localStorage.getItem("theme") || "default"
+  );
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme && savedTheme !== "default") {
+      document.body.classList.add(savedTheme);
+    }
+  }, []);
 
+  return (
+    <IonApp>
+      <IonReactRouter>
+        <IonRouterOutlet>
+          {/* Make Login the first page */}
+          <Route exact path="/login">
+            <Login />
+          </Route>
+          <Route exact path="/home">
+            <Home />
+          </Route>
+          <Route exact path="/dashboard">
+            <Dashboard />
+          </Route>
+          <Route exact path="/work-orders/:id">
+            <WorkOrder />
+          </Route>
+          <Route exact path="/">
+            <Redirect to="/login" />
+          </Route>
+
+          {/* Make Login the first page */}
+          <Route exact path="/settings">
+            <Settings onThemeChange={setSelectedTheme} />
+          </Route>
+        </IonRouterOutlet>
+      </IonReactRouter>
+    </IonApp>
+  );
+};
 export default App;

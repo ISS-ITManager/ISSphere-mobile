@@ -1,4 +1,5 @@
 import React from "react";
+import { useHistory } from "react-router-dom";
 import {
   IonHeader,
   IonToolbar,
@@ -13,16 +14,14 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ title }) => {
+  const history = useHistory();
+
   return (
     <IonHeader collapse="fade" className="ion-no-border">
       <IonToolbar className="ion-no-border">
         <IonTitle>{title}</IonTitle>
         <div slot="end" className="ion-align-items-center">
-          <IonButton
-            fill="clear"
-            className="ion-padding-0"
-            style={{ marginRight: "-25px" }}
-          >
+          <IonButton fill="clear" className="ion-padding-0">
             <IonIcon
               icon={notificationsOutline}
               className="ion-text-muted"
@@ -49,7 +48,11 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             </div>
           </IonButton>
 
-          <IonButton fill="clear" className="ion-padding-0">
+          <IonButton
+            fill="clear"
+            className="ion-padding-0"
+            onClick={() => history.push("/settings")}
+          >
             <IonIcon
               icon={personCircleOutline}
               className="ion-text-muted"

@@ -1,0 +1,101 @@
+/* FloatingTabButtons.css */
+.floating-buttons-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1002; /* Ensure buttons are above the backdrop */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  /* background-color: rgba(
+    0,
+    0,
+    0,
+    0.1
+  );  */
+  transition: all 0.3s ease;
+}
+
+/* Backdrop styling */
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1001; /* Make sure backdrop is behind the floating buttons */
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none; /* Ensures backdrop doesn't block clicks */
+}
+
+/* Main button */
+.main-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--ion-color-primary);
+  color: white;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
+  position: relative;
+  z-index: 1003; /* Ensure the main button is always above everything */
+}
+
+/* Main button in expanded state */
+.main-button.expanded {
+  transform: rotate(45deg); /* Rotate the button when expanded */
+}
+
+/* Styling for expanded buttons */
+.expanded-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  z-index: 1002; /* Ensure expanded buttons stay above the backdrop */
+}
+
+.expanded-buttons.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Individual button animation */
+.expanded-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--ion-color-secondary);
+  color: white;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: buttonFadeIn 0.3s forwards;
+  position: relative;
+  z-index: 1003; /* Ensure expanded buttons are above everything */
+}
+
+.expanded-button:hover {
+  transform: scale(1.1);
+}
+
+/* Stagger animation for each button */
+@keyframes buttonFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

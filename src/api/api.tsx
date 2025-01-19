@@ -108,3 +108,35 @@ export const workOrderStatusApi = {
     }
   },
 };
+
+export const workOrderAssetsCreateApi = {
+  list: async ({ workOrderId, action, asset, assetCategory }) => {
+    try {
+      const response = await api.get(`/work-order-assets`, {
+        params: {
+          work_order: workOrderId,
+          action: action,
+          asset: asset,
+          asset_category: assetCategory,
+        },
+      });
+      return response.data; // Ensure response has a success property to check
+    } catch (error) {
+      console.error("Error fetching work order assets:", error);
+      throw error;
+    }
+  },
+};
+
+// Fetch work order tasks by work_order_id
+export const getWorkOrderTasks = async (workOrderId: string) => {
+  try {
+    const response = await api.get(`/work-order-tasks`, {
+      params: { work_order_id: workOrderId }, // Pass work_order_id as a parameter
+    });
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error("Error fetching work order tasks:", error);
+    throw error; // Rethrow error to be handled in the component
+  }
+};

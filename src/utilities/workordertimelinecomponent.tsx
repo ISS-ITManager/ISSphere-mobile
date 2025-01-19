@@ -1,132 +1,243 @@
-import React, { useEffect, useState } from "react";
-import { IonContent, IonPage, IonIcon } from "@ionic/react";
-import { personCircle, time, checkmarkCircle } from "ionicons/icons";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Calendar,
+  Check,
+  CheckCheck,
+  Clock,
+  HardHat,
+  Lock,
+  LockOpen,
+  Pause,
+  User,
+  X,
+} from "lucide-react";
+import { IonPopover } from "@ionic/react";
+import { workOrderStatusApi } from "../api/api"; // Adjust the import path as needed
 
-const hardcodedResponse = [
-  {
-    id: 1,
-    status: "open",
-    date: "2024-12-26 10:13:32",
-    duration: 0,
-    actual_time: 0,
-    remarks: null,
-    active: 0,
-  },
-  {
-    id: 2,
-    status: "in-progress",
-    date: "2024-12-26 10:20:55",
-    duration: 2,
-    actual_time: 0,
-    remarks: null,
-    active: 0,
-  },
-  {
-    id: 4,
-    status: "completed",
-    date: "2024-12-26 19:25:11",
-    duration: 2,
-    actual_time: 0,
-    remarks: null,
-    active: 1,
-  },
-];
+interface WorkOrderStatus {
+  id: string;
+  status: string;
+  duration: number;
+  first_name: string;
+  last_name: string;
+  date: string;
+}
 
-const TimelineBar: React.FC = () => {
+interface TimelineProps {
+  workOrderId: string;
+}
+
+const Timeline: React.FC<TimelineProps> = ({ workOrderId }) => {
+  const [workOrderStatuses, setWorkOrderStatuses] = useState<WorkOrderStatus[]>(
+    []
+  );
+  const [totalStatus, setTotalStatus] = useState(0);
+  const [totalDuration, setTotalDuration] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [popoverState, setPopoverState] = useState({
+    isOpen: false,
+    event: null,
+    currentStatus: null,
+  });
+
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const fetchWorkOrderStatuses = async () => {
+      try {
+        const response = await workOrderStatusApi.list(workOrderId);
+        if (response && response.success && Array.isArray(response.data)) {
+          setWorkOrderStatuses(response.data);
+        } else {
+          setWorkOrderStatuses([]);
+        }
+      } catch (error) {
+        console.error("Error fetching work order statuses:", error);
+        setWorkOrderStatuses([]);
+      }
+    };
+
+    fetchWorkOrderStatuses();
+  }, [workOrderId]);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const initContainerWidth = containerRef.current.offsetWidth;
+      const initStatusWidth = totalStatus * 25; // badge is 25px
+      const valContainerWidth = initContainerWidth - initStatusWidth;
+      setContainerWidth(valContainerWidth);
+    }
+
     const handleResize = () => {
-      setContainerWidth(window.innerWidth - 40); // Adjust width for padding
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
     };
 
-    // Set initial container width
-    handleResize();
-
-    // Add resize event listener
     window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [totalStatus]);
 
-    // Cleanup on component unmount
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  useEffect(() => {
+    setTotalDuration(
+      workOrderStatuses.reduce((sum, item) => sum + Number(item.duration), 0)
+    );
+    setTotalStatus(workOrderStatuses.length);
+  }, [workOrderStatuses]);
 
-  // Calculate the total duration of the entire process
-  const totalDuration = hardcodedResponse.reduce(
-    (total, item) => total + item.duration,
-    0
-  );
+  const openPopover = (e: any, status: WorkOrderStatus) => {
+    setPopoverState({
+      isOpen: true,
+      event: e.nativeEvent,
+      currentStatus: status,
+    });
+  };
 
-  // Compute the width in px between each status and icon
+  const closePopover = () => {
+    setPopoverState({ isOpen: false, event: null, currentStatus: null });
+  };
+
+  const icon = (status: string) => {
+    switch (status) {
+      case "cancelled":
+        return <X strokeWidth="2" style={{ height: "15px", width: "15px" }} />;
+      case "open":
+        return (
+          <LockOpen strokeWidth="2" style={{ height: "15px", width: "15px" }} />
+        );
+      case "pending":
+        return (
+          <Pause strokeWidth="2" style={{ height: "15px", width: "15px" }} />
+        );
+      case "in-progress":
+        return (
+          <HardHat strokeWidth="2" style={{ height: "15px", width: "15px" }} />
+        );
+      case "completed":
+        return (
+          <Check strokeWidth="2" style={{ height: "15px", width: "15px" }} />
+        );
+      case "validated":
+        return (
+          <CheckCheck strokeWidth="2" className="text-purple-500 h-4 w-4" />
+        );
+      case "closed":
+        return (
+          <Lock strokeWidth="2" style={{ height: "15px", width: "15px" }} />
+        );
+      default:
+        return null;
+    }
+  };
+
+  const bgColor = (status: string) => {
+    switch (status) {
+      case "cancelled":
+        return "#EF4444";
+      case "open":
+        return "#EAB308";
+      case "pending":
+        return "#FB923C";
+      case "in-progress":
+        return "#3B82F6";
+      case "completed":
+        return "#22C55E";
+      case "validated":
+        return "#A855F7";
+      case "closed":
+        return "#27272A";
+      default:
+        return "";
+    }
+  };
+
   const computeWidth = (duration: number) => {
     const widthPercentage =
       totalDuration > 0 ? (duration / totalDuration) * 100 : 0;
     const widthInPx =
-      widthPercentage > 0 ? (widthPercentage / 100) * containerWidth : 0; // Convert percentage to px
+      widthPercentage > 0 ? (widthPercentage / 100) * containerWidth : 0;
     return Math.floor(widthInPx);
   };
 
-  const icons = {
-    open: personCircle,
-    "in-progress": time,
-    completed: checkmarkCircle,
-  };
-
   return (
-    <IonPage>
-      <IonContent>
-        <div style={{ padding: "20px", display: "flex", alignItems: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        width: "100%",
+        alignItems: "center",
+        marginTop: "12px",
+      }}
+      ref={containerRef}
+    >
+      {workOrderStatuses.map((status) => (
+        <div key={status.id} style={{ display: "flex", alignItems: "center" }}>
+          <div
+            style={{
+              borderRadius: "8px",
+              height: "25px",
+              minWidth: "25px",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: bgColor(status.status),
+              color: "#ffffff",
+              cursor: "pointer",
+            }}
+            id={`popover_${status.id}`}
+          >
+            {icon(status.status)}
+          </div>
+          <IonPopover trigger={`popover_${status.id}`}>
+            <div style={{ padding: "12px", textAlign: "center" }}>
+              {/* status as badge */}
+              {status.status}
+              {/* duration as hh:mm */}
+              {status.duration}
+              <small style={{ display: "flex", alignItems: "center" }}>
+                <User
+                  style={{
+                    height: "12px",
+                    width: "12px",
+                    marginRight: "4px",
+                    marginTop: "2px",
+                  }}
+                />
+                {status?.first_name} {status?.last_name}
+              </small>
+              <small style={{ display: "flex", alignItems: "center" }}>
+                <Calendar
+                  style={{
+                    height: "12px",
+                    width: "12px",
+                    marginRight: "4px",
+                    marginTop: "2px",
+                  }}
+                />
+                {status?.date}
+              </small>
+            </div>
+          </IonPopover>
           <div
             style={{
               position: "relative",
-              height: "20px",
-              width: "100%",
-              backgroundColor: "#e0e0e0",
-              borderRadius: "10px",
+              height: "8px",
+              overflow: "hidden",
+              padding: "0",
             }}
           >
-            {hardcodedResponse.map((item, index) => {
-              const leftPosition = hardcodedResponse
-                .slice(0, index + 1)
-                .reduce((sum, task) => sum + task.duration, 0);
-
-              const width = computeWidth(item.duration);
-              const position = (leftPosition / totalDuration) * 100;
-
-              return (
-                <div
-                  key={item.id}
-                  style={{
-                    position: "absolute",
-                    left: `${position}%`,
-                    transform: "translateX(-50%)",
-                    textAlign: "center",
-                  }}
-                >
-                  <IonIcon
-                    icon={icons[item.status]}
-                    style={{
-                      fontSize: "30px",
-                      color:
-                        item.status === "open"
-                          ? "#d9534f"
-                          : item.status === "in-progress"
-                          ? "#f0ad4e"
-                          : "#5bc0de",
-                    }}
-                  />
-                  <div style={{ fontSize: "12px", color: "#666" }}>
-                    {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                  </div>
-                </div>
-              );
-            })}
+            <div
+              style={{
+                height: "100%",
+                backgroundColor: bgColor(status.status),
+                width: computeWidth(status.duration),
+              }}
+            ></div>
           </div>
         </div>
-      </IonContent>
-    </IonPage>
+      ))}
+    </div>
   );
 };
 
-export default TimelineBar;
+export default Timeline;

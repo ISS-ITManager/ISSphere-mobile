@@ -1,0 +1,67 @@
+.custom-ios-modal::part(backdrop) {
+  background: rgba(0, 0, 0, 0.5); /* Optional: Adjust the backdrop color */
+}
+
+.custom-ios-modal::part(content) {
+  border-radius: 20px 20px 0 0 !important; /* Ensure the top corners are rounded */
+  overflow: hidden; /* Prevent child elements from breaking the radius */
+}
+
+/* Header */
+.custom-header {
+  background: white;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-top-left-radius: 20px; /* Apply border-radius to header top-left */
+  border-top-right-radius: 20px; /* Apply border-radius to header top-right */
+}
+
+/* Title */
+.modal-title {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  width: 100%;
+}
+
+/* Close Button */
+.close-button {
+  font-size: 22px;
+  color: #007aff;
+}
+
+/* Content Wrapper */
+.modal-content {
+  padding: 12px;
+}
+
+/* Bottom Buttons */
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.ignore-button {
+  flex: 1;
+  margin-right: 8px;
+  color: black;
+  border: 1px solid gray;
+}
+
+.share-button {
+  flex: 1;
+  background-color: #007aff;
+  color: white;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .custom-ios-modal {
+    --background: rgba(30, 30, 30, 0.9);
+    color: white;
+  }
+  .custom-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}

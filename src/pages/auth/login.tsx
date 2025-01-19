@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   IonApp,
   IonPage,
@@ -8,16 +8,16 @@ import {
   IonHeader,
   IonToolbar,
   IonTitle,
-} from '@ionic/react';
-import { useHistory } from 'react-router-dom';
-import { loginUser } from '../../api/api';
-import BD from '../../assets/images/bdsf.png';
+} from "@ionic/react";
+import { useHistory } from "react-router-dom";
+import { loginUser } from "../../api/api";
+import BD from "../../assets/images/bdsf.png";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const history = useHistory();
 
   const handleLogin = async () => {
@@ -26,15 +26,15 @@ const Login: React.FC = () => {
       const response = await loginUser(email, password);
       if (response.success) {
         // Save response data to localStorage
-        localStorage.setItem('userData', JSON.stringify(response.data));
+        localStorage.setItem("userData", JSON.stringify(response.data));
 
         // Navigate to the dashboard
-        history.push('/dashboard');
+        history.push("/dashboard");
       } else {
-        setErrorMessage('Invalid credentials, please try again.');
+        setErrorMessage("Invalid credentials, please try again.");
       }
     } catch (error) {
-      setErrorMessage('Error logging in. Please try again later.');
+      setErrorMessage("Error logging in. Please try again later.");
     }
     setIsLoading(false);
   };
@@ -45,25 +45,32 @@ const Login: React.FC = () => {
         <IonContent forceOverscroll={false}>
           <div
             className="d-flex flex-column justify-content-center align-items-center"
-            style={{ height: '80vh' }}
+            style={{ height: "80vh" }}
           >
             <div className="text-center mb-4">
-              <i className="bx bx-globe text-primary" style={{ fontSize: '4em' }}></i>
-              <h1 className="fw-bold text-primary">ISSPHERE</h1>
+              <i
+                className="bx bx-globe text-color-primary"
+                style={{ fontSize: "4em" }}
+              ></i>
+              <h1 className="fw-bold text-color-primary">ISSPHERE</h1>
             </div>
 
             <div
               className="card p-4 shadow-lg"
               style={{
-                maxWidth: '400px',
-                width: '100%',
-                background: 'rgba(207, 201, 201, 0.6)',
-                borderRadius: '15px',
-                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
+                maxWidth: "400px",
+                width: "100%",
+                background: "rgba(207, 201, 201, 0.6)",
+                borderRadius: "15px",
+                boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
               }}
             >
               <div className="mb-3 w-100">
-                <label htmlFor="email" className="form-label" style={{ color: '#333333' }}>
+                <label
+                  htmlFor="email"
+                  className="form-label"
+                  style={{ color: "#333333" }}
+                >
                   Email
                 </label>
                 <input
@@ -76,7 +83,11 @@ const Login: React.FC = () => {
                 />
               </div>
               <div className="mb-3 w-100">
-                <label htmlFor="password" className="form-label" style={{ color: '#333333' }}>
+                <label
+                  htmlFor="password"
+                  className="form-label"
+                  style={{ color: "#333333" }}
+                >
                   Password
                 </label>
                 <input
@@ -93,15 +104,16 @@ const Login: React.FC = () => {
                   expand="block"
                   onClick={handleLogin}
                   shape="round"
-                  color="dark"
                   size="large"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Signing In...' : 'Sign In'}
+                  {isLoading ? "Signing In..." : "Sign In"}
                 </IonButton>
               </div>
               {errorMessage && (
-                <div className="alert alert-danger w-100 text-center">{errorMessage}</div>
+                <div className="alert alert-danger w-100 text-center">
+                  {errorMessage}
+                </div>
               )}
             </div>
           </div>
@@ -112,13 +124,13 @@ const Login: React.FC = () => {
             src={BD}
             alt="Logo"
             style={{
-              position: 'absolute',
-              bottom: '-15px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              height: 'auto',
-              maxWidth: '520px',
-              zIndex: '-1',
+              position: "absolute",
+              bottom: "-15px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              height: "auto",
+              maxWidth: "520px",
+              zIndex: "-1",
             }}
           />
         </IonFooter>
