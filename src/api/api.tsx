@@ -140,3 +140,112 @@ export const getWorkOrderTasks = async (workOrderId: string) => {
     throw error; // Rethrow error to be handled in the component
   }
 };
+
+// Fetch work order task history by work_order_task_id
+export const getWorkOrderTaskHistory = async (workOrderTaskId: string) => {
+  try {
+    const response = await api.get(`/work-order-task-histories`, {
+      params: { work_order_task_id: workOrderTaskId }, // Pass work_order_task_id as a parameter
+    });
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error("Error fetching work order tasks history:", error);
+    throw error; // Rethrow error to be handled in the component
+  }
+};
+
+export const createTaskHistory = async (data) => {
+  try {
+    const response = await api.post("/work-order-task-histories", { data });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// api for work order tasks
+export const workOrderTaskApi ={
+  get: async (workOrderId: any) => {
+      const response = await api.get(`/work-order-tasks?work_order_id=${workOrderId}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/work-order-tasks/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/work-order-tasks/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/work-order-tasks`, data);
+      return response;
+  },
+  list: async (workOrderRequestId : any) => {
+      const response = await api.get(`/work-order-tasks/list?work_order_request=${workOrderRequestId}`);
+      return response;
+  },
+ 
+}
+
+//api for work order task history
+export const workOrderTaskHistoryApi ={
+  get: async (workOrderTaskId: any) => {
+      const response = await api.get(`/work-order-task-histories?work_order_task_id=${workOrderTaskId}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/work-order-task-histories/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/work-order-task-histories/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/work-order-task-histories`, data);
+      return response;
+  },
+  list: async (workOrderRequestId : any) => {
+      const response = await api.get(`/work-order-task-histories/list?work_order_request=${workOrderRequestId}`);
+      return response;
+  },
+  updateStatus: async (data : any) => {
+      const response = await api.post(`/work-order-statuses`, data);
+      return response;
+  },
+}
+
+//assignee api
+
+export const assigneeApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/assignees?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/assignees/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/assignees/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/assignees`, data);
+      return response;
+  },
+  list: async () => {
+      const response = await api.get(`/assignees/list`);
+      return response; 
+  },
+}
+
+//api for activity log
+export const WorkOrderActivityLogApi ={
+  
+  list: async (id: any) => {
+      const response = await api.get(`/work-order-activity-logs/list?work_order=${id}`);
+      return response;
+  },
+}

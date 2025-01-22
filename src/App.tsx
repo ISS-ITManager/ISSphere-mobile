@@ -39,6 +39,7 @@ import "@ionic/react/css/palettes/dark.system.css";
 
 /* Theme variables */
 import "./theme/variables.css";
+import WorkOrderTasks from "./pages/work-orders/workordertasks";
 
 setupIonicReact();
 
@@ -69,6 +70,9 @@ const App: React.FC = () => {
           </Route>
           <Route exact path="/work-orders/:id">
             <WorkOrder />
+          </Route>
+          <Route exact path="/viewWO">
+            <WorkOrderTasks />
           </Route>
           <Route exact path="/">
             <Redirect to="/login" />
