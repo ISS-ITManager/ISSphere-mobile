@@ -170,6 +170,85 @@ const Assets: React.FC<AssetsProps> = ({
           </IonButton>
         </>
       )}
+
+      {apiSuccess && selectedAction === "repair" && (
+        <>
+          <IonText>
+            <h3>REPAIR ASSET</h3>
+          </IonText>
+          <IonItem>
+            <IonLabel>Select Asset Stock</IonLabel>
+            <IonSelect placeholder="Select Asset Stock" slot="end">
+              {/* Replace with dynamic data if available */}
+              <IonSelectOption value="stock1">Stock 1</IonSelectOption>
+              <IonSelectOption value="stock2">Stock 2</IonSelectOption>
+            </IonSelect>
+          </IonItem>
+
+          <IonItem>
+            <IonLabel>Supplies</IonLabel>
+            <IonSelect
+              placeholder="Select Supplies"
+              multiple
+              onIonChange={(e) =>
+                console.log("Selected Supplies:", e.detail.value)
+              }
+            >
+              {/* Replace with dynamic supply options */}
+              <IonSelectOption value="supply1">Supply 1</IonSelectOption>
+              <IonSelectOption value="supply2">Supply 2</IonSelectOption>
+              <IonSelectOption value="supply3">Supply 3</IonSelectOption>
+            </IonSelect>
+          </IonItem>
+
+          <IonButton expand="block" color="primary">
+            <IonIcon slot="start" icon={saveOutline}></IonIcon>
+            Save
+          </IonButton>
+        </>
+      )}
+
+      {apiSuccess && selectedAction === "condemn" && (
+        <>
+          <IonText>
+            <h3>CONDEMN ASSET</h3>
+          </IonText>
+          <IonItem>
+            <IonLabel>Select Asset Stock</IonLabel>
+            <IonSelect placeholder="Select Asset Stock" slot="end">
+              {/* Replace with dynamic asset stock options */}
+              <IonSelectOption value="stock1">Stock 1</IonSelectOption>
+              <IonSelectOption value="stock2">Stock 2</IonSelectOption>
+            </IonSelect>
+          </IonItem>
+
+          <IonButton expand="block" color="primary">
+            <IonIcon slot="start" icon={saveOutline}></IonIcon>
+            Save
+          </IonButton>
+        </>
+      )}
+
+      {apiSuccess && selectedAction === "remove" && (
+        <>
+          <IonText>
+            <h3>REMOVE ASSET</h3>
+          </IonText>
+          <IonItem>
+            <IonLabel>Select Asset Stock</IonLabel>
+            <IonSelect placeholder="Select Asset Stock" slot="end">
+              {/* Replace with dynamic asset stock options */}
+              <IonSelectOption value="stock1">Stock 1</IonSelectOption>
+              <IonSelectOption value="stock2">Stock 2</IonSelectOption>
+            </IonSelect>
+          </IonItem>
+
+          <IonButton expand="block" color="primary">
+            <IonIcon slot="start" icon={saveOutline}></IonIcon>
+            Save
+          </IonButton>
+        </>
+      )}
     </div>
   );
 };
