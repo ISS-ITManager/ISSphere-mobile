@@ -100,7 +100,7 @@ export const workOrderStatusApi = {
       const response = await api.get(`/work-order-statuses/list`, {
         params: { work_order: workOrderId }, // Pass workOrderId as the parameter
       });
-      console.log("API Response:", response); // Log full response to inspect the structure
+      // console.log("API Response:", response); // Log full response to inspect the structure
       return response.data; // Return the full response data
     } catch (error) {
       console.error("Error fetching work order statuses:", error);
@@ -127,6 +127,30 @@ export const workOrderAssetsCreateApi = {
     }
   },
 };
+
+//Suppliers
+export const supplierApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/suppliers?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/suppliers/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/suppliers/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/suppliers`, data);
+      return response;
+  },
+  list: async () => {
+      const response = await api.get(`/suppliers/list`);
+      return response;
+  },
+}
 
 // Fetch work order tasks by work_order_id
 export const getWorkOrderTasks = async (workOrderId: string) => {
@@ -164,88 +188,144 @@ export const createTaskHistory = async (data) => {
 }
 
 // api for work order tasks
-export const workOrderTaskApi ={
+export const workOrderTaskApi = {
   get: async (workOrderId: any) => {
-      const response = await api.get(`/work-order-tasks?work_order_id=${workOrderId}`);
-      return response;
+    const response = await api.get(`/work-order-tasks?work_order_id=${workOrderId}`);
+    return response;
   },
   show: async (id: any) => {
-      const response = await api.get(`/work-order-tasks/${id}`);
-      return response;
+    const response = await api.get(`/work-order-tasks/${id}`);
+    return response;
   },
   update: async (id: any, data: any) => {
-      const response = await api.put(`/work-order-tasks/${id}`, data);
-      return response;
+    const response = await api.put(`/work-order-tasks/${id}`, data);
+    return response;
   },
-  store: async (data : any) => {
-      const response = await api.post(`/work-order-tasks`, data);
-      return response;
+  store: async (data: any) => {
+    const response = await api.post(`/work-order-tasks`, data);
+    return response;
   },
-  list: async (workOrderRequestId : any) => {
-      const response = await api.get(`/work-order-tasks/list?work_order_request=${workOrderRequestId}`);
-      return response;
+  list: async (workOrderRequestId: any) => {
+    const response = await api.get(`/work-order-tasks/list?work_order_request=${workOrderRequestId}`);
+    return response;
   },
- 
+
 }
 
 //api for work order task history
-export const workOrderTaskHistoryApi ={
+export const workOrderTaskHistoryApi = {
   get: async (workOrderTaskId: any) => {
-      const response = await api.get(`/work-order-task-histories?work_order_task_id=${workOrderTaskId}`);
-      return response;
+    const response = await api.get(`/work-order-task-histories?work_order_task_id=${workOrderTaskId}`);
+    return response;
   },
   show: async (id: any) => {
-      const response = await api.get(`/work-order-task-histories/${id}`);
-      return response;
+    const response = await api.get(`/work-order-task-histories/${id}`);
+    return response;
   },
   update: async (id: any, data: any) => {
-      const response = await api.put(`/work-order-task-histories/${id}`, data);
-      return response;
+    const response = await api.put(`/work-order-task-histories/${id}`, data);
+    return response;
   },
-  store: async (data : any) => {
-      const response = await api.post(`/work-order-task-histories`, data);
-      return response;
+  store: async (data: any) => {
+    const response = await api.post(`/work-order-task-histories`, data);
+    return response;
   },
-  list: async (workOrderRequestId : any) => {
-      const response = await api.get(`/work-order-task-histories/list?work_order_request=${workOrderRequestId}`);
-      return response;
+  list: async (workOrderRequestId: any) => {
+    const response = await api.get(`/work-order-task-histories/list?work_order_request=${workOrderRequestId}`);
+    return response;
   },
-  updateStatus: async (data : any) => {
-      const response = await api.post(`/work-order-statuses`, data);
-      return response;
+  updateStatus: async (data: any) => {
+    const response = await api.post(`/work-order-statuses`, data);
+    return response;
   },
 }
 
 //assignee api
-
-export const assigneeApi ={
+export const assigneeApi = {
   get: async (data: any) => {
-      const response = await api.get(`/assignees?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
-      return response;
+    const response = await api.get(`/assignees?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    return response;
   },
   show: async (id: any) => {
-      const response = await api.get(`/assignees/${id}`);
-      return response;
+    const response = await api.get(`/assignees/${id}`);
+    return response;
   },
   update: async (id: any, data: any) => {
-      const response = await api.put(`/assignees/${id}`, data);
-      return response;
+    const response = await api.put(`/assignees/${id}`, data);
+    return response;
   },
-  store: async (data : any) => {
-      const response = await api.post(`/assignees`, data);
-      return response;
+  store: async (data: any) => {
+    const response = await api.post(`/assignees`, data);
+    return response;
   },
   list: async () => {
-      const response = await api.get(`/assignees/list`);
-      return response; 
+    const response = await api.get(`/assignees/list`);
+    return response;
   },
 }
 
 //api for activity log
-export const WorkOrderActivityLogApi ={
-  
+export const workOrderActivityLogApi = {
+
   list: async (id: any) => {
-      const response = await api.get(`/work-order-activity-logs/list?work_order=${id}`);
+    const response = await api.get(`/work-order-activity-logs/list?work_order=${id}`);
+    return response;
+  },
+}
+
+export const supplyApi ={
+  show: async (id: any) => {
+      const response = await api.get(`/supplies/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/supplies/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/supplies`, data);
+      return response;
+  },
+  list: async () => {
+      const response = await api.get(`/supplies/list`);
+      return response; 
+  },
+}
+
+export const supplyCategoryApi ={
+  show: async (id: any) => {
+      const response = await api.get(`/supply-categories/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/supply-categories/${id}`, data);
+      return response;
+  },
+  list: async () => {
+      const response = await api.get(`/supply-categories/list`);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/supply-categories`, data);
+      return response;
+  },
+}
+
+export const workOrderSupplyApi ={
+  getStock: async (data: any) => {
+      const response = await api.get(`/work-order-supplies?supply_category=${data.supply_category}&supply=${data.supply}&supplier=${data.supplier}`);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/work-order-supplies`, data);
+      return response;
+  },
+  list: async (worOrkerId : any) => {
+      const response = await api.get(`/work-order-supplies/list?work_order=${worOrkerId}`);
+      return response; 
+  },
+  delete: async (id: any) => {
+      const response = await api.delete(`/work-order-supplies/${id}`);
       return response;
   },
 }
