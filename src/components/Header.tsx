@@ -8,6 +8,7 @@ import {
   IonIcon,
 } from "@ionic/react";
 import { notificationsOutline, personCircleOutline } from "ionicons/icons";
+import BackButton from "./BackButton";
 
 interface HeaderProps {
   title: string;
@@ -19,6 +20,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
   return (
     <IonHeader collapse="fade" className="ion-no-border">
       <IonToolbar className="ion-no-border">
+        <BackButton/>
         <IonTitle>{title}</IonTitle>
         <div slot="end" className="ion-align-items-center">
           <IonButton fill="clear" className="ion-padding-0">

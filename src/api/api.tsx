@@ -22,6 +22,32 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+export const permissionApi = {
+  get: async (data: any) => {
+    const response = await api.get(`/permissions?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    return response;
+  },
+  show: async (id: any) => {
+    const response = await api.get(`/permissions/${id}`);
+    return response;
+  },
+  update: async (id: any, data: any) => {
+    const response = await api.put(`/permissions/${id}`, data);
+    return response;
+  },
+  store: async (data: any) => {
+    const response = await api.post(`/permissions`, data);
+    return response;
+  },
+  list: async (data: any) => {
+    const url = data.client_id
+      ? `/permissions/list?client_id=${data.client_id}`
+      : `/permissions/list`;
+    const response = await api.get(url);
+    return response;
+  },
+
+}
 
 // Login function
 export const loginUser = async (email: string, password: string) => {
@@ -129,26 +155,26 @@ export const workOrderAssetsCreateApi = {
 };
 
 //Suppliers
-export const supplierApi ={
+export const supplierApi = {
   get: async (data: any) => {
-      const response = await api.get(`/suppliers?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
-      return response;
+    const response = await api.get(`/suppliers?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    return response;
   },
   show: async (id: any) => {
-      const response = await api.get(`/suppliers/${id}`);
-      return response;
+    const response = await api.get(`/suppliers/${id}`);
+    return response;
   },
   update: async (id: any, data: any) => {
-      const response = await api.put(`/suppliers/${id}`, data);
-      return response;
+    const response = await api.put(`/suppliers/${id}`, data);
+    return response;
   },
-  store: async (data : any) => {
-      const response = await api.post(`/suppliers`, data);
-      return response;
+  store: async (data: any) => {
+    const response = await api.post(`/suppliers`, data);
+    return response;
   },
   list: async () => {
-      const response = await api.get(`/suppliers/list`);
-      return response;
+    const response = await api.get(`/suppliers/list`);
+    return response;
   },
 }
 
@@ -273,59 +299,355 @@ export const workOrderActivityLogApi = {
   },
 }
 
-export const supplyApi ={
+export const supplyApi = {
   show: async (id: any) => {
-      const response = await api.get(`/supplies/${id}`);
-      return response;
+    const response = await api.get(`/supplies/${id}`);
+    return response;
   },
   update: async (id: any, data: any) => {
-      const response = await api.put(`/supplies/${id}`, data);
-      return response;
+    const response = await api.put(`/supplies/${id}`, data);
+    return response;
   },
-  store: async (data : any) => {
-      const response = await api.post(`/supplies`, data);
-      return response;
+  store: async (data: any) => {
+    const response = await api.post(`/supplies`, data);
+    return response;
   },
   list: async () => {
-      const response = await api.get(`/supplies/list`);
-      return response; 
+    const response = await api.get(`/supplies/list`);
+    return response;
   },
 }
 
-export const supplyCategoryApi ={
+export const supplyCategoryApi = {
   show: async (id: any) => {
-      const response = await api.get(`/supply-categories/${id}`);
-      return response;
+    const response = await api.get(`/supply-categories/${id}`);
+    return response;
   },
   update: async (id: any, data: any) => {
-      const response = await api.put(`/supply-categories/${id}`, data);
-      return response;
+    const response = await api.put(`/supply-categories/${id}`, data);
+    return response;
   },
   list: async () => {
-      const response = await api.get(`/supply-categories/list`);
-      return response;
+    const response = await api.get(`/supply-categories/list`);
+    return response;
   },
-  store: async (data : any) => {
-      const response = await api.post(`/supply-categories`, data);
-      return response;
+  store: async (data: any) => {
+    const response = await api.post(`/supply-categories`, data);
+    return response;
   },
 }
 
-export const workOrderSupplyApi ={
+export const workOrderSupplyApi = {
   getStock: async (data: any) => {
-      const response = await api.get(`/work-order-supplies?supply_category=${data.supply_category}&supply=${data.supply}&supplier=${data.supplier}`);
-      return response;
+    const response = await api.get(`/work-order-supplies?supply_category=${data.supply_category}&supply=${data.supply}&supplier=${data.supplier}`);
+    return response;
   },
-  store: async (data : any) => {
-      const response = await api.post(`/work-order-supplies`, data);
-      return response;
+  store: async (data: any) => {
+    const response = await api.post(`/work-order-supplies`, data);
+    return response;
   },
-  list: async (worOrkerId : any) => {
-      const response = await api.get(`/work-order-supplies/list?work_order=${worOrkerId}`);
-      return response; 
+  list: async (worOrkerId: any) => {
+    const response = await api.get(`/work-order-supplies/list?work_order=${worOrkerId}`);
+    return response;
   },
   delete: async (id: any) => {
-      const response = await api.delete(`/work-order-supplies/${id}`);
+    const response = await api.delete(`/work-order-supplies/${id}`);
+    return response;
+  },
+}
+
+export const workOrderCategoryApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/work-order-categories?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/work-order-categories/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/work-order-categories/${id}`, data);
+      return response;
+  },
+  list: async () => {
+      const response = await api.get(`/work-order-categories/list`);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/work-order-categories`, data);
+      return response;
+  },
+}
+
+export const workOrderTypeApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/work-order-types?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}&work_order_category=${data.work_order_category}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/work-order-types/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/work-order-types/${id}`, data);
+      return response;
+  },
+  list: async (categoryId : any) => {
+      const response = await api.get(`/work-order-types/list?work_order_category=${categoryId}`);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/work-order-types`, data);
+      return response;
+  },
+}
+
+export const groupApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/groups?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/groups/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/groups/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/groups`, data);
+      return response;
+  },
+  list: async () => {
+      const response = await api.get(`/groups/list`);
+      return response;
+  },
+  countries: async () => {
+      const response = await api.get(`/countries/list`);
+      return response;
+  },
+}
+
+export const entityApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/entities?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/entities/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/entities/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/entities`, data);
+      return response;
+  },
+  list: async (groupId : any) => {
+      const response = await api.get(`/entities/list?group=${groupId}`);
+      return response;
+  },
+}
+
+export const propertyApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/properties?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/properties/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/properties/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/properties`, data);
+      return response;
+  },
+  list: async (entityId : any) => {
+      const response = await api.get(`/properties/list?entity=${entityId}`);
+      return response;
+  },
+}
+
+
+export const zoneApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/zones?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/zones/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/zones/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/zones`, data);
+      return response;
+  },
+  list: async (propertyId : any) => {
+      const response = await api.get(`/zones/list?property=${propertyId}`);
+      return response;
+  },
+}
+
+
+export const levelApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/levels?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/levels/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/levels/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/levels`, data);
+      return response;
+  },
+  list: async (zoneId : any) => {
+      const response = await api.get(`/levels/list?zone=${zoneId}`);
+      return response;
+  },
+}
+
+export const roomApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/rooms?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/rooms/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/rooms/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/rooms`, data);
+      return response;
+  },
+  list: async (levelId : any) => {
+      const response = await api.get(`/rooms/list?level=${levelId}`);
+      return response;
+  },
+}
+
+export const workOrderRequestApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/work-order-requests?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/work-order-requests/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/work-order-requests/${id}`, data);
+      return response;
+  },
+  list: async () => {
+      const response = await api.get(`/work-order-requests`);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/work-order-requests`, data);
+      return response;
+  },
+  storeSchedule: async (data : any) => {
+      const response = await api.post(`/work-order-request-schedules`, data);
+      return response;
+  },
+  decline: async (data : any) => {
+      const response = await api.post(`/work-order-requests/decline`, data);
+      return response;
+  },
+  
+}
+
+
+export const teamApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/teams?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/teams/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/teams/${id}`, data);
+      return response;
+  },
+  list: async () => {
+      const response = await api.get(`/teams/list`);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/teams`, data);
+      return response;
+  },
+}
+
+export const serviceApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/services?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/services/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.put(`/services/${id}`, data);
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/services`, data);
+      return response;
+  },
+  list: async (sla_priority : any) => {
+      const response = await api.get(`/services/list?sla_priority=${sla_priority}`);
+      return response;
+  },
+}
+
+export const serviceProviderServiceApi ={
+  get: async (data: any) => {
+      const response = await api.get(`/provider-services?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}&service_provider=${data.service_provider_id}`);
+      return response;
+  },
+  show: async (id: any) => {
+      const response = await api.get(`/provider-services/${id}`);
+      return response;
+  },
+  update: async (id: any, data: any) => {
+      const response = await api.post(`/provider-services/${id}`, data, {
+          headers: {
+              'Content-Type': 'multipart/form-data',
+          }, 
+      });
+      return response;
+  },
+  store: async (data : any) => {
+      const response = await api.post(`/provider-services`, data);
+      return response;
+  },
+  list: async (serviceId : any) => {
+      const response = await api.get(`/provider-services/list?service=${serviceId}`);
       return response;
   },
 }
