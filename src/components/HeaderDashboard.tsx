@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { IonText } from "@ionic/react";
 import "./HeaderDashboard.css";
-import coverImage from "../assets/images/cover.png";
+import coverImage from "../assets/images/abstract.png";
 
 interface HeaderProps {
   userName: string;
@@ -30,15 +30,15 @@ const Header: React.FC<HeaderProps> = ({ userName }) => {
       className="header-container"
       style={{
         backgroundImage: `url(${coverImage})`,
-        backgroundSize: "200px",
-        backgroundPosition: "right -5px top 30px",
+        backgroundSize: "150px",
+        backgroundPosition: "right -5px top 50px",
         backgroundRepeat: "no-repeat",
       }}
     >
       <div className="header-content">
         <div className="greeting-section">
           <IonText>
-            <h2 className="greeting"> {userName},</h2>
+            <h2 className="greeting"> <b>{userName}</b></h2>
             <p className="date-time">{formattedDate}</p>
           </IonText>
         </div>

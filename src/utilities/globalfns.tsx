@@ -1,5 +1,8 @@
 
 import { useIonToast } from '@ionic/react';
+import {
+    notificationApi
+} from '../api/api';
 export const formatDate = (apiDateString) => {
     const date = new Date(apiDateString);
     const options = {
@@ -16,8 +19,6 @@ export const formatDate = (apiDateString) => {
 
 }
 
-
-
 export const presentToast = (message) => {
     const [present] = useIonToast();
     present({
@@ -25,4 +26,21 @@ export const presentToast = (message) => {
         duration: 1500,
         position: 'top'
     })
+}
+
+export const getNotificationCount = async () => {
+    try {
+        const req = await notificationApi.all();
+        // console.log("count: "+JSON.stringify(req.data?.data?.unread));
+        let ct = JSON.stringify(req.data?.data?.unread);
+        return ct;
+    } catch (error) {
+        console.log("getNotificationCount: " + error);
+        return 0;
+    }
+}
+
+export const hasPermission = (permission) => {
+    const permissions = localStorage.getItem("userPermissions");
+    return permissions?.includes(permission);
 }

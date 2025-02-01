@@ -12,6 +12,11 @@ import {
   IonSpinner,
   IonRow,
   IonCol,
+  IonCardHeader,
+  IonCardTitle,
+  IonItem,
+  IonLabel,
+  IonChip,
 } from "@ionic/react";
 import { Bar } from "react-chartjs-2";
 import {
@@ -27,12 +32,14 @@ import Header from "../../components/HeaderDashboard";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import {
+  chevronForwardOutline,
   personCircleOutline,
   informationCircleOutline,
   calendarOutline,
   calendarClearOutline,
   checkmarkCircleOutline,
   briefcaseOutline,
+  caretForwardOutline,
 } from "ionicons/icons";
 import { getUserData, getWorkOrders } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
@@ -74,6 +81,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   // Get theme from localStorage initially
   const storedTheme = localStorage.getItem("theme") || "default";
 
+
   useEffect(() => {
     // Set bar color based on the theme
     const themeColors: Record<string, string> = {
@@ -103,9 +111,14 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
         const interval = setInterval(updateDateTime, 60000);
 
         const workOrdersData = await getWorkOrders(user.user.id);
+        // console.log("workOrdersData: "+JSON.stringify(workOrdersData));
+
         const workOrdersArray = workOrdersData.success
           ? workOrdersData.data.data
           : [];
+
+        // console.log("workOrdersArray: " + JSON.stringify(workOrdersArray));
+
         setWorkOrders(workOrdersArray);
 
         return () => clearInterval(interval); // Cleanup interval
@@ -205,7 +218,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
 
           {/* Work Orders List */}
           <div className="work-orders-section">
-            <h2 className="section-title">My Work Orders</h2>
+            <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
             <IonList>
               {Array.isArray(workOrders) && workOrders.length === 0 ? (
                 <IonText className="no-work-orders">
@@ -215,26 +228,76 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 workOrders.map((order, index) => (
                   <IonCard
                     key={index}
-                    className="minimal-work-order-card bounce-in-left"
+                    className="minimal-work-order-card bounce-in-left task-card"
                     onClick={() => history.push(`/work-orders/${order.id}`)}
+                    style={{ marginLeft: '8px' }}
                   >
-                    <IonCardContent className="work-order-content">
-                      {/* Header */}
+                    <IonCardHeader>
+                      <IonCardTitle>
+                        <div className="work-order-header">
+                          {/* <IonIcon
+                            icon={briefcaseOutline}
+                            className="icon-title"
+                          /> */}
+                          {order.work_order_reference_number}
+                          <BadgeComponent status={order.status} />
+                        </div>
+                      </IonCardTitle>
+                    </IonCardHeader>
+                    <IonItem lines="none">
+                      <IonLabel><b>Description:</b></IonLabel>
+                      <IonText>{order.work_order_description}</IonText>
+                    </IonItem>
+                    <IonItem lines="none">
+                      <IonLabel><b>Schedule:</b></IonLabel>
+                      <IonText>
+                        {order.end_date === order.start_date
+                          ? order.start_date
+                          : `from ${order.start_date} to ${order.end_date}`}
+                      </IonText>
+                    </IonItem>
+                    <IonItem lines="none" >
+                      <IonLabel>
+                        <IonChip className="ion-text-uppercase" outline={true} color="warning">
+
+                          <IonIcon icon={calendarOutline} />
+                          <b>{order.day}</b>
+                        </IonChip>
+                      </IonLabel>
+                      <IonText className="ion-text-end">
+                        <b>{order.start_time} - {order.end_time}</b>
+                      </IonText>
+                    </IonItem>
+                    <IonItem>
+                      <IonLabel><b>Location: </b></IonLabel>
+                      <IonText className='ion-text-end'>
+                        {order?.group}
+                        <IonIcon icon={caretForwardOutline} />
+                        {order?.entity}
+                        <IonIcon icon={caretForwardOutline} />
+                        {order?.property}
+                        <IonIcon icon={caretForwardOutline} />
+                        {order?.zone}
+                        <IonIcon icon={caretForwardOutline} />
+                        {order?.level}
+                        {<IonIcon icon={caretForwardOutline} /> &&
+                          order?.room}
+                      </IonText>
+                    </IonItem>
+                    {/* <IonCardContent className="work-order-content">
                       <div className="work-order-header">
                         <h1 className="work-order-title">
                           <IonIcon
                             icon={briefcaseOutline}
                             className="icon-title"
                           />
-                          {order.work_order_reference_number}
+                          <b>{order.work_order_reference_number}</b>
                         </h1>
                         <BadgeComponent status={order.status} />
                       </div>
 
-                      {/* Details */}
                       <div className="work-order-grid">
                         <IonRow className="work-order-item">
-                          {/* Start and End Dates in the same row */}
                           <IonCol size="auto">
                             <IonIcon icon={calendarOutline} className="icon" />
                             <span>
@@ -273,7 +336,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                           </IonRow>
                         </div>
                       </div>
-                    </IonCardContent>
+                    </IonCardContent> */}
                   </IonCard>
                 ))
               )}

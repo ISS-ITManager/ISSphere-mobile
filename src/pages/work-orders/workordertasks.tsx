@@ -1,4 +1,4 @@
-import { IonBadge, IonButton, IonCard, IonCardContent, IonContent, IonGrid, IonIcon, IonInput, IonItem, IonLabel, IonList, IonPage, IonModal, IonToolbar, IonTitle, IonHeader, IonButtons, IonTextarea, IonDatetimeButton, IonDatetime, useIonToast, IonSelect, IonSelectOption } from '@ionic/react';
+import { IonBadge, IonButton, IonCard, IonCardContent, IonContent, IonGrid, IonIcon, IonInput, IonItem, IonLabel, IonList, IonPage, IonModal, IonToolbar, IonTitle, IonHeader, IonButtons, IonTextarea, IonDatetimeButton, IonDatetime, useIonToast, IonSelect, IonSelectOption, IonCardHeader, IonCardTitle, IonText } from '@ionic/react';
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router';
 // import MasterComponent '../../components/MasterComponent';
@@ -8,6 +8,9 @@ import { sendOutline, saveOutline, pencilOutline, folderOpenOutline, closeOutlin
 import { getWorkOrderTaskHistory, createTaskHistory, workOrderTaskApi, workOrderTaskHistoryApi, assigneeApi } from '../../api/api';
 import ModalComponent from '../../components/Modal';
 import { formatDate, presentToast } from '../../utilities/globalfns';
+import "./workorder.css";
+import ModalComponent1 from '../../components/ModalComponent1';
+import BadgeComponent from '../../utilities/badgecomponent';
 
 const WorkOrderTasks: React.FC = () => {
 
@@ -29,7 +32,8 @@ const WorkOrderTasks: React.FC = () => {
         assignee_id: workOrderTasks?.assignee_id,
         title: workOrderTasks?.title,
         description: workOrderTasks?.description,
-        priority: workOrderTasks?.priority
+        priority: workOrderTasks?.priority,
+        status: workOrderTasks?.status,
     });
 
     const [formHistory, setFormHistory] = useState({
@@ -38,7 +42,7 @@ const WorkOrderTasks: React.FC = () => {
         comment: ''
     })
 
-    const id = workOrderTasks.id;
+    const id = workOrderTasks?.id;
 
     //fetch all assignees
     useEffect(() => {
@@ -49,7 +53,7 @@ const WorkOrderTasks: React.FC = () => {
                 // console.log("assignees: " + JSON.stringify(data.data.data));
 
             } catch (error) {
-                console.log(error);
+                console.log("fetchAssignees error:" + error.message);
             }
         }
         fetchAssignees();
@@ -60,15 +64,14 @@ const WorkOrderTasks: React.FC = () => {
         if (id) {
             try {
                 const data = await getWorkOrderTaskHistory(id);
-                console.log("data: " + JSON.stringify(data));
+                // console.log("data: " + JSON.stringify(data));
 
                 setWorkOrderHistory(data);
                 setIsOpen(true);
             } catch (err) {
-
+                console.log("fetchWorkOrderHistory error:" + err.message);
             }
         }
-        console.log("id: " + id + " | " + JSON.stringify(workOrderHistory));
 
     };
 
@@ -77,7 +80,7 @@ const WorkOrderTasks: React.FC = () => {
         return (
             <IonList>
                 {workOrderHistory && workOrderHistory.data?.map((task, index) => (
-                    <IonCard key={index}>
+                    <IonCard key={index} className="ion-padding task-card animate__animated  animate__pulse">
                         <IonList>
                             <IonItem> @
                                 <IonLabel>
@@ -86,9 +89,9 @@ const WorkOrderTasks: React.FC = () => {
                             </IonItem>
                             <IonItem>
                                 <IonLabel position='stacked'>Subject</IonLabel>
-                                <IonInput readonly>
+                                <IonText>
                                     {task.transaction}
-                                </IonInput>
+                                </IonText>
                             </IonItem>
                             <IonItem>
                                 <IonLabel position='stacked'>Comment</IonLabel>
@@ -98,9 +101,9 @@ const WorkOrderTasks: React.FC = () => {
                             </IonItem>
                             <IonItem>
                                 <IonLabel position='stacked'>Posted on</IonLabel>
-                                <IonInput readonly>
+                                <IonText>
                                     {formatDate(task.created_at)}
-                                </IonInput>
+                                </IonText>
                             </IonItem>
                         </IonList>
                     </IonCard>
@@ -146,7 +149,6 @@ const WorkOrderTasks: React.FC = () => {
 
         const handleSave = () => {
             saveModifiedData(localFormData);
-            presentToast("Successfully saved");
             // console.log("localFormData: " + JSON.stringify(localFormData));
             const updatedTask = { ...workOrderTasks, ...localFormData };
             // console.log("updatedTask: " + JSON.stringify(updatedTask));
@@ -156,77 +158,81 @@ const WorkOrderTasks: React.FC = () => {
         };
 
         return (
-            <IonList>
-                <IonItem>
-                    <IonLabel position="stacked">Assignee</IonLabel>
-                    <IonSelect
-                        name="assignee_id"
-                        value={localFormData.assignee_id}
-                        // onIonChange={(e) => handleInputChange(e)}
-                        onIonChange={(e) => handleInputChange('assignee_id', e.detail.value)}
-                        placeholder="Select assginee"
-                    >
-                        {assignees.map((person, index) => (
-                            <IonSelectOption value={person.id} key={index}>{person.first_name} {person.last_name}</IonSelectOption>
-                        ))}
-                    </IonSelect>
-                </IonItem>
-                <IonItem>
-                    <IonLabel position="stacked">Title</IonLabel>
-                    <IonInput
-                        name='title'
-                        value={localFormData.title || ''}
-                        onIonInput={(e) => handleInputChange('title', e.target.value)}
-                    />
-                </IonItem>
-                <IonItem>
-                    <IonLabel position="stacked">Description</IonLabel>
-                    <IonTextarea
-                        name='description'
-                        value={localFormData.description || ''}
-                        autoGrow
-                        onIonInput={(e) => handleInputChange('description', e.target.value)}
-                    />
-                </IonItem>
-                <IonItem>
-                    <IonLabel position="stacked">Priority</IonLabel>
-                    <IonSelect
-                        name='priority'
-                        value={localFormData.priority || ''}
-                        onIonChange={(e) => handleInputChange('priority', e.detail.value)}
-                    >
-                        <IonSelectOption value="low">Low</IonSelectOption>
-                        <IonSelectOption value="medium">Medium</IonSelectOption>
-                        <IonSelectOption value="high">High</IonSelectOption>
-                    </IonSelect>
-                </IonItem>
-                <IonButton onClick={handleSave} expand="block">
-                    Save
-                    <IonIcon icon={saveOutline} slot="end" />
-                </IonButton>
-            </IonList>
+            <IonCard className='ion-padding task-card'>
+                <IonList>
+                    <IonItem>
+                        <IonLabel position="stacked"><b>Assignee</b></IonLabel>
+                        <IonSelect
+                            label='Assignee'
+                            name="assignee_id"
+                            value={localFormData.assignee_id}
+                            // onIonChange={(e) => handleInputChange(e)}
+                            onIonChange={(e) => handleInputChange('assignee_id', e.detail.value)}
+                            placeholder="Select assginee"
+                        >
+                            {assignees.map((person, index) => (
+                                <IonSelectOption value={person.id} key={index}>{person.first_name} {person.last_name}</IonSelectOption>
+                            ))}
+                        </IonSelect>
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel position="stacked"><b>Title</b></IonLabel>
+                        <IonInput
+                            className='ion-text-end'
+                            name='title'
+                            value={localFormData.title || ''}
+                            onIonInput={(e) => handleInputChange('title', e.target.value)}
+                        />
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel position="stacked"><b>Description</b></IonLabel>
+                        <IonTextarea
+                            className='ion-text-end'
+                            name='description'
+                            value={localFormData.description || ''}
+                            autoGrow
+                            onIonInput={(e) => handleInputChange('description', e.target.value)}
+                        />
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel position="stacked"><b>Priority</b></IonLabel>
+                        <IonSelect
+                            label='Priority'
+                            name='priority'
+                            value={localFormData.priority || ''}
+                            onIonChange={(e) => handleInputChange('priority', e.detail.value)}
+                        >
+                            <IonSelectOption value="low">Low</IonSelectOption>
+                            <IonSelectOption value="medium">Medium</IonSelectOption>
+                            <IonSelectOption value="high">High</IonSelectOption>
+                        </IonSelect>
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel position="stacked"><b>Status</b></IonLabel>
+                        <IonSelect
+                            name='status'
+                            label='Status'
+                            value={localFormData.status || ''}
+                            onIonChange={(e) => handleInputChange('status', e.detail.value)}
+                        >
+                            <IonSelectOption value="new">New</IonSelectOption>
+                            <IonSelectOption value="in-progress">In-Progress</IonSelectOption>
+                            <IonSelectOption value="completed">Completed</IonSelectOption>
+                            <IonSelectOption value="closed">Closed</IonSelectOption>
+                            <IonSelectOption value="on-hold">On-Hold</IonSelectOption>
+                            <IonSelectOption value="cancelled">Cancelled</IonSelectOption>
+                            <IonSelectOption value="pending">Pending</IonSelectOption>
+                        </IonSelect>
+                    </IonItem>
+                    <IonButton onClick={handleSave} expand="block">
+                        Save
+                        <IonIcon icon={saveOutline} slot="end" />
+                    </IonButton>
+                </IonList>
+            </IonCard>
         );
     };
 
-    const ModalContainer = ({ isOpen, closeModal, getModalContent, title }) => {
-        return (
-            <IonModal isOpen={isOpen} onDidDismiss={closeModal}>
-                <IonHeader>
-                    <IonToolbar>
-                        <IonTitle>{title}</IonTitle>
-                        <IonButtons slot="end">
-                            <IonButton onClick={closeModal}>Close</IonButton>
-                        </IonButtons>
-                    </IonToolbar>
-                </IonHeader>
-                <IonContent className="ion-padding">
-                    <p>
-                        {getModalContent()}
-                    </p>
-                </IonContent>
-            </IonModal>
-        )
-    }
 
     const addPost = async (data) => {
 
@@ -236,10 +242,8 @@ const WorkOrderTasks: React.FC = () => {
                 const req = await workOrderTaskHistoryApi.store(data);
                 console.log("req: " + JSON.stringify(req));
 
-                presentToast("Successfully saved")
-
             } catch (error) {
-                presentToast("Error: " + error.message)
+                console.log("AddPost error: " + error.message)
             }
             finally {
                 setFormHistory({
@@ -258,32 +262,36 @@ const WorkOrderTasks: React.FC = () => {
 
     return (
         <MasterComponent title={"View Work Order Task"}>
-            <IonCard className='ion-padding'>
-                <IonLabel>
+            <IonCard className='ion-padding task-card'>
+                <IonCardTitle>
                     <h2>Task info
                         <IonBadge
                             color={formData.priority === 'low' ? 'success' : formData.priority === 'medium' ? 'warning' : formData.priority === 'high' ? 'danger' : 'primary'}>
                             {formData?.priority.charAt(0).toUpperCase() + formData.priority.slice(1)}
                         </IonBadge>
                     </h2>
-                </IonLabel>
+                </IonCardTitle>
                 <IonList>
                     <IonItem>
-                        <IonLabel position="stacked">Title:</IonLabel>
-                        <IonInput value={formData.title} readonly />
+                        <IonLabel><b>Title:</b></IonLabel>
+                        <IonText>{formData.title}</IonText>
                     </IonItem>
                     <IonItem>
-                        <IonLabel position="stacked">Description:</IonLabel>
-                        <IonTextarea value={formData.description} autoGrow readonly
-                        />
+                        <IonLabel><b>Description:</b></IonLabel>
+                        <IonText>{formData.description}</IonText>
                     </IonItem>
                     <IonItem className='ion-text-wrap'>
-                        <IonLabel position="stacked">Start Date:</IonLabel>
-                        <IonInput value={formatDate(workOrderTasks?.start_date)} readonly />
+                        <IonLabel><b>Start Date:</b></IonLabel>
+                        <IonText>{formatDate(workOrderTasks?.start_date)}</IonText>
+                    </IonItem>
+                    <IonItem className='ion-align-self-end'>
+                        <IonLabel><b>Status:</b></IonLabel>
+                        <BadgeComponent status={formData.status} />
+                        {/* <IonText className='ion-text-uppercase'>{workOrderTasks.status}</IonText>  */}
                     </IonItem>
                     <IonItem>
-                        <IonLabel position="stacked">Completed Date:</IonLabel>
-                        <IonInput value={workOrderTasks.completed_date === null ? 'N/A' : workOrderTasks.completed_date} readonly />
+                        <IonLabel><b>Completed Date:</b></IonLabel>
+                        <IonText>{workOrderTasks.completed_date === null ? 'N/A' : workOrderTasks.completed_date}</IonText>
                     </IonItem>
                     <IonButton
                         onClick={handleOpenModal}
@@ -294,8 +302,10 @@ const WorkOrderTasks: React.FC = () => {
 
                 </IonList>
             </IonCard>
-            <IonCard className='ion-padding'>
-                <IonLabel><h2>Comments and Histories</h2></IonLabel>
+            <IonCard className='ion-padding task-card'>
+                <IonCardTitle>
+                    <IonLabel><h2>Comments and Histories</h2></IonLabel>
+                </IonCardTitle>
                 <IonList>
                     <IonItem>
                         <IonInput label='Subject' placeholder='Subject' name='transaction' value={formHistory.transaction}
@@ -314,19 +324,18 @@ const WorkOrderTasks: React.FC = () => {
                 </IonList>
             </IonCard>
 
-            {isOpen && (<ModalContainer title={"Work Order Task History"}
-                getModalContent={getModalContent}
-                closeModal={closeModal}
-                isOpen={isOpen}
-            />)}
+            {isOpen && (
+                <ModalComponent1 title={"Work Order Task History"}
+                    getContentModal={getModalContent}
+                    onClose={closeModal}
+                    isOpen={isOpen} />
+            )}
 
             {isClicked && (
-                <ModalContainer
-                    title="Update Task"
+                <ModalComponent1 title={"Update Task"}
                     isOpen={isClicked}
-                    closeModal={unclick}
-                    // getModalContent={getContentModify(formData,saveModifiedData)}
-                    getModalContent={() =>
+                    onClose={unclick}
+                    getContentModal={() =>
                         <UpdateTaskForm
                             initialData={formData}
                             saveModifiedData={saveModifiedData}

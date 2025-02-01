@@ -40,8 +40,12 @@ import "@ionic/react/css/palettes/dark.system.css";
 /* Theme variables */
 import "./theme/variables.css";
 import WorkOrderTasks from "./pages/work-orders/workordertasks";
-import WorkOrderCreate from "./pages/work-orders/workordercreate";
-import WorkOrderRequestApprove from "./pages/work-orders/workorderRequest";
+import WorkOrderRequestCreate from "./pages/work-order-request/workorderRequestCreate";
+import WorkOrderRequestApprove from "./pages/work-order-request/workorderRequestApprove";
+import NotificationPage from "./pages/Notification";
+import AccountPage from "./pages/Account";
+import WorkOrderRequestView from "./pages/work-order-request/workorderRequestView";
+// import Notification from "./pages/notification";
 
 setupIonicReact();
 
@@ -76,14 +80,23 @@ const App: React.FC = () => {
           <Route exact path="/viewWO">
             <WorkOrderTasks />
           </Route>
-          <Route exact path="/createWO">
-            <WorkOrderCreate />
+          <Route exact path="/createWOR">
+            <WorkOrderRequestCreate />
           </Route>
+          <Route exact path="/workOrderRequest/:id">
+            <WorkOrderRequestView />
+          </Route>          
           <Route exact path="/approveWO">
             <WorkOrderRequestApprove />
           </Route>
           <Route exact path="/">
             <Redirect to="/login" />
+          </Route>
+          <Route exact path="/notification">
+            <NotificationPage />
+          </Route>
+          <Route exact path="/account">
+            <AccountPage />
           </Route>
 
           {/* Make Login the first page */}

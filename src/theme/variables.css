@@ -3,6 +3,8 @@
   --ion-color-primary: #3f51b5;
   --ion-color-secondary: #0000;
   --ion-background-color: #f4ebeb; /* Default white background */
+  --ion-font-family: 'Inter', sans-serif; /* Ionic variable for global font */
+
 }
 
 .theme-dark {
@@ -32,5 +34,7 @@ ion-page {
 
 /* Optional: For smooth transition when switching themes */
 body {
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease;  
+  font-family: 'Inter', sans-serif; /* Apply font-family to the entire app */
+
 }

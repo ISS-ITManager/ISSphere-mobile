@@ -19,16 +19,27 @@ import {
   saveOutline,
 } from "ionicons/icons";
 import { workOrderSupplyApi } from "../../../api/api";
+import { useHistory } from "react-router";
+import { presentToast } from "../../../utilities/globalfns";
 
-const WorkOrderSupplies = ({ workOrder, supplierList, categoryList, supplyList , closeModal}) => {
+const WorkOrderSupplies = ({ workOrder, supplierList, categoryList, supplyList, closeModal, onSave }) => {
 
+  const history = useHistory();
   const [supplyStockList, setSupplyStockList] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState();
   const [selectedSuppCat, setSelectedSuppCat] = useState();
   const [selectedSupply, setSelectedSupply] = useState();
   const [selectedSupplyStock, setSelectedSupplyStock] = useState();
+  const [formData, setFormData] = useState({
+    supply:'',
+    supply_category:'',
+    cost:'',
+    quantity:'',
+    unit_of_measure:'',
+    batch_number:''
+  })
 
-  const [qty, setQty] = useState();
+  const [qty, setQty] = useState(0);
 
   const applyFilter = async () => {
     console.log("category: " + selectedSuppCat + " |supply: " + selectedSupply + " |supplier: " + selectedSupplier);
@@ -37,21 +48,39 @@ const WorkOrderSupplies = ({ workOrder, supplierList, categoryList, supplyList ,
       try {
         const req = await workOrderSupplyApi.getStock({ supply_category: selectedSuppCat, supply: selectedSupply, supplier: selectedSupplier });
         setSupplyStockList(req.data.data);
-        console.log("supplyStock: " + JSON.stringify(req.data.data));
+        // console.log("supplyStock: " + JSON.stringify(req.data.data));
 
       } catch (error) {
+        console.log("applyFilter error: " + JSON.stringify(error.message));
 
       }
     }
   }
 
-  const saveWorkOrderSupply = () => {
-    if (qty && qty > 0 && selectedSupplyStock) {
+  const saveWorkOrderSupply = async (quantity, supplyStock) => {
+    console.log("qty: " + quantity + " |selectedSupplyStock: " + JSON.stringify(supplyStock));
+
+    if (!quantity || isNaN(quantity) || quantity <= 0) {
+      console.log("Invalid quantity:", quantity);
+      return;
+    }
+    if (quantity && quantity > 0 && supplyStock) {
       try {
-        const req = workOrderSupplyApi.store({ quantities: [qty], supply_stocks: [selectedSupplyStock], work_order: workOrder })
-        console.log("req: " + JSON.stringify(req));
+        const req = await workOrderSupplyApi.store({ quantities: [qty], supply_stocks: [selectedSupplyStock], work_order: workOrder })
+        // console.log("req: " + JSON.stringify(req));
+
+        
+        const newSupply = {supply_id: selectedSupply, supply_category: selectedSuppCat, selectedSupplyStock, quantity: qty};
+        // console.log("New Supply: "+JSON.stringify(newSupply));
+        
+        if(onSave)
+        {
+          onSave(newSupply);
+        }
         closeModal();
+
       } catch (error) {
+        console.log("saveWorkOrderSupply error: " + JSON.stringify(error.message));
 
       }
     }
@@ -134,13 +163,20 @@ const WorkOrderSupplies = ({ workOrder, supplierList, categoryList, supplyList ,
 
           <IonItem>
             <IonLabel>Quantity</IonLabel>
-            <IonInput placeholder="Input Quantity" type="number" slot="end" value={qty} name="quantities" onIonChange={(e) => setQty(e.target.value)} />
+            <IonInput
+              className="ion-text-end"
+              placeholder="Input Quantity"
+              type="number" slot="end"
+              value={qty} name="quantities"
+              onIonInput={(e) => setQty(parseInt(e.target.value) || 0)} />
           </IonItem>
 
           <IonButton
             expand="block"
-            onClick={saveWorkOrderSupply}
-          ><IonIcon slot="start" icon={saveOutline}></IonIcon> Save</IonButton>
+            onClick={() => saveWorkOrderSupply(qty, selectedSupplyStock)}
+          >
+            <IonIcon slot="start" icon={saveOutline} /> Save
+          </IonButton>
         </>}
 
     </IonContent>

@@ -396,3 +396,8 @@
   align-items: center;
   gap: 0px;
 }
+
+ion-item {
+  font-size: 14px;
+  font-family: var(--ion-font-family); 
+}

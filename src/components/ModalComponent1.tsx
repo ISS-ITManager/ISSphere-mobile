@@ -19,7 +19,9 @@ const ModalComponent1 = ({ title, getContentModal, onClose, isOpen }) => {
                 <IonToolbar>
                     <IonTitle>{title}</IonTitle>
                     <IonButtons slot="end">
-                        <IonButton onClick={onClose}>Close</IonButton>
+                        <IonButton onClick={onClose}>
+                            <IonIcon icon={closeOutline} />
+                        </IonButton>
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>

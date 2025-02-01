@@ -35,13 +35,16 @@ import {
   IonButtons,
   IonItemSliding,
   IonItemOptions,
-  IonItemOption
+  IonItemOption,
+  IonCardHeader,
+  IonCardTitle,
+  IonAlert
 } from "@ionic/react";
 import {
   addOutline,
   saveOutline,
   listOutline,
-  documentTextOutline,
+  closeOutline,
   listCircle,
   documentAttachOutline,
   cloudUploadOutline,
@@ -50,6 +53,8 @@ import {
   personCircleOutline,
   cubeOutline,
   fileTrayFullOutline,
+  statsChart,
+  trashOutline,
 } from "ionicons/icons";
 import "./workorder.css";
 import Header from "../../components/Header";
@@ -69,6 +74,7 @@ import {
   supplyApi,
   supplyCategoryApi,
   workOrderSupplyApi,
+  workOrderApi,
 } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Timeline from "../../utilities/workordertimelinecomponent";
@@ -76,6 +82,9 @@ import Details from "./workorder-components/details";
 import Assets from "./workorder-components/assets";
 import { formatDate, presentToast } from "../../utilities/globalfns";
 import WorkOrderSupplies from "./workorder-components/supplies";
+import ModalComponent1 from "../../components/ModalComponent1";
+import BadgePriority from "../../utilities/badgePriority";
+import BadgeStatus from "../../utilities/BadgeStatus";
 
 // Define the WorkOrder type
 interface WorkOrder {
@@ -160,7 +169,8 @@ const WorkOrder: React.FC = () => {
     assignee_id: '',
     title: '',
     description: '',
-    priority: ''
+    priority: '',
+    status: '',
   })
   const [activityLogs, setActivityLogs] = useState([]);
   // const [returnMsg, setReturnMsg] = useState<string>("");
@@ -169,6 +179,16 @@ const WorkOrder: React.FC = () => {
   const [supplyList, setSupplyList] = useState([]);
   const [workOrderSupplyList, setWorkOrderSupplyList] = useState([]);
   const [openSupply, setOpenSupply] = useState(false);
+  const [deleteSupply, setDeleteSupply] = useState(false);
+  const [updateWorkOrder, setUpdateWorkOrder] = useState(false);
+  const [formUpdate, setFormUpdate] = useState({
+    work_order_id: '',
+    status: '',
+    remarks: ''
+  });
+
+  const [workOrderStatus, setWorkOrderStatus] = useState('');
+  const [workOrderRemarks, setWorkOrderRemarks]= useState('');
 
   const handleApplyFilter = async () => {
     try {
@@ -216,6 +236,68 @@ const WorkOrder: React.FC = () => {
     }));
   };
 
+
+  const handleUpdateWorkOrder = async (workOrder) => {
+    setUpdateWorkOrder(true);
+    
+    // await handleSaveWorkOrder(workOrder);
+  }
+  const handleSaveWorkOrder = async (workOrder) => {
+    console.log("handleSaveWorkOrder: "+JSON.stringify(workOrder));
+    if (workOrder && workOrderStatus) {
+      try {
+        let data = {
+          status: workOrderStatus,
+          remarks: workOrderRemarks
+        }
+        const req = await workOrderApi.update(workOrder.id, data);
+        console.log("handleSaveWorkOrder req: " + JSON.stringify(req.data));
+
+      } catch (error) {
+        console.log("handleSaveWorkOrder error: " + JSON.stringify(error.message));
+
+      }
+    }
+  }
+
+  const getContentModalUpdateWO = (workOrder) => {
+    console.log("WORKOrder: " + JSON.stringify(workOrder));
+
+    return (
+      <>
+        {workOrder &&
+          <IonList className="ion-padding">
+            <IonLabel> status: {workOrder?.active_status?.status}</IonLabel>
+            <IonItem>
+              <IonLabel>Select Status</IonLabel>
+              <IonSelect
+                value={workOrderStatus}
+                label="Status"
+                onIonChange={(e)=> setWorkOrderStatus(e.target.value)}>
+                {workOrder?.active_status?.status === "open" ?
+                  <IonSelectOption value='in-progress'>In-Progress</IonSelectOption> :
+                  <>
+                    <IonSelectOption value="in-progress">In-Progress</IonSelectOption>
+                    <IonSelectOption value="completed">Completed</IonSelectOption>
+                    <IonSelectOption value="cancelled">Cancelled</IonSelectOption>
+                  </>}
+              </IonSelect>
+            </IonItem>
+            <IonItem>
+              <IonLabel>Remarks</IonLabel>
+              <IonTextarea 
+              onIonInput={(e)=> setWorkOrderRemarks(e.target.value)}
+              placeholder="Type your remarks here" 
+              value={workOrderRemarks}/>
+            </IonItem>
+            <IonButton>Cancel</IonButton>
+            <IonButton onClick={() => handleSaveWorkOrder(workOrder)}>Continue</IonButton>
+          </IonList>
+        }
+      </>
+    )
+  }
+
   //fetch work order details
   useEffect(() => {
     const fetchWorkOrderDetails = async () => {
@@ -229,6 +311,8 @@ const WorkOrder: React.FC = () => {
         setLoading(true);
         const data = await getWorkOrderDetails(id);
         setWorkOrder(data.data);
+        // console.log("getWorkOrderDetails: " + JSON.stringify(data.data));
+
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "An unknown error occurred.";
@@ -257,6 +341,8 @@ const WorkOrder: React.FC = () => {
         const response = await getWorkOrderTasks(id);
         if (response.success) {
           setTasks(response.data);
+          // console.log("Tasks: " + JSON.stringify(response.data));
+
         } else {
           setTasks([]);
         }
@@ -315,20 +401,22 @@ const WorkOrder: React.FC = () => {
     }
   }, [selectedCategory]);
 
-  //fetch supply
-  useEffect(() => {
-    const fetchSupplyList = async () => {
-      try {
-        const req = await workOrderSupplyApi.list(id);
-        // console.log("supplyList: " + JSON.stringify(req.data.data));
-        setWorkOrderSupplyList(req.data.data);
 
-      }
-      catch (error) {
-        console.log(error);
+  const fetchSupplyList = async () => {
+    try {
+      const req = await workOrderSupplyApi.list(id);
+      // console.log("supplyList: " + JSON.stringify(req.data.data));
+      setWorkOrderSupplyList(req.data.data);
 
-      }
     }
+    catch (error) {
+      console.log("fetchSupplyList error: " + error.message);
+
+    }
+  }
+
+  useEffect(() => {
+
     const fetchSuppliers = async () => {
       try {
         const req = await supplierApi.list();
@@ -376,7 +464,7 @@ const WorkOrder: React.FC = () => {
       if (id) {
         try {
           setLoading(true);
-          const data = await WorkOrderActivityLogApi.list(id);
+          const data = await workOrderActivityLogApi.list(id);
           // console.log("activityLogs: " + JSON.stringify(data.data.data));
 
           setActivityLogs(data.data.data);
@@ -416,6 +504,34 @@ const WorkOrder: React.FC = () => {
     }
   };
 
+  const getStatus = (status) => {
+    let stats = status.charAt(0).toLocaleUpperCase() + status.slice(1);
+    switch (status) {
+      case 'in-progress':
+      case 'pending':
+        return <IonBadge color="warning" >
+          {stats}
+        </IonBadge>;
+      case 'completed':
+        return <IonBadge color="success" >
+          {stats}
+        </IonBadge>;
+      case "cancelled":
+      case 'on-hold':
+        return <IonBadge color="danger" >
+          {stats}
+        </IonBadge>;
+      case 'closed':
+        return <IonBadge color="primary" >
+          {stats}
+        </IonBadge>;
+      default: //new
+        return <IonBadge color="tertiary" >
+          {stats}
+        </IonBadge>;
+    }
+  }
+
   const getModalContent = () => {
     switch (selectedTab) {
       case "details":
@@ -444,56 +560,59 @@ const WorkOrder: React.FC = () => {
         setPageTitle("Work Order Task");
         handleUpdateRecords();
         return (
-          <div style={{ maxHeight: '70%', overflowY: 'auto' }}>
-            <IonAccordionGroup multiple>
-              <IonItem>
-                <IonLabel><h2>Task List</h2></IonLabel>
-                <IonButton
-                  onClick={() => setAddTask(true)}
-                  size="default"
-                  slot="end"
-                >
-                  <IonIcon icon={addOutline} slot="start" />
-                  Add
-                </IonButton>
-              </IonItem>
-              {tasks
+          <>
+
+            <IonItem>
+              <IonLabel><h2>Task List</h2></IonLabel>
+              <IonButton
+                onClick={() => setAddTask(true)}
+                size="default"
+                slot="end"
+              >
+                <IonIcon icon={addOutline} slot="start" />
+                Add
+              </IonButton>
+            </IonItem>
+
+            <div style={{ maxHeight: '65%', overflowY: 'auto' }}>
+              {tasks && tasks
                 .map((task, index) => (
-                  <IonAccordion value={index} key={index} 
-                  >
-                    <IonItem slot="header" color="light" lines="full" detail={false}>
-                      <IonLabel>
-                        <h2 >{task.title}</h2>
+                  <IonCard key={index} className="bounce-in-right task-card" color="light"
+                    style={{ animationDelay: `${index * 0.1}s` }}>
+                    <IonCardHeader >
+                      <IonLabel className="work-order-header">
+                        <h2><b>{task.title} </b></h2>
+
+                        <BadgeComponent status={task.status} />
+                        {/* <IonButton className="task-card-delete-button"
+                          id="delete-supply"
+                          color="danger"
+                          onClick={() => setDeleteSupply(true)}
+                        >
+                          <IonIcon
+                            icon={trashOutline} />
+                        </IonButton> */}
                       </IonLabel>
-                      <IonBadge
-                        color={
-                          task.priority === 'low' ? 'success' :
-                            task.priority === 'medium' ? 'warning' :
-                              task.priority === 'high' ? 'danger' :
-                                'primary'
-                        }
-                        style={{ marginLeft: '8px' }}
-                      >
-                        {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                      </IonBadge>
-                    </IonItem>
-                    <div className="ion-padding" slot="content" onClick={() => handleViewWOTasks(task)}>
-                      <IonList>
-                        <IonItem lines="none">
-                          <IonLabel>
-                            <h3>Description</h3>
-                            {task.description}
-                          </IonLabel>
-                        </IonItem>
-                        <IonItem lines="none">
-                          <IonLabel>
-                            <h4>Start Date</h4>
-                            {formatDate(task.start_date)}
-                          </IonLabel>
-                        </IonItem>
-                      </IonList>
-                    </div>
-                  </IonAccordion>
+                    </IonCardHeader>
+                    <IonList onClick={() => handleViewWOTasks(task)}>
+                      <IonItem>
+                        <IonLabel><b>Description: </b></IonLabel>
+                        <IonText>{task.description}</IonText>
+                      </IonItem>
+                      <IonItem>
+                        <IonLabel><b>Priority: </b></IonLabel>
+                        <BadgePriority priority={task.priority} />
+                      </IonItem>
+                      <IonItem >
+                        <IonLabel><b>Start Date: </b></IonLabel>
+                        <IonText>{formatDate(task.start_date)}</IonText>
+                      </IonItem>
+                      <IonItem >
+                        <IonLabel><b>Completed Date: </b></IonLabel>
+                        <IonText>{task.completed_date === null ? 'N/A' : formatDate(task.completed_date)}</IonText>
+                      </IonItem>
+                    </IonList>
+                  </IonCard>
                 ))}
 
               {tasks?.length === 0 && <IonLabel><center><i>No records found</i></center></IonLabel>}
@@ -507,7 +626,7 @@ const WorkOrder: React.FC = () => {
                     <IonToolbar>
                       <IonTitle>Add Task</IonTitle>
                       <IonButtons slot="end">
-                        <IonButton onClick={() => setAddTask(false)}>Close</IonButton>
+                        <IonButton onClick={() => setAddTask(false)}><IonIcon icon={closeOutline} /></IonButton>
                       </IonButtons>
                     </IonToolbar>
                   </IonHeader>
@@ -567,15 +686,14 @@ const WorkOrder: React.FC = () => {
                   </IonContent>
                 </IonModal>
               }
-            </IonAccordionGroup>
-          </div>
+            </div>
+          </>
         );
 
       case "supplies":
         setPageTitle("Work Order Supplies");
 
         return (
-          // <WorkOrderSupplies workOrder={id} supplierList={supplierList} categoryList={supplyCategory} supplyList={supplyList} />
 
           < >
             <IonItem>
@@ -593,21 +711,21 @@ const WorkOrder: React.FC = () => {
               {renderSupplies()}
 
               {openSupply &&
-                <IonModal
+                <ModalComponent1 title={"Add Supply"}
                   isOpen={openSupply}
-                  onDidDismiss={() => setOpenSupply(false)}
-                >
-                  <IonHeader>
-                    <IonToolbar>
-                      <IonTitle>Add Supply</IonTitle>
-                      <IonButtons slot="end">
-                        <IonButton onClick={() => setOpenSupply(false)}>Close</IonButton>
-                      </IonButtons>
-                    </IonToolbar>
-                  </IonHeader>
-                  <WorkOrderSupplies workOrder={id} supplierList={supplierList} categoryList={supplyCategory} supplyList={supplyList} closeModal={() => setOpenSupply(false)} />
-                </IonModal>
+                  onClose={() => setOpenSupply(false)}
+                  getContentModal={() =>
+                    <WorkOrderSupplies
+                      workOrder={id}
+                      supplierList={supplierList}
+                      categoryList={supplyCategory}
+                      supplyList={supplyList}
+                      closeModal={() => setOpenSupply(false)}
+                      onSave={handleSaveSupply}
+                    />}
+                />
               }
+
 
             </div>
           </>
@@ -615,29 +733,96 @@ const WorkOrder: React.FC = () => {
         );
 
       case "activity":
-        setPageTitle("Activity Log");
+        setPageTitle("Activity Logs");
         return (
           <IonContent style={{ maxHeight: '70%', overflowY: 'auto' }}>
             <div>
               {activityLogs && activityLogs.map((item, index) => (
-                <IonCard key={index} className='ion-padding'>
-                  {/* <IonItem> */}
-                  <IonLabel>{formatDate(item.created_at)}</IonLabel><br />
-                  <IonLabel><h2>{item.activity}</h2></IonLabel>
-                  <IonIcon icon={personCircleOutline} /> <IonLabel>{item.first_name} {item.middle_name} {item.last_name}</IonLabel>
-                  {/* </IonItem> */}
+                <IonCard key={index} className='ion-padding task-card'>
+                  <IonItem>
+                    <IonLabel>{formatDate(item.created_at)}</IonLabel>
+                  </IonItem>
+                  <IonItem>
+                    <IonText>{item.activity}</IonText>
+                  </IonItem>
+                  <IonItem>
+                    <IonIcon icon={personCircleOutline} /> <IonLabel>{item.first_name} {item.middle_name} {item.last_name}</IonLabel>
+                  </IonItem>
+
                 </IonCard>
               ))}
             </div>
           </IonContent>
         );
+
       default:
         return null;
     }
   };
 
+  const getModalContentAddTask = ({ }) => {
+    return (
+      <IonContent className="ion-padding">
+        <IonList>
+          <IonItem>
+            <IonLabel position="stacked">Assignee</IonLabel>
+            <IonSelect
+              name="assignee_id"
+              value={formTask.assignee_id}
+              onIonChange={(e) => handleInputChange(e)}
+              placeholder="Select assginee"
+            >
+              {assignees.map((person, index) => (
+                <IonSelectOption value={person.id} key={index}>{person.first_name} {person.last_name}</IonSelectOption>
+              ))}
+            </IonSelect>
+          </IonItem>
+          <IonItem>
+            <IonLabel position="stacked">Title</IonLabel>
+            <IonInput
+              name="title"
+              value={formTask.title}
+              onIonInput={(e) => handleInputChange(e)}
+              placeholder="Enter title"
+            />
+          </IonItem>
+          <IonItem>
+            <IonLabel position="stacked">Description</IonLabel>
+            <IonTextarea
+              name="description"
+              value={formTask.description}
+              onIonInput={(e) => handleInputChange(e)}
+              placeholder="Enter description"
+              autoGrow
+            />
+          </IonItem>
+          <IonItem>
+            <IonLabel position="stacked">Priority</IonLabel>
+            <IonSelect
+              name="priority"
+              value={formTask.priority}
+              onIonChange={(e) => handleInputChange(e)}
+              placeholder="Select priority"
+            >
+              <IonSelectOption value="low">Low</IonSelectOption>
+              <IonSelectOption value="medium">Medium</IonSelectOption>
+              <IonSelectOption value="high">High</IonSelectOption>
+            </IonSelect>
+          </IonItem>
+        </IonList>
+        <IonButton
+          expand="block"
+          onClick={handleSaveTask}>
+          Save <IonIcon slot="start" icon={saveOutline} />
+        </IonButton>
+      </IonContent>
+    )
+  }
+
   const renderTasks = () => {
-    const completedTasks = tasks.filter((task) => task.status === "Completed");
+    const completedTasks = tasks.filter((task) => task.status === "completed");
+    // console.log("completed tasks: " + JSON.stringify(completedTasks));
+
 
     return (
       <div className="timeline-container">
@@ -651,9 +836,9 @@ const WorkOrder: React.FC = () => {
             </div>
 
             {/* Task Card */}
-            <div
+            {/* <div
               className="task-card bounce-in-right"
-              style={{ animationDelay: `${index * 0.1}s` }} // Add delay for sequential animation
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="task-header">
                 <h3 className="task-title">{task.title}</h3>
@@ -677,7 +862,41 @@ const WorkOrder: React.FC = () => {
                   ))}
               </div>
               <p className="task-days">{task.days || "No days specified"}</p>
-            </div>
+            </div> */}
+
+            <IonCard className="task-card bounce-in-right"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <IonCardHeader>
+                <IonLabel className="work-order-header">
+                  <b>{task.title} </b>
+                  <span className="task-badge">
+                    {task.status.toUpperCase() || "Unknown"}
+                  </span>
+                </IonLabel>
+              </IonCardHeader>
+              <IonItem>
+                <IonLabel><b>Description:</b></IonLabel>
+                {task.description}
+              </IonItem>
+              <IonItem>
+                <IonLabel><b>Priority:</b></IonLabel>
+                <BadgePriority priority={task.priority} />
+              </IonItem>
+              <IonItem>
+                <IonLabel><b>Assigned to: </b></IonLabel>
+                <IonText>
+                  {task?.assignee?.user?.profile?.first_name} {task?.assignee?.user?.profile?.middle_name} {task?.assignee?.user?.profile?.last_name}
+                </IonText>
+              </IonItem>
+              <IonItem>
+                <IonLabel><b>Completed date: </b></IonLabel>
+                <IonText className="ion-text-end">
+                  {formatDate(task.completed_date)}
+                </IonText>
+              </IonItem>
+
+            </IonCard>
           </div>
         ))}
       </div>
@@ -685,58 +904,66 @@ const WorkOrder: React.FC = () => {
   };
 
   const renderSupplies = () => {
-    const rowStyle = {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      // padding: "1px 1px",
-    };
-
-    const labelStyle = {
-      flex: "1",
-      fontWeight: "bold",
-      textAlign: "left",
-    };
-
-    const valueStyle = {
-      flex: "2",
-      textAlign: "right",
-      // paddingLeft: "1px",
-    };
     return (
       <div>
         {workOrderSupplyList && workOrderSupplyList?.map((stock, index) => (
-          <IonCard key={index} className="bounce-in-right" color="light"
+          <IonCard key={index} className="bounce-in-right task-card" color="light"
             style={{ animationDelay: `${index * 0.1}s` }}>
+            <IonCardHeader>
+              <IonButton className="task-card-delete-button"
+                id="delete-supply"
+                color="danger"
+                onClick={() => setDeleteSupply(true)}
+              >
+                <IonIcon
+                  icon={trashOutline} />
+              </IonButton>
+            </IonCardHeader>
             <IonList >
-              <IonItem lines="none" style={rowStyle} button={true} detail={false}>
+              <IonItem button={true} detail={false}>
                 <div className="unread-indicator-wrapper" slot="start">
                   <div className="unread-indicator"></div>
                 </div>
-                <IonLabel style={labelStyle}>Supply:</IonLabel>
-                <span style={valueStyle}>{stock.supply}</span>
+                <IonLabel><b>Supply:</b></IonLabel>
+                <IonText>{stock.supply}</IonText>
               </IonItem>
-              <IonItem lines="none" style={rowStyle}>
-                <IonLabel style={labelStyle}>Supply Category:</IonLabel>
-                <span style={valueStyle}>{stock.supply_category}</span>
+              <IonItem>
+                <IonLabel><b>Supply Category:</b></IonLabel>
+                <IonText>{stock.supply_category}</IonText>
               </IonItem>
-              <IonItem lines="none" style={rowStyle}>
-                <IonLabel style={labelStyle}>Supply:</IonLabel>
-                <span style={valueStyle}>{stock.supply}</span>
+              <IonItem>
+                <IonLabel><b>Cost:</b></IonLabel>
+                <IonText>QAR {stock.cost}</IonText>
               </IonItem>
-              <IonItem lines="none" style={rowStyle}>
-                <IonLabel style={labelStyle}>Cost:</IonLabel>
-                <span style={valueStyle}>QAR {stock.cost}</span>
+              <IonItem>
+                <IonLabel><b>Quantity:</b></IonLabel>
+                <IonText> {stock.quantity} {stock.unit_of_measure}</IonText>
               </IonItem>
-              <IonItem lines="none" style={rowStyle}>
-                <IonLabel style={labelStyle}>Quantity:</IonLabel>
-                <span style={valueStyle}>{stock.quantity} {stock.unit_of_measure}</span>
-              </IonItem>
-              <IonItem lines="none" style={rowStyle}>
-                <IonLabel style={labelStyle}>Batch number:</IonLabel>
-                <span style={valueStyle}>{stock.batch_number}</span>
+              <IonItem>
+                <IonLabel><b>Batch Number:</b></IonLabel>
+                <IonText> {stock.batch_number}</IonText>
               </IonItem>
             </IonList>
+
+            <IonAlert
+              header="Delete Supply"
+              trigger="delete-supply"
+              message={"Are you sure you want to delete this supply from this work order?"}
+              buttons={[
+                {
+                  text: 'Cancel',
+                  role: 'cancel'
+                },
+                {
+                  text: 'OK',
+                  role: 'confirm',
+                  handler: () => {
+                    handleDeleteSupply(stock)
+                  },
+                },
+              ]}
+              onDidDismiss={({ detail }) => console.log(`Dismissed with role: ${detail.role}`)}
+            ></IonAlert>
           </IonCard>
         ))}
 
@@ -744,6 +971,36 @@ const WorkOrder: React.FC = () => {
       </div>
     )
   }
+
+
+  const handleDeleteSupply = async (supply) => {
+    if (supply) {
+      try {
+        const req = await workOrderSupplyApi.delete(supply.id);
+        console.log("req: " + JSON.stringify(req.data));
+        await fetchSupplyList();
+
+      } catch (error) {
+        console.log("HandleDeleteSypply error: " + JSON.stringify(error.message));
+
+      }
+    }
+  }
+
+
+  // const handleDeleteTask = async (task) => {
+  //   if (task) {
+  //     try {
+  //       const req = await workOrderTaskApi. .delete(task.id);
+  //       console.log("req: " + JSON.stringify(req.data));
+  //       await fetchSupplyList();
+
+  //     } catch (error) {
+  //       console.log("HandleDeleteSypply error: " + JSON.stringify(error.message));
+
+  //     }
+  //   }
+  // }
 
   const handleViewWOTasks = (task) => {
     modal.current?.dismiss();
@@ -757,14 +1014,21 @@ const WorkOrder: React.FC = () => {
     console.log("new tasks: " + JSON.stringify(formTask));
 
     try {
-      let req = workOrderTaskApi.store(formTask);
+      let req = workOrderTaskApi.store({
+        assignee_id: formTask.assignee_id,
+        description: formTask.description,
+        priority: formTask.priority,
+        status: 'new',
+        title: formTask.title,
+        work_order_id: formTask.work_order_id
+      });
       console.log("req:" + JSON.stringify(req));
-      presentToast("Successfully saved");
+      // presentToast("Successfully saved");
       setAddTask(false);
       setTasks((prevRecords) => [...prevRecords, formTask]);
       setFormTask({ work_order_id: id, assignee_id: '', title: '', description: '', priority: '' });
     } catch (error) {
-      presentToast("Error: " + error);
+      console.log("handleSaveTask Error: " + error.message);
     }
   }
 
@@ -772,11 +1036,21 @@ const WorkOrder: React.FC = () => {
     const state: any = history.location.state;
     if (state?.updatedTask) {
       setTasks((prevRecords) =>
-        prevRecords.map((record) => 
-          record.id === state.updatedTask.id? state.updatedTask: record));
-        history.replace({...history.location, state:undefined});
+        prevRecords.map((record) =>
+          record.id === state.updatedTask.id ? state.updatedTask : record));
+      history.replace({ ...history.location, state: undefined });
     }
   }
+
+  const handleSaveSupply = async (newSupply) => {
+    console.log("NewSupply: " + JSON.stringify(newSupply) + " | prevSupplies: " + JSON.stringify(workOrderSupplyList));
+
+    await fetchSupplyList();
+
+    // setWorkOrderSupplyList((prevSupplies) => [...prevSupplies, newSupply]);
+
+  }
+
   return (
     <IonPage>
       <Header title="Work Order" />
@@ -804,16 +1078,24 @@ const WorkOrder: React.FC = () => {
                     <IonGrid className="header-section">
                       <IonRow className="header-row">
                         <IonCol className="header-content ion-text-center">
-                          <BadgeComponent
-                            status={workOrder.active_status.status}
-                          />
-                          <h2 className="work-order-header">
-                            Work Order #{workOrder.reference_number}
+
+                          <h2 className="work-order-header" onClick={() => handleUpdateWorkOrder(workOrder)}>
+                            {workOrder.reference_number}
+                            <BadgeComponent
+                              status={workOrder.active_status.status}
+                            />
                           </h2>
                           <Timeline workOrderId={id!} />
                         </IonCol>
                       </IonRow>
                     </IonGrid>
+
+                    {updateWorkOrder && <ModalComponent1 title={"Update Work Order"}
+                      isOpen={updateWorkOrder}
+                      onClose={() => setUpdateWorkOrder(false)}
+                      getContentModal={() => getContentModalUpdateWO(workOrder)}
+                    />
+                    }
 
                     {/* Attachments Section */}
                     <div className="attachments-section">
@@ -853,7 +1135,7 @@ const WorkOrder: React.FC = () => {
                               onClick={() => removeFile(index)}
                               className="remove-file-btn"
                             >
-                              <IonIcon icon={closeCircleOutline} />
+                              <IonIcon icon={closeOutline} />
                             </IonButton>
                           </IonItem>
                         ))}

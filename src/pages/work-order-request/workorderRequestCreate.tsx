@@ -11,7 +11,7 @@ import { formatDate, presentToast } from '../../utilities/globalfns';
 import ModalComponent1 from '../../components/ModalComponent1';
 
 
-const WorkOrderCreate: React.FC = () => {
+const WorkOrderRequestCreate: React.FC = () => {
     const history = useHistory();
     const [category, setCategory] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -148,9 +148,9 @@ const WorkOrderCreate: React.FC = () => {
             try {
                 const req = await workOrderRequestApi.show(workOrderId);
                 setSelectedRequest(req.data.data);
-                console.log("workOrderId: " + workOrderId);
+                // console.log("selectedRequest: " + +JSON.stringify(req.data.data));
             } catch (error) {
-
+                console.log("fetchRequestOrder error: " + JSON.stringify(error));
             }
         }
     }
@@ -201,8 +201,17 @@ const WorkOrderCreate: React.FC = () => {
     }
 
     const handleOpenRequest = async (taskId) => {
-        setOpenRequest(true);
+        //setOpenRequest(true);
         await fetchRequestOrder(taskId);
+        // console.log("selectedRequest: " + JSON.stringify(selectedRequest));
+        if (selectedRequest) {
+            history.push(
+                {
+                    pathname: `/workOrderRequest/${taskId}`,
+                    state: { selectedRequest: selectedRequest }
+                }
+            )
+        }
     }
 
     const handleDecline = (wo) => {
@@ -629,7 +638,7 @@ const WorkOrderCreate: React.FC = () => {
                 />
             }
 
-            {/* Open Work Order */}
+            {/* Open Work Order Request */}
             {openRequest && selectedRequest?.work_order_request &&
                 <>
                     <ModalComponent1
@@ -662,4 +671,4 @@ const WorkOrderCreate: React.FC = () => {
     )
 }
 
-export default WorkOrderCreate;
+export default WorkOrderRequestCreate;

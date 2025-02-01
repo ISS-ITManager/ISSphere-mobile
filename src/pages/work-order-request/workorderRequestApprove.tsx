@@ -6,6 +6,7 @@ import { addOutline, saveOutline, checkmarkCircleOutline, closeCircleOutline, ar
 
 import { assigneeApi,workOrderRequestApi, teamApi, serviceProviderServiceApi, serviceApi } from '../../api/api';
 import { formatDate, presentToast } from '../../utilities/globalfns';
+
 const WorkOrderRequestApprove: React.FC = () => {
     const history = useHistory();
     const location = useLocation();
@@ -446,7 +447,6 @@ const WorkOrderRequestApprove: React.FC = () => {
 
 
     useEffect(() => {
-        console.log("fetching assignees");
 
         getAssignees();
         getTeamsList();
@@ -511,8 +511,6 @@ const WorkOrderRequestApprove: React.FC = () => {
                         handlePrev={handleBack}
                         handleSubmit={handleSubmit}
                         handleChange={handleChange}
-                        serviceList={serviceList}
-                        providerList={providerList}
                     />
                     }
 
