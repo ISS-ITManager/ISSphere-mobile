@@ -257,6 +257,10 @@ export const workOrderApi = {
     const response = await api.post(`/work-orders`, data);
     return response;
   },
+  workOrderStatus: async (data: any) => {
+    const response = await api.post(`/work-order-statuses`, data);
+    return response;
+  },
   list: async (workOrderRequestId: any) => {
     const response = await api.get(`/work-orders/list?work_order_request=${workOrderRequestId}`);
     return response;

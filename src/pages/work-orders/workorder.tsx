@@ -188,7 +188,7 @@ const WorkOrder: React.FC = () => {
   });
 
   const [workOrderStatus, setWorkOrderStatus] = useState('');
-  const [workOrderRemarks, setWorkOrderRemarks]= useState('');
+  const [workOrderRemarks, setWorkOrderRemarks] = useState('');
 
   const handleApplyFilter = async () => {
     try {
@@ -239,29 +239,32 @@ const WorkOrder: React.FC = () => {
 
   const handleUpdateWorkOrder = async (workOrder) => {
     setUpdateWorkOrder(true);
-    
+
     // await handleSaveWorkOrder(workOrder);
   }
   const handleSaveWorkOrder = async (workOrder) => {
-    console.log("handleSaveWorkOrder: "+JSON.stringify(workOrder));
+    console.log("handleSaveWorkOrder: " + JSON.stringify(workOrder));
     if (workOrder && workOrderStatus) {
       try {
         let data = {
+          work_order: workOrder.id,
           status: workOrderStatus,
           remarks: workOrderRemarks
         }
-        const req = await workOrderApi.update(workOrder.id, data);
+        const req = await workOrderApi.workOrderStatus(data);
         console.log("handleSaveWorkOrder req: " + JSON.stringify(req.data));
 
       } catch (error) {
         console.log("handleSaveWorkOrder error: " + JSON.stringify(error.message));
 
       }
+      setUpdateWorkOrder(false);
+      await fetchWorkOrderDetails();
     }
   }
 
   const getContentModalUpdateWO = (workOrder) => {
-    console.log("WORKOrder: " + JSON.stringify(workOrder));
+    // console.log("WORKOrder: " + JSON.stringify(workOrder));
 
     return (
       <>
@@ -273,7 +276,7 @@ const WorkOrder: React.FC = () => {
               <IonSelect
                 value={workOrderStatus}
                 label="Status"
-                onIonChange={(e)=> setWorkOrderStatus(e.target.value)}>
+                onIonChange={(e) => setWorkOrderStatus(e.target.value)}>
                 {workOrder?.active_status?.status === "open" ?
                   <IonSelectOption value='in-progress'>In-Progress</IonSelectOption> :
                   <>
@@ -285,12 +288,12 @@ const WorkOrder: React.FC = () => {
             </IonItem>
             <IonItem>
               <IonLabel>Remarks</IonLabel>
-              <IonTextarea 
-              onIonInput={(e)=> setWorkOrderRemarks(e.target.value)}
-              placeholder="Type your remarks here" 
-              value={workOrderRemarks}/>
+              <IonTextarea
+                onIonInput={(e) => setWorkOrderRemarks(e.target.value)}
+                placeholder="Type your remarks here"
+                value={workOrderRemarks} />
             </IonItem>
-            <IonButton>Cancel</IonButton>
+            <IonButton fill="outline" >Cancel</IonButton>
             <IonButton onClick={() => handleSaveWorkOrder(workOrder)}>Continue</IonButton>
           </IonList>
         }
@@ -298,30 +301,32 @@ const WorkOrder: React.FC = () => {
     )
   }
 
+  const fetchWorkOrderDetails = async () => {
+    if (!id) {
+      setError("Work order ID is missing.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const data = await getWorkOrderDetails(id);
+      setWorkOrder(data.data);
+      // console.log("getWorkOrderDetails: " + JSON.stringify(data.data));
+
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unknown error occurred.";
+      setError(`Failed to fetch work order details: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   //fetch work order details
   useEffect(() => {
-    const fetchWorkOrderDetails = async () => {
-      if (!id) {
-        setError("Work order ID is missing.");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const data = await getWorkOrderDetails(id);
-        setWorkOrder(data.data);
-        // console.log("getWorkOrderDetails: " + JSON.stringify(data.data));
-
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An unknown error occurred.";
-        setError(`Failed to fetch work order details: ${errorMessage}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    
     fetchWorkOrderDetails();
   }, [id]);
 
