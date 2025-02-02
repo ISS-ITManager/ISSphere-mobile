@@ -9,18 +9,13 @@ const api = axios.create({
   },
 });
 
-// Add an interceptor to include the token in each request
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("access_token"); // Get token from localStorage
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`; // Add token to Authorization header
-    }
+    const token = localStorage.getItem("access_token");
+    if (token) config.headers["Authorization"] = `Bearer ${token}`;
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 export const permissionApi = {
   get: async (data: any) => {
@@ -53,16 +48,10 @@ export const permissionApi = {
 
 }
 
-// Login function
 export const loginUser = async (email: string, password: string) => {
-  try {
-    const response = await api.post("/login", { email, password });
-    const accessToken = response.data.data.access_token; // Assuming token is in response.data.data.access_token
-    localStorage.setItem("access_token", accessToken); // Save token to localStorage
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post("/login", { email, password });
+  localStorage.setItem("access_token", response.data.data.access_token);
+  return response.data;
 };
 
 export const logout = async () => {
@@ -73,62 +62,50 @@ export const logout = async () => {
 // Fetch user data
 export const getUserData = async () => {
   const storedData = localStorage.getItem("userData");
-  if (!storedData) {
-    throw new Error("User not logged in");
-  }
-  return JSON.parse(storedData); // Parse the user data from localStorage
+  if (!storedData) throw new Error("User not logged in");
+  return JSON.parse(storedData);
 };
 
-// Fetch work orders for the user
-export const getWorkOrders = async (userId: string) => {
-  try {
-    const response = await api.get(`/work-orders`); // Assuming the endpoint takes the user ID
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+export const getWorkOrders = async () => {
+  const response = await api.get("/work-orders");
+  return response.data;
 };
 
 export const getWorkOrderDetails = async (id: string) => {
-  try {
-    const response = await api.get(`/work-orders/${id}`); // Use the axios instance
-    return response.data; // Axios automatically parses JSON responses
-  } catch (error) {
-    console.error("Error fetching work order details:", error);
-    throw error;
-  }
+  const response = await api.get(`/work-orders/${id}`);
+  return response.data;
 };
 
-// Fetch categories for assets
 export const getCategories = async () => {
-  try {
-    const response = await api.get("/asset-categories/list"); // Assuming this is the correct endpoint
-    return response.data.data; // Correct the path to access the categories array
-  } catch (error) {
-    console.error("Error fetching categories:", error);
-    throw error; // Rethrow error to be handled in the component
-  }
+  const response = await api.get("/asset-categories/list");
+  return response.data.data;
 };
 
-// Fetch assets by category
 export const getAssets = async (categoryId: string) => {
-  try {
-    const response = await api.get(`/assets/list?asset_category=${categoryId}`);
-    console.log("Fetched Assets Response:", response); // Log the full response to debug
+  const response = await api.get(`/assets/list`, {
+    params: { asset_category: categoryId },
+  });
+  return response.data.data || [];
+};
 
-    if (response && response.data && response.data.data) {
-      return response.data.data; // Correctly access the assets
-    } else {
-      console.error("Assets not found in response:", response);
-      return []; // Return an empty array if assets are not found
-    }
-  } catch (error) {
-    console.error("Error fetching assets:", error);
-    throw error;
+export const getGroups = async () => {
+  const response = await api.get("/groups/list");
+  if (response.data.success) {
+    return response.data.data;
+  } else {
+    throw new Error("Failed to fetch groups");
   }
 };
 
-// Update the workOrderStatusApi to use the new endpoint
+export const getEntitiesByGroupId = async (groupId: number) => {
+  const response = await api.get(`/entities/${groupId}`);
+  if (response.data.success) {
+    return response.data.data;
+  } else {
+    throw new Error("Failed to fetch entities for group");
+  }
+};
+
 export const workOrderStatusApi = {
   list: async (workOrderId: string) => {
     try {
@@ -145,23 +122,17 @@ export const workOrderStatusApi = {
 };
 
 export const workOrderAssetsCreateApi = {
-  list: async ({ workOrderId, action, asset, assetCategory }) => {
-    try {
-      const response = await api.get(`/work-order-assets`, {
-        params: {
-          work_order: workOrderId,
-          action: action,
-          asset: asset,
-          asset_category: assetCategory,
-        },
-      });
-      return response.data; // Ensure response has a success property to check
-    } catch (error) {
-      console.error("Error fetching work order assets:", error);
-      throw error;
-    }
+  list: async (params: {
+    work_order: string;
+    action?: string;
+    asset?: string;
+    asset_category?: string;
+  }) => {
+    const response = await api.get(`/work-order-assets`, { params });
+    return response.data;
   },
 };
+
 
 //Suppliers
 export const supplierApi = {
@@ -188,16 +159,12 @@ export const supplierApi = {
 }
 
 // Fetch work order tasks by work_order_id
+
 export const getWorkOrderTasks = async (workOrderId: string) => {
-  try {
-    const response = await api.get(`/work-order-tasks`, {
-      params: { work_order_id: workOrderId }, // Pass work_order_id as a parameter
-    });
-    return response.data; // Return the data from the response
-  } catch (error) {
-    console.error("Error fetching work order tasks:", error);
-    throw error; // Rethrow error to be handled in the component
-  }
+  const response = await api.get(`/work-order-tasks`, {
+    params: { work_order_id: workOrderId },
+  });
+  return response.data;
 };
 
 // Fetch work order task history by work_order_task_id

@@ -75,6 +75,8 @@ import {
   supplyCategoryApi,
   workOrderSupplyApi,
   workOrderApi,
+  getGroups,
+  getEntitiesByGroupId,
 } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Timeline from "../../utilities/workordertimelinecomponent";
@@ -161,6 +163,10 @@ const WorkOrder: React.FC = () => {
   const [apiData, setApiData] = useState<any>(null);
 
   const [tasks, setTasks] = useState<any[]>([]);
+  const [groups, setGroups] = useState<any[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
+  const [entities, setEntities] = useState<any[]>([]);
+
   const [loadingTasks, setLoadingTasks] = useState<boolean>(false);
   const [assignees, setAssignees] = useState([]);
   const [addTask, setAddTask] = useState(false);
@@ -193,10 +199,10 @@ const WorkOrder: React.FC = () => {
   const handleApplyFilter = async () => {
     try {
       const response = await workOrderAssetsCreateApi.list({
-        workOrderId: id,
+        work_order: id,
         action: selectedAction,
         asset: selectedAsset,
-        assetCategory: selectedCategory,
+        asset_category: selectedCategory,
       });
 
       console.log("API Response:", response);
@@ -363,14 +369,14 @@ const WorkOrder: React.FC = () => {
         const response = await getCategories(); // Call the corrected API function
         // console.log("Fetched Categories Response:", response); // Log the response to inspect it
         if (response && response.length > 0) {
-          setCategoryOptions(response); // Set categories if valid data is returned
+          setCategoryOptions(response);
         } else {
           console.error("Error: Invalid or empty categories response.");
-          setCategoryOptions([]); // Fallback to empty array if invalid
+          setCategoryOptions([]);
         }
       } catch (error) {
         console.error("Error fetching categories:", error);
-        setCategoryOptions([]); // Handle error gracefully by setting empty array
+        setCategoryOptions([]);
       } finally {
         setLoadingCategories(false);
       }
@@ -384,9 +390,11 @@ const WorkOrder: React.FC = () => {
         setLoadingAssets(true);
         try {
           const assets = await getAssets(selectedCategory);
+
           // console.log("Fetched Assets:", assets); // Log the fetched assets
+
           if (assets && Array.isArray(assets)) {
-            setAssetOptions(assets); // Set the assets correctly
+            setAssetOptions(assets);
           } else {
             console.error("Invalid response structure for assets:", assets);
           }
@@ -497,6 +505,39 @@ const WorkOrder: React.FC = () => {
     fetchAssignees();
   }, [])
 
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const data = await getGroups();
+        setGroups(data);
+      } catch (err) {
+        setError("Failed to fetch groups");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGroups();
+  }, []);
+
+  useEffect(() => {
+    console.log("Selected Group:", selectedGroup);
+    if (selectedGroup !== null && selectedGroup !== undefined) {
+      const fetchEntities = async () => {
+        try {
+          const data = await getEntitiesByGroupId(selectedGroup);
+          console.log("Fetched Entities:", data);
+          setEntities(data);
+          console.log("Fetched Entitiess:", entities);
+        } catch (err) {
+          console.error("Error fetching entities:", err);
+          setError("Failed to fetch entities");
+        }
+      };
+      fetchEntities();
+    }
+  }, [selectedGroup]);
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const files = Array.from(event.target.files);
@@ -551,6 +592,11 @@ const WorkOrder: React.FC = () => {
             loadingAssets={loadingAssets}
             categoryOptions={categoryOptions}
             assetOptions={assetOptions}
+            groups={groups}
+            setSelectedGroup={setSelectedGroup}
+            selectedGroup={selectedGroup}
+            entities={entities}
+            setEntities={setEntities}
             onApplyFilter={handleApplyFilter}
             apiSuccess={apiSuccess}
             apiData={apiData}
