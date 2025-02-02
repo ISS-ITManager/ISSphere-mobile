@@ -99,3 +99,26 @@
     transform: translateY(0);
   }
 }
+
+
+.notification-button-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px; /* Adjust as needed */
+  right: -5px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 10;
+}

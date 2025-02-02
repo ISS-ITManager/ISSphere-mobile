@@ -8,10 +8,14 @@ import {
   IonHeader,
   IonToolbar,
   IonTitle,
+  IonImg,
+  IonIcon,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
-import { loginUser } from "../../api/api";
-import BD from "../../assets/images/bdsf.png";
+import { loginUser, permissionApi } from "../../api/api";
+import BD from "../../assets/images/abstract.png";//bdsf.png";
+import sphere from "../../assets/images/sphere.png";
+import { arrowForwardOutline } from 'ionicons/icons';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -24,9 +28,13 @@ const Login: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await loginUser(email, password);
-      if (response.success) {
+      const permissions = await permissionApi.permission();
+
+
+      if (response.success && permissions) {
         // Save response data to localStorage
         localStorage.setItem("userData", JSON.stringify(response.data));
+        localStorage.setItem("userPermissions", JSON.stringify(permissions.data.data.permissions))
 
         // Navigate to the dashboard
         history.push("/dashboard");
@@ -34,7 +42,7 @@ const Login: React.FC = () => {
         setErrorMessage("Invalid credentials, please try again.");
       }
     } catch (error) {
-      setErrorMessage("Error logging in. Please try again later.");
+      setErrorMessage("Error logging in. Please try again later."+error);
     }
     setIsLoading(false);
   };
@@ -47,12 +55,20 @@ const Login: React.FC = () => {
             className="d-flex flex-column justify-content-center align-items-center"
             style={{ height: "80vh" }}
           >
-            <div className="text-center mb-4">
-              <i
-                className="bx bx-globe text-color-primary"
-                style={{ fontSize: "4em" }}
-              ></i>
-              <h1 className="fw-bold text-color-primary">ISSPHERE</h1>
+            {/* <div className="text-center mb-4">
+              <IonImg src={sphere} style={{ width: '60px', marginLeft: '-40px' }} />
+              <div>
+                <h1 className="fw-bold text-color-primary">ISSPHERE</h1>
+                <h3>Facility Management</h3>
+              </div>
+            </div> */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom:'20px' }}>
+              <IonImg src={sphere} style={{ width: '60px' }} />
+
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <h1 style={{ margin: 0, fontSize: '25px', fontWeight: 'bold' }}>ISSPHERE</h1>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'normal', color: '#666' }}>Facility Management</h3>
+              </div>
             </div>
 
             <div
@@ -107,7 +123,8 @@ const Login: React.FC = () => {
                   size="large"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Signing In..." : "Sign In"}
+                  {isLoading ? "Logging In..." : "Login"}
+                  <IonIcon icon={arrowForwardOutline} />
                 </IonButton>
               </div>
               {errorMessage && (
@@ -124,7 +141,7 @@ const Login: React.FC = () => {
             src={BD}
             alt="Logo"
             style={{
-              position: "absolute",
+              position: "fixed",
               bottom: "-15px",
               left: "50%",
               transform: "translateX(-50%)",

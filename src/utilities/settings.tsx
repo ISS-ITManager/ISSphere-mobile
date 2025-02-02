@@ -10,7 +10,10 @@ import {
   IonLabel,
   IonSelect,
   IonSelectOption,
+  IonButton,
+  IonIcon,
 } from "@ionic/react";
+import BackButton from "../components/BackButton";
 
 const SettingsPage: React.FC<{ onThemeChange: (theme: string) => void }> = ({
   onThemeChange,
@@ -32,6 +35,7 @@ const SettingsPage: React.FC<{ onThemeChange: (theme: string) => void }> = ({
     <IonPage>
       <IonHeader>
         <IonToolbar>
+          <BackButton />
           <IonTitle>Settings</IonTitle>
         </IonToolbar>
       </IonHeader>

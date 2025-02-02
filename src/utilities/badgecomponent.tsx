@@ -23,6 +23,11 @@ const BadgeComponent: React.FC<BadgeComponentProps> = ({ status }) => {
       backgroundColor: "#fbbf24",
       icon: <LockOpen className="h-4 w-4" />,
     },
+    new: {
+      color: "white",
+      backgroundColor: "#fbbf24",
+      icon: <LockOpen className="h-4 w-4" />,
+    },
     "in-progress": {
       color: "white",
       backgroundColor: "#3b82f6",
@@ -55,7 +60,7 @@ const BadgeComponent: React.FC<BadgeComponentProps> = ({ status }) => {
     },
   };
 
-  const statusKey = status.toLowerCase();
+  const statusKey = status;
   const { color, backgroundColor, icon } =
     statusStyles[statusKey] || statusStyles.closed;
 
@@ -75,7 +80,7 @@ const BadgeComponent: React.FC<BadgeComponentProps> = ({ status }) => {
         backgroundColor,
       }}
     >
-      {icon} {status.charAt(0).toUpperCase() + status.slice(1)}
+      {icon} {status && status.charAt(0).toUpperCase() + status.slice(1)}
     </IonBadge>
   );
 };
