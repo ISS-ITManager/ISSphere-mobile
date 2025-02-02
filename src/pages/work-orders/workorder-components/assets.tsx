@@ -22,6 +22,11 @@ interface AssetsProps {
   loadingAssets: boolean;
   categoryOptions: any[];
   assetOptions: any[];
+  groups: any[];
+  setSelectedGroup: React.Dispatch<React.SetStateAction<string | undefined>>;
+  selectedGroup: string | undefined;
+  entities: any[];
+  selectedEntities: React.Dispatch<React.SetStateAction<any[]>>;
   onApplyFilter: () => void;
   apiSuccess: boolean;
   apiData: any[];
@@ -38,10 +43,15 @@ const Assets: React.FC<AssetsProps> = ({
   loadingAssets,
   categoryOptions,
   assetOptions,
+  groups,
+  selectedGroup,
+  setSelectedGroup,
+  entities,
   onApplyFilter,
   apiSuccess,
   apiData,
 }) => {
+  console.log("Entities: " + JSON.stringify(entities, null, 2));
   return (
     <div>
       <IonItem>
@@ -147,7 +157,7 @@ const Assets: React.FC<AssetsProps> = ({
           <IonText>
             <h3>TRANSFER ASSET</h3>
           </IonText>
-          {[
+          {/* {[
             "Stock",
             "Group",
             "Entity",
@@ -163,7 +173,40 @@ const Assets: React.FC<AssetsProps> = ({
                 <IonSelectOption value="">Option 2</IonSelectOption>
               </IonSelect>
             </IonItem>
-          ))}
+          ))} */}
+
+          <IonItem>
+            <IonLabel>Select Group</IonLabel>
+            <IonSelect
+              placeholder="Select Group"
+              slot="end"
+              onIonChange={(e) => setSelectedGroup(e.detail.value)} // Update selectedGroup on change
+            >
+              {groups.map((group) => (
+                <IonSelectOption key={group.id} value={group.id}>
+                  {group.group} - {group.country} ({group.country_code})
+                </IonSelectOption>
+              ))}
+            </IonSelect>
+          </IonItem>
+
+          {selectedGroup && (
+            <IonItem>
+              <IonLabel>Select Entity</IonLabel>
+              <IonSelect placeholder="Select Entity" slot="end">
+                {entities && entities.entity ? (
+                  <IonSelectOption key={entities.id} value={entities.id}>
+                    {entities.entity}
+                  </IonSelectOption>
+                ) : (
+                  <IonSelectOption value="" disabled>
+                    No entities available
+                  </IonSelectOption>
+                )}
+              </IonSelect>
+            </IonItem>
+          )}
+
           <IonButton expand="block">
             <IonIcon slot="start" icon={saveOutline}></IonIcon>
             Save
