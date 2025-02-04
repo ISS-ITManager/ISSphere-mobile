@@ -19,7 +19,7 @@ const FloatingTabButtons: React.FC = () => {
 
   const handleToggle = () => {
     console.log("clicking toggle");
-    
+
     setIsExpanded(!isExpanded);
   };
 
@@ -35,7 +35,7 @@ const FloatingTabButtons: React.FC = () => {
       }
     }
     fetchNotifsCount();
-    
+
 
   }, [])
 
@@ -70,7 +70,7 @@ const FloatingTabButtons: React.FC = () => {
           <IonButton
             className="expanded-button"
             style={{ animationDelay: "0.1s" }}
-            onClick={() => {history.push("/account"); handleToggle();}}
+            onClick={() => { history.push("/account"); handleToggle(); }}
           >
             <IonIcon icon={personCircleOutline} />
           </IonButton>
@@ -96,11 +96,15 @@ const FloatingTabButtons: React.FC = () => {
               style={{ animationDelay: "0.3s" }}
               onClick={() => history.push("/notification")}
             >
-              <IonIcon icon={notificationsOutline}></IonIcon>
+              <IonIcon icon={notificationsOutline} />
             </IonButton>
-
             {/* Badge */}
-            <div className="notification-badge">{notifsCount}</div> {/* Replace '5' with dynamic data */}
+            {(notifsCount) > 0 &&
+              <div className="notification-badge">
+                {notifsCount}
+              </div>
+            }
+
           </div>
 
 

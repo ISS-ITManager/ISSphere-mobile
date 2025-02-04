@@ -30,14 +30,6 @@ const WorkOrderSupplies = ({ workOrder, supplierList, categoryList, supplyList, 
   const [selectedSuppCat, setSelectedSuppCat] = useState();
   const [selectedSupply, setSelectedSupply] = useState();
   const [selectedSupplyStock, setSelectedSupplyStock] = useState();
-  const [formData, setFormData] = useState({
-    supply:'',
-    supply_category:'',
-    cost:'',
-    quantity:'',
-    unit_of_measure:'',
-    batch_number:''
-  })
 
   const [qty, setQty] = useState(0);
 
@@ -68,8 +60,6 @@ const WorkOrderSupplies = ({ workOrder, supplierList, categoryList, supplyList, 
       try {
         const req = await workOrderSupplyApi.store({ quantities: [qty], supply_stocks: [selectedSupplyStock], work_order: workOrder })
         // console.log("req: " + JSON.stringify(req));
-
-        
         const newSupply = {supply_id: selectedSupply, supply_category: selectedSuppCat, selectedSupplyStock, quantity: qty};
         // console.log("New Supply: "+JSON.stringify(newSupply));
         

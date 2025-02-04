@@ -241,7 +241,7 @@ export const workOrderApi = {
     return response;
   },
   resolutionTime: async (id: any) => {
-    const response = await Axi.get(`/work-orders/resolution-time?work_order=${id}`);
+    const response = await api.get(`/work-orders/resolution-time?work_order=${id}`);
     return response;
   },
 }
@@ -386,6 +386,22 @@ export const workOrderSupplyApi = {
   delete: async (id: any) => {
     const response = await api.delete(`/work-order-supplies/${id}`);
     return response;
+  },
+}
+
+export const workOrderExpenseApi ={
+  
+  store: async (data : any) => {
+      const response = await api.post(`/work-order-expenses`, data);
+      return response;
+  },
+  list: async (id:any) => {
+      const response = await api.get(`/work-order-expenses/list?work_order=${id}`);
+      return response;
+  },
+  delete: async (id: any) => {
+      const response = await api.delete(`/work-order-expenses/${id}`);
+      return response;
   },
 }
 

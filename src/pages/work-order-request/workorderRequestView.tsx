@@ -139,7 +139,7 @@ const WorkOrderRequestView: React.FC = () => {
                                         <IonText>
                                             {item.end_date === item.start_date
                                                 ? item.start_date
-                                                : `from ${item.start_date} to ${item.end_date}`}
+                                                : `From ${item.start_date} To ${item.end_date}`}
                                         </IonText>
                                         <IonLabel>
                                             <IonChip className="ion-text-uppercase" outline={true} color="warning">

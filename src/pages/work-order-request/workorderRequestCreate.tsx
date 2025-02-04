@@ -3,7 +3,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router';
 // import MasterComponent '../../components/MasterComponent';
 import MasterComponent from '../../components/MasterComponent';
-import { addOutline, saveOutline, checkmarkCircleOutline, closeCircleOutline, checkmarkOutline, closeOutline, navigateOutline, chevronForwardOutline, arrowBackOutline, arrowForwardOutline } from 'ionicons/icons';
+import { addOutline, saveOutline, checkmarkCircleOutline, closeCircleOutline, checkmarkOutline, closeOutline, navigateOutline, chevronForwardOutline, arrowBackOutline, arrowForwardOutline, fileTrayStackedOutline } from 'ionicons/icons';
 
 import { workOrderCategoryApi, workOrderTypeApi, entityApi, workOrderTaskHistoryApi, assigneeApi, groupApi, propertyApi, zoneApi, levelApi, roomApi, workOrderRequestApi } from '../../api/api';
 import ModalComponent from '../../components/Modal';
@@ -39,6 +39,7 @@ const WorkOrderRequestCreate: React.FC = () => {
     const [openDecline, setOpenDecline] = useState(false);
     const [declineRemarks, setDeclineRemarks] = useState();
     const [searchTerm, setSearchTerm] = useState();
+
 
     const [present] = useIonToast();
 
@@ -148,6 +149,7 @@ const WorkOrderRequestCreate: React.FC = () => {
             try {
                 const req = await workOrderRequestApi.show(workOrderId);
                 setSelectedRequest(req.data.data);
+                return req.data.data;
                 // console.log("selectedRequest: " + +JSON.stringify(req.data.data));
             } catch (error) {
                 console.log("fetchRequestOrder error: " + JSON.stringify(error));
@@ -201,14 +203,13 @@ const WorkOrderRequestCreate: React.FC = () => {
     }
 
     const handleOpenRequest = async (taskId) => {
-        //setOpenRequest(true);
-        await fetchRequestOrder(taskId);
+        const requestedData = await fetchRequestOrder(taskId);
         // console.log("selectedRequest: " + JSON.stringify(selectedRequest));
-        if (selectedRequest) {
+        if (taskId && requestedData) {
             history.push(
                 {
                     pathname: `/workOrderRequest/${taskId}`,
-                    state: { selectedRequest: selectedRequest }
+                    state: { selectedRequest: requestedData }
                 }
             )
         }
@@ -292,9 +293,11 @@ const WorkOrderRequestCreate: React.FC = () => {
     const createContent = () => {
         return (
             <>
-                <IonCard>
-                    <IonLabel><h2><b>Work Order Details</b></h2></IonLabel>
+                <IonCard className='task-card'>
                     <IonList>
+                        <IonItem lines='none'>
+                            <IonLabel><h2><b>Work Order Details</b></h2></IonLabel>
+                        </IonItem>
                         <IonItem>
                             <IonLabel position="stacked">Work Order Category</IonLabel>
                             <IonSelect
@@ -334,9 +337,11 @@ const WorkOrderRequestCreate: React.FC = () => {
                     </IonList>
                 </IonCard>
 
-                <IonCard>
-                    <IonLabel><h2><b>Location Details</b></h2></IonLabel>
+                <IonCard className='task-card'>
                     <IonList>
+                        <IonItem lines='none'>
+                            <IonLabel><h2><b>Location Details</b></h2></IonLabel>
+                        </IonItem>
                         <IonItem>
                             <IonLabel position="stacked">Group</IonLabel>
                             <IonSelect
@@ -434,7 +439,7 @@ const WorkOrderRequestCreate: React.FC = () => {
 
     const viewContent = (selectedRequest) => {
         return (
-            <IonCard className="task-card animate__animated  animate__pulse" style={{ marginLeft: '5px', marginTop: '-10px' }}>
+            <IonCard className="task-card animate__animated  animate__pulse" style={{marginTop: '-10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '10px' }}>
                     <div>{getIsAcceptedColor(selectedRequest.work_order_request.is_accepted)}</div>
                     <div>{getPriority(selectedRequest.work_order_request.priority)}</div>
@@ -532,15 +537,26 @@ const WorkOrderRequestCreate: React.FC = () => {
     };
 
     const handleOpenApprove = async (workOrderRequest) => {
-        await fetchRequestOrder(workOrderRequest.id);
+
+        const reqData = await fetchRequestOrder(workOrderRequest.id);
         // console.log("selectedRequest: "+JSON.stringify(selectedRequest));
-        if (selectedRequest) {
+        if (workOrderRequest && reqData) {
             history.push({
                 pathname: '/approveWO',
-                state: { workOrderRequest: selectedRequest }
+                state: { workOrderRequest: reqData }
             });
         }
     }
+
+    // useEffect(() => {
+    //     if (selectedRequest && taskId) {
+    //       // Only navigate if both state values are available
+    //       history.push({
+    //         pathname: `/approveWO`,
+    //         state: { selectedRequest: selectedRequest },
+    //       });
+    //     }
+    //   }, [selectedRequest, taskId, history]); 
 
     const handleSearch = async (e) => {
         const val = (e.target as HTMLInputElement).value;

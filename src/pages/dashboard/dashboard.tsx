@@ -17,6 +17,7 @@ import {
   IonItem,
   IonLabel,
   IonChip,
+  IonButton,
 } from "@ionic/react";
 import { Bar } from "react-chartjs-2";
 import {
@@ -40,6 +41,7 @@ import {
   checkmarkCircleOutline,
   briefcaseOutline,
   caretForwardOutline,
+  chevronDown,
 } from "ionicons/icons";
 import { getUserData, getWorkOrders } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
@@ -218,10 +220,10 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
 
           {/* Work Orders List */}
           <div className="work-orders-section">
-            <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
+            <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2> 
             <IonList>
               {Array.isArray(workOrders) && workOrders.length === 0 ? (
-                <IonText className="no-work-orders">
+                <IonText className="no-work-orders ion-padding">
                   No work orders available
                 </IonText>
               ) : (
@@ -230,7 +232,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                     key={index}
                     className="minimal-work-order-card bounce-in-left task-card"
                     onClick={() => history.push(`/work-orders/${order.id}`)}
-                    style={{ marginLeft: '8px' }}
+                    // style={{ marginLeft: '8px' }}
                   >
                     <IonCardHeader>
                       <IonCardTitle>
@@ -246,14 +248,14 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                     </IonCardHeader>
                     <IonItem lines="none">
                       <IonLabel><b>Description:</b></IonLabel>
-                      <IonText>{order.work_order_description}</IonText>
+                      <IonText className="ion-text-end">{order.work_order_description}</IonText>
                     </IonItem>
                     <IonItem lines="none">
                       <IonLabel><b>Schedule:</b></IonLabel>
                       <IonText>
                         {order.end_date === order.start_date
                           ? order.start_date
-                          : `from ${order.start_date} to ${order.end_date}`}
+                          : ` ${order.start_date} - ${order.end_date}`}
                       </IonText>
                     </IonItem>
                     <IonItem lines="none" >
@@ -342,6 +344,8 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
               )}
             </IonList>
           </div>
+
+          
         </IonContent>
         {/* Floating Tab Buttons */}
         <FloatingTabButtons />

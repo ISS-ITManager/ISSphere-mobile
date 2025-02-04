@@ -4,7 +4,7 @@ import { useHistory, useLocation } from 'react-router';
 import MasterComponent from '../../components/MasterComponent';
 import { addOutline, saveOutline, checkmarkCircleOutline, closeCircleOutline, arrowBackOutline, arrowForwardOutline, caretForwardOutline } from 'ionicons/icons';
 
-import { assigneeApi,workOrderRequestApi, teamApi, serviceProviderServiceApi, serviceApi } from '../../api/api';
+import { assigneeApi, workOrderRequestApi, teamApi, serviceProviderServiceApi, serviceApi } from '../../api/api';
 import { formatDate, presentToast } from '../../utilities/globalfns';
 
 const WorkOrderRequestApprove: React.FC = () => {
@@ -115,10 +115,10 @@ const WorkOrderRequestApprove: React.FC = () => {
         setStep((prevStep) => prevStep - 1);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         console.log("formData: " + JSON.stringify(formData))
         try {
-            const req = workOrderRequestApi.storeSchedule({
+            const req = await workOrderRequestApi.storeSchedule({
                 work_order_request: formData.work_order_request,
                 assignment_mode: formData.assignment_mode,
                 days_of_week: formData.days_of_week,
@@ -136,13 +136,15 @@ const WorkOrderRequestApprove: React.FC = () => {
                     : { assignees: [formData.assignees] })
             });
 
-            console.log("req: " + JSON.stringify(req));
+            console.log("req: " + JSON.stringify(req.data));
 
+            if (req.data) {
+                history.push({
+                    pathname: '/createWOR',
+                    state: { formData: formData }
+                })
 
-            history.push({
-                pathname: '/createWO',
-                state: { formData: formData }
-            })
+            }
         } catch (error) {
 
         }
@@ -191,7 +193,7 @@ const WorkOrderRequestApprove: React.FC = () => {
 
 
         return (
-            <IonCard style={{ marginLeft: '5px' }} className='ion-padding'>
+            <IonCard className='ion-padding'>
 
                 <div style={{ marginTop: '10px', padding: '1px' }}>
                     <IonLabel><b>Accept Request</b></IonLabel>
@@ -291,7 +293,7 @@ const WorkOrderRequestApprove: React.FC = () => {
 
     const AssigneeDetails = ({ formData, handlePrev, handleNext, handleChange, assigneesList, teamsList }) => {
         return (
-            <IonCard style={{ marginLeft: '5px' }} className='ion-padding'>
+            <IonCard className='ion-padding'>
                 <div style={{ marginTop: '10px', padding: '1px' }}>
                     <IonLabel><b>Assign to Assignee or Team</b></IonLabel>
                 </div>
@@ -360,6 +362,7 @@ const WorkOrderRequestApprove: React.FC = () => {
             if (priority) {
                 try {
                     const req = await serviceApi.list(priority);
+                    // console.log("getServiceList: " + JSON.stringify(req.data.data));
                     setServiceList(req.data.data);
                 } catch (error) {
                     console.log("getServiceList error: " + JSON.stringify(error));
@@ -371,6 +374,7 @@ const WorkOrderRequestApprove: React.FC = () => {
             if (serviceId) {
                 try {
                     const req = await serviceProviderServiceApi.list(serviceId);
+                    console.log("getServiceProviderList: " + JSON.stringify(req.data));
                     setProviderList(req.data.data);
                 } catch (error) {
                     console.log("getServiceProviderList error: " + JSON.stringify(error));
@@ -380,26 +384,41 @@ const WorkOrderRequestApprove: React.FC = () => {
 
         const handlePriority = async (priority) => {
             if (priority) {
+                await handleChange('priority', priority);
+                // await handleChange({ target: { name: "priority", value: priority } });
                 await getServiceList(priority);
-                handleChange('priority',  priority);
+            }
+            else {
+                setServiceList([]);
             }
         }
 
-        const handleServices = async(serviceId)=> {
-            if(serviceId)
-            {
+        const handleServices = async (serviceId) => {
+            if (serviceId) {
+                await handleChange('services', serviceId);
                 await getServiceProviderList(serviceId);
-                handleChange('services', serviceId);
+            }
+            else {
+                setProviderList([]);
             }
         }
+
+        useEffect(() => {
+            if (formData.priority) {
+                getServiceList(formData.priority);
+            }
+            if (formData.services) {
+                getServiceProviderList(formData.services);
+            }
+        }, [formData.priority, formData.services])
 
         return (
-            <IonCard style={{ marginLeft: '5px' }} className='ion-padding'>
+            <IonCard className='ion-padding'>
                 <div style={{ marginTop: '10px', padding: '1px' }}>
-                    <IonLabel><b>Assign to Assignee or Team</b></IonLabel>
+                    <IonLabel><b>Services</b></IonLabel>
                 </div>
                 <IonItem>
-                    <IonSelect label='Select Priority'
+                    <IonSelect label='Priority'
                         color={"danger"}
                         value={formData.priority}
                         onIonChange={(e) => handlePriority(e.target.value)}>
@@ -409,22 +428,22 @@ const WorkOrderRequestApprove: React.FC = () => {
                     </IonSelect>
                 </IonItem>
                 <IonItem>
-                    <IonSelect label='Select Services'
+                    <IonSelect label='Services'
                         value={formData.services}
                         multiple
                         onIonChange={(e) => handleServices(e.target.value)}>
-                        {serviceList.map((serv, index) => (
+                        {serviceList && serviceList.map((serv, index) => (
                             <IonSelectOption value={serv.id} key={index}>{serv.service}</IonSelectOption>
                         ))}
                     </IonSelect>
                 </IonItem>
                 <IonItem>
-                    <IonSelect label='Select Service Provider'
+                    <IonSelect label='Service Provider'
                         value={formData.service_providers}
                         multiple
                         onIonChange={(e) => handleChange('service_providers', e.target.value)}>
                         {providerList.map((provider, index) => (
-                            <IonSelectOption value={provider.id} key={index}>{provider.provider}</IonSelectOption>
+                            <IonSelectOption value={provider.service_provider_id} key={index}>{provider.service_provider}</IonSelectOption>
                         ))}
                     </IonSelect>
                 </IonItem>
@@ -456,7 +475,7 @@ const WorkOrderRequestApprove: React.FC = () => {
         <MasterComponent title={"Accept Request"}>
             {selectedRequest &&
                 <>
-                    <IonCard className="task-card bounce-in-right" style={{ marginLeft: '5px', marginTop: '-10px' }}>
+                    <IonCard className="task-card bounce-in-right task-card" style={{  marginTop: '-10px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '10px' }}>
                             <div>{getIsAcceptedColor(selectedRequest?.work_order_request?.is_accepted)}</div>
                             <div>{getPriority(selectedRequest?.work_order_request?.priority)}</div>

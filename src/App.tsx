@@ -45,6 +45,7 @@ import WorkOrderRequestApprove from "./pages/work-order-request/workorderRequest
 import NotificationPage from "./pages/Notification";
 import AccountPage from "./pages/Account";
 import WorkOrderRequestView from "./pages/work-order-request/workorderRequestView";
+import WorkOrderSLA from "./pages/work-orders/workordersla";
 // import Notification from "./pages/notification";
 
 setupIonicReact();
@@ -88,6 +89,9 @@ const App: React.FC = () => {
           </Route>          
           <Route exact path="/approveWO">
             <WorkOrderRequestApprove />
+          </Route>
+          <Route exact path="/sla">
+            <WorkOrderSLA />
           </Route>
           <Route exact path="/">
             <Redirect to="/login" />

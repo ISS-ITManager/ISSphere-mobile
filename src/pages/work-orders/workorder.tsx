@@ -38,7 +38,8 @@ import {
   IonItemOption,
   IonCardHeader,
   IonCardTitle,
-  IonAlert
+  IonAlert,
+  IonChip
 } from "@ionic/react";
 import {
   addOutline,
@@ -55,6 +56,8 @@ import {
   fileTrayFullOutline,
   statsChart,
   trashOutline,
+  cashOutline,
+  receiptOutline,
 } from "ionicons/icons";
 import "./workorder.css";
 import Header from "../../components/Header";
@@ -77,6 +80,7 @@ import {
   workOrderApi,
   getGroups,
   getEntitiesByGroupId,
+  workOrderExpenseApi,
 } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Timeline from "../../utilities/workordertimelinecomponent";
@@ -87,6 +91,8 @@ import WorkOrderSupplies from "./workorder-components/supplies";
 import ModalComponent1 from "../../components/ModalComponent1";
 import BadgePriority from "../../utilities/badgePriority";
 import BadgeStatus from "../../utilities/BadgeStatus";
+import WorkOrderExpenses from "./workorder-components/expense";
+import { hasPermission } from "../../utilities/globalfns";
 
 // Define the WorkOrder type
 interface WorkOrder {
@@ -185,16 +191,15 @@ const WorkOrder: React.FC = () => {
   const [supplyList, setSupplyList] = useState([]);
   const [workOrderSupplyList, setWorkOrderSupplyList] = useState([]);
   const [openSupply, setOpenSupply] = useState(false);
-  const [deleteSupply, setDeleteSupply] = useState(false);
   const [updateWorkOrder, setUpdateWorkOrder] = useState(false);
-  const [formUpdate, setFormUpdate] = useState({
-    work_order_id: '',
-    status: '',
-    remarks: ''
-  });
 
   const [workOrderStatus, setWorkOrderStatus] = useState('');
   const [workOrderRemarks, setWorkOrderRemarks] = useState('');
+  const [responseTime, setResponseTime] = useState();
+  const [openResponseTime, setOpenResponseTime] = useState();
+  const [resolutionTime, setResolutionTime] = useState();
+  const [workOrderExpenseList, setWorkOrderExpenseList] = useState([]);
+  const [openExpense, setOpenExpense] = useState(false);
 
   const handleApplyFilter = async () => {
     try {
@@ -222,11 +227,12 @@ const WorkOrder: React.FC = () => {
   };
 
   const tabs = [
-    { name: "details", icon: informationCircleOutline },
-    { name: "assets", icon: listOutline },
-    { name: "task", icon: fileTrayFullOutline },
-    { name: "supplies", icon: cubeOutline },
-    { name: "activity", icon: timeOutline }
+    { name: "details", icon: informationCircleOutline, permissions: ['work-order.view-assignee', 'work-order.view'] },
+    { name: "assets", icon: listOutline, permissions: ['work-order-asset.view'] },
+    { name: "task", icon: fileTrayFullOutline, permissions: ['work-order-task.view', "work-order-task.view-list", 'work-order-task.edit', 'work-order-task.create'] },
+    { name: "supplies", icon: cubeOutline, permissions: ["work-order-supply.view", "work-order-supply.view-list", "work-order-supply.create", "work-order-supply.edit", "work-order-supply.delete"] },
+    { name: "expenses", icon: receiptOutline, permissions: [] },
+    { name: "activity", icon: timeOutline, permissions: [] }
   ];
 
   const handleTabChange = (tab: string) => {
@@ -243,13 +249,12 @@ const WorkOrder: React.FC = () => {
   };
 
 
-  const handleUpdateWorkOrder = async (workOrder) => {
+  const handleUpdateWorkOrder = async () => {
     setUpdateWorkOrder(true);
 
-    // await handleSaveWorkOrder(workOrder);
   }
   const handleSaveWorkOrder = async (workOrder) => {
-    console.log("handleSaveWorkOrder: " + JSON.stringify(workOrder));
+    // console.log("handleSaveWorkOrder: " + JSON.stringify(workOrder));
     if (workOrder && workOrderStatus) {
       try {
         let data = {
@@ -276,31 +281,48 @@ const WorkOrder: React.FC = () => {
       <>
         {workOrder &&
           <IonList className="ion-padding">
-            <IonLabel> status: {workOrder?.active_status?.status}</IonLabel>
+            <IonLabel> Current Status: {workOrder?.active_status?.status}</IonLabel>
             <IonItem>
-              <IonLabel>Select Status</IonLabel>
+              <IonLabel><b>Select Status</b></IonLabel>
               <IonSelect
                 value={workOrderStatus}
                 label="Status"
                 onIonChange={(e) => setWorkOrderStatus(e.target.value)}>
-                {workOrder?.active_status?.status === "open" ?
-                  <IonSelectOption value='in-progress'>In-Progress</IonSelectOption> :
+                {workOrder?.active_status?.status === "open" && <IonSelectOption value='in-progress'>In-Progress</IonSelectOption> }
+                {workOrder?.active_status?.status === "pending" &&
                   <>
                     <IonSelectOption value="in-progress">In-Progress</IonSelectOption>
                     <IonSelectOption value="completed">Completed</IonSelectOption>
                     <IonSelectOption value="cancelled">Cancelled</IonSelectOption>
-                  </>}
+                  </>
+                }
+                {workOrder?.active_status?.status === "in-progress" &&
+                  <>
+                    <IonSelectOption value="pending">Pending</IonSelectOption>
+                    <IonSelectOption value="completed">Completed</IonSelectOption>
+                    <IonSelectOption value="cancelled">Cancelled</IonSelectOption>
+                  </>
+                }
+                {workOrder?.active_status?.status === "completed" &&
+                  <>
+                    <IonSelectOption value="completed">Completed</IonSelectOption>
+                    <IonSelectOption value="closed">Closed</IonSelectOption>
+                  </>
+                }
               </IonSelect>
             </IonItem>
             <IonItem>
               <IonLabel>Remarks</IonLabel>
               <IonTextarea
                 onIonInput={(e) => setWorkOrderRemarks(e.target.value)}
+                rows={4}
                 placeholder="Type your remarks here"
                 value={workOrderRemarks} />
             </IonItem>
-            <IonButton fill="outline" >Cancel</IonButton>
-            <IonButton onClick={() => handleSaveWorkOrder(workOrder)}>Continue</IonButton>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem' }}>
+              <IonButton fill="outline" onClick={() => setUpdateWorkOrder(false)}>Cancel</IonButton>
+              <IonButton onClick={() => handleSaveWorkOrder(workOrder)}>Continue</IonButton>
+            </div>
           </IonList>
         }
       </>
@@ -329,10 +351,8 @@ const WorkOrder: React.FC = () => {
     }
   };
 
-
   //fetch work order details
   useEffect(() => {
-    
     fetchWorkOrderDetails();
   }, [id]);
 
@@ -343,27 +363,28 @@ const WorkOrder: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      if (!id) return;
+  const fetchTasks = async () => {
+    if (!id) return;
 
-      setLoadingTasks(true);
-      try {
-        const response = await getWorkOrderTasks(id);
-        if (response.success) {
-          setTasks(response.data);
-          // console.log("Tasks: " + JSON.stringify(response.data));
+    setLoadingTasks(true);
+    try {
+      const response = await getWorkOrderTasks(id);
+      if (response.success) {
+        await setTasks(response.data);
+        // console.log("Tasks: " + JSON.stringify(response.data));
 
-        } else {
-          setTasks([]);
-        }
-      } catch (err) {
-        console.error("Failed to fetch tasks:", err);
+      } else {
         setTasks([]);
-      } finally {
-        setLoadingTasks(false);
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch tasks:", err);
+      setTasks([]);
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
+
+  useEffect(() => {
     fetchTasks();
   }, [id]);
 
@@ -418,12 +439,24 @@ const WorkOrder: React.FC = () => {
   const fetchSupplyList = async () => {
     try {
       const req = await workOrderSupplyApi.list(id);
-      // console.log("supplyList: " + JSON.stringify(req.data.data));
+      console.log("supplyList: " + JSON.stringify(req.data.data));
       setWorkOrderSupplyList(req.data.data);
 
     }
     catch (error) {
       console.log("fetchSupplyList error: " + error.message);
+
+    }
+  }
+
+
+  const fetchExpenseList = async () => {
+    try {
+      const req = await workOrderExpenseApi.list(id);
+      setWorkOrderExpenseList(req.data.data);
+
+    } catch (error) {
+      console.log("fetchExpenseList error: " + error.message);
 
     }
   }
@@ -469,6 +502,8 @@ const WorkOrder: React.FC = () => {
     fetchSuppliers();
     fetchSupplyCategory();
     fetchSupplies();
+
+    fetchExpenseList();
   }, [])
 
   //fetch activityLogs
@@ -550,34 +585,6 @@ const WorkOrder: React.FC = () => {
     }
   };
 
-  const getStatus = (status) => {
-    let stats = status.charAt(0).toLocaleUpperCase() + status.slice(1);
-    switch (status) {
-      case 'in-progress':
-      case 'pending':
-        return <IonBadge color="warning" >
-          {stats}
-        </IonBadge>;
-      case 'completed':
-        return <IonBadge color="success" >
-          {stats}
-        </IonBadge>;
-      case "cancelled":
-      case 'on-hold':
-        return <IonBadge color="danger" >
-          {stats}
-        </IonBadge>;
-      case 'closed':
-        return <IonBadge color="primary" >
-          {stats}
-        </IonBadge>;
-      default: //new
-        return <IonBadge color="tertiary" >
-          {stats}
-        </IonBadge>;
-    }
-  }
-
   const getModalContent = () => {
     switch (selectedTab) {
       case "details":
@@ -607,6 +614,7 @@ const WorkOrder: React.FC = () => {
             apiData={apiData}
           />
         );
+
       case "task":
         setPageTitle("Work Order Task");
         handleUpdateRecords();
@@ -783,6 +791,40 @@ const WorkOrder: React.FC = () => {
 
         );
 
+      case "expenses":
+        setPageTitle("Other Expense");
+        return <>
+          <IonItem>
+            <IonLabel><h2>Other Expenses</h2></IonLabel>
+            <IonButton
+              onClick={() => setOpenExpense(true)}
+              size="default"
+              slot="end"
+            >
+              <IonIcon icon={addOutline} slot="start" />
+              Add
+            </IonButton>
+          </IonItem>
+
+          <div style={{ maxHeight: '65%', overflowY: 'auto' }}>
+            {renderExpenses()}
+            {openExpense &&
+              <ModalComponent1
+                title={"Work Order Expenses"}
+                isOpen={openExpense}
+                onClose={() => setOpenExpense(false)}
+                getContentModal={() =>
+                  <WorkOrderExpenses
+                    workOrder={id}
+                    closeModal={() => setOpenExpense(false)}
+                    onSave={handleSaveExpense}
+                  />
+                } />
+            }
+          </div>
+
+        </>
+
       case "activity":
         setPageTitle("Activity Logs");
         return (
@@ -877,79 +919,57 @@ const WorkOrder: React.FC = () => {
 
     return (
       <div className="timeline-container">
-        <h2 className="section-title">Completed Tasks</h2>
-        {completedTasks.map((task, index) => (
-          <div key={task.id} className="task-container">
-            {/* Vertical Timeline Line */}
-            <div className="timeline-indicator">
-              <div className="timeline-line"></div> {/* Continuous line */}
-              <div className="circle"></div> {/* Circle for each task */}
-            </div>
+        {completedTasks?.length > 0 &&
+          <>
+            <h2 className="section-title">Completed Tasks</h2>
+            {completedTasks.map((task, index) => (
+              <div key={task.id} className="task-container">
+                {/* Vertical Timeline Line */}
+                <div className="timeline-indicator">
+                  <div className="timeline-line"></div> {/* Continuous line */}
+                  <div className="circle"></div> {/* Circle for each task */}
+                </div>
 
-            {/* Task Card */}
-            {/* <div
-              className="task-card bounce-in-right"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="task-header">
-                <h3 className="task-title">{task.title}</h3>
-                <span
-                  className={`task-badge ${task.status ? task.status.toLowerCase() : "default"
-                    }`}
+                {/* Task Card */}
+                <IonCard className="task-card bounce-in-right"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                  onClick={() => handleViewWOTasks(task)}
                 >
-                  {task.status || "Unknown"}
-                </span>
-              </div>
-              <p className="task-subtitle">Team members</p>
-              <div className="task-members">
-                {task.members &&
-                  task.members.map((member, idx) => (
-                    <img
-                      key={idx}
-                      src={member.avatar}
-                      alt={`${member.name || "Unknown"}'s avatar`}
-                      className="member-avatar"
-                    />
-                  ))}
-              </div>
-              <p className="task-days">{task.days || "No days specified"}</p>
-            </div> */}
+                  <IonCardHeader>
+                    <IonLabel className="work-order-header">
+                      <b>{task.title} </b>
+                      {/* <span className="task-badge">
+                        {task.status.toUpperCase() || "Unknown"}
+                      </span> */}
+                      <BadgeStatus status={task.status} />
+                    </IonLabel>
+                  </IonCardHeader>
+                  <IonItem>
+                    <IonLabel><b>Description:</b></IonLabel>
+                    {task.description}
+                  </IonItem>
+                  <IonItem>
+                    <IonLabel><b>Priority:</b></IonLabel>
+                    <BadgePriority priority={task.priority} />
+                  </IonItem>
+                  <IonItem>
+                    <IonLabel><b>Assigned to: </b></IonLabel>
+                    <IonText>
+                      {task?.assignee?.user?.profile?.first_name} {task?.assignee?.user?.profile?.middle_name} {task?.assignee?.user?.profile?.last_name}
+                    </IonText>
+                  </IonItem>
+                  <IonItem>
+                    <IonLabel><b>Completed date: </b></IonLabel>
+                    <IonText className="ion-text-end">
+                      {formatDate(task.completed_date)}
+                    </IonText>
+                  </IonItem>
 
-            <IonCard className="task-card bounce-in-right"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <IonCardHeader>
-                <IonLabel className="work-order-header">
-                  <b>{task.title} </b>
-                  <span className="task-badge">
-                    {task.status.toUpperCase() || "Unknown"}
-                  </span>
-                </IonLabel>
-              </IonCardHeader>
-              <IonItem>
-                <IonLabel><b>Description:</b></IonLabel>
-                {task.description}
-              </IonItem>
-              <IonItem>
-                <IonLabel><b>Priority:</b></IonLabel>
-                <BadgePriority priority={task.priority} />
-              </IonItem>
-              <IonItem>
-                <IonLabel><b>Assigned to: </b></IonLabel>
-                <IonText>
-                  {task?.assignee?.user?.profile?.first_name} {task?.assignee?.user?.profile?.middle_name} {task?.assignee?.user?.profile?.last_name}
-                </IonText>
-              </IonItem>
-              <IonItem>
-                <IonLabel><b>Completed date: </b></IonLabel>
-                <IonText className="ion-text-end">
-                  {formatDate(task.completed_date)}
-                </IonText>
-              </IonItem>
-
-            </IonCard>
-          </div>
-        ))}
+                </IonCard>
+              </div>
+            ))}
+          </>
+        }
       </div>
     );
   };
@@ -957,72 +977,170 @@ const WorkOrder: React.FC = () => {
   const renderSupplies = () => {
     return (
       <div>
-        {workOrderSupplyList && workOrderSupplyList?.map((stock, index) => (
-          <IonCard key={index} className="bounce-in-right task-card" color="light"
-            style={{ animationDelay: `${index * 0.1}s` }}>
-            <IonCardHeader>
-              <IonButton className="task-card-delete-button"
-                id="delete-supply"
-                color="danger"
-                onClick={() => setDeleteSupply(true)}
-              >
-                <IonIcon
-                  icon={trashOutline} />
-              </IonButton>
-            </IonCardHeader>
-            <IonList >
-              <IonItem button={true} detail={false}>
-                <div className="unread-indicator-wrapper" slot="start">
-                  <div className="unread-indicator"></div>
-                </div>
-                <IonLabel><b>Supply:</b></IonLabel>
-                <IonText>{stock.supply}</IonText>
-              </IonItem>
-              <IonItem>
-                <IonLabel><b>Supply Category:</b></IonLabel>
-                <IonText>{stock.supply_category}</IonText>
-              </IonItem>
-              <IonItem>
-                <IonLabel><b>Cost:</b></IonLabel>
-                <IonText>QAR {stock.cost}</IonText>
-              </IonItem>
-              <IonItem>
-                <IonLabel><b>Quantity:</b></IonLabel>
-                <IonText> {stock.quantity} {stock.unit_of_measure}</IonText>
-              </IonItem>
-              <IonItem>
-                <IonLabel><b>Batch Number:</b></IonLabel>
-                <IonText> {stock.batch_number}</IonText>
-              </IonItem>
-            </IonList>
+        {workOrderSupplyList && workOrderSupplyList?.length > 0 ?
+          workOrderSupplyList?.map((stock, index) => (
+            <IonCard key={index} className="bounce-in-right task-card" color="light"
+              style={{ animationDelay: `${index * 0.1}s` }}>
+              <IonCardHeader>
+                <IonButton className="task-card-delete-button"
+                  id="delete-supply"
+                  color="danger"
+                >
+                  <IonIcon
+                    icon={trashOutline} />
+                </IonButton>
+              </IonCardHeader>
+              <IonList >
+                <IonItem>
+                  <IonLabel><b>Supply:</b></IonLabel>
+                  <IonText>{stock.supply}</IonText>
+                </IonItem>
+                <IonItem>
+                  <IonLabel><b>Supply Category:</b></IonLabel>
+                  <IonText>{stock.supply_category}</IonText>
+                </IonItem>
+                <IonItem>
+                  <IonLabel><b>Cost:</b></IonLabel>
+                  <IonText>QAR {stock.cost}</IonText>
+                </IonItem>
+                <IonItem>
+                  <IonLabel><b>Quantity:</b></IonLabel>
+                  <IonText> {stock.quantity} {stock.unit_of_measure}</IonText>
+                </IonItem>
+                <IonItem>
+                  <IonLabel><b>Batch Number:</b></IonLabel>
+                  <IonText> {stock.batch_number}</IonText>
+                </IonItem>
+              </IonList>
 
-            <IonAlert
-              header="Delete Supply"
-              trigger="delete-supply"
-              message={"Are you sure you want to delete this supply from this work order?"}
-              buttons={[
-                {
-                  text: 'Cancel',
-                  role: 'cancel'
-                },
-                {
-                  text: 'OK',
-                  role: 'confirm',
-                  handler: () => {
-                    handleDeleteSupply(stock)
+              <IonAlert
+                header="Delete Supply"
+                trigger="delete-supply"
+                message={"Are you sure you want to delete this supply from this work order?"}
+                buttons={[
+                  {
+                    text: 'Cancel',
+                    role: 'cancel'
                   },
-                },
-              ]}
-              onDidDismiss={({ detail }) => console.log(`Dismissed with role: ${detail.role}`)}
-            ></IonAlert>
-          </IonCard>
-        ))}
+                  {
+                    text: 'OK',
+                    role: 'confirm',
+                    handler: () => {
+                      handleDeleteSupply(stock)
+                    },
+                  },
+                ]}
+                onDidDismiss={({ detail }) => console.log(`Dismissed with role: ${detail.role}`)}
+              ></IonAlert>
+            </IonCard>
+          ))
+          :
+          <IonLabel><center><i>No records found</i></center></IonLabel>
+        }
 
-        {workOrderSupplyList?.length === 0 && <IonLabel><center><i>No records found</i></center></IonLabel>}
       </div>
     )
   }
 
+  const renderExpenses = () => {
+    return (
+      <div>
+        {workOrderExpenseList && workOrderExpenseList?.length > 0 ?
+
+          workOrderExpenseList?.map((exp, index) => (
+            <IonCard key={index} className="bounce-in-right task-card" color="light"
+              style={{ animationDelay: `${index * 0.1}s` }}>
+              <IonCardHeader>
+                <IonButton className="task-card-delete-button"
+                  id="delete-expense"
+                  color="danger"
+                >
+                  <IonIcon
+                    icon={trashOutline} />
+                </IonButton>
+              </IonCardHeader>
+              <IonList >
+                <IonItem>
+                  <IonLabel><b>Remarks:</b></IonLabel>
+                  <IonText>{exp.remarks}</IonText>
+                </IonItem>
+                <IonItem>
+                  <IonLabel><b>Amount:</b></IonLabel>
+                  <IonText>QAR {exp.amount}</IonText>
+                </IonItem>
+              </IonList>
+
+              <IonAlert
+                header="Delete Expense"
+                trigger="delete-expense"
+                message={"Are you sure you want to delete this expense from this work order?"}
+                buttons={[
+                  {
+                    text: 'Cancel',
+                    role: 'cancel'
+                  },
+                  {
+                    text: 'OK',
+                    role: 'confirm',
+                    handler: () => {
+                      handleDeleteExpense(exp)
+                    },
+                  },
+                ]}
+                onDidDismiss={({ detail }) => console.log(`Dismissed with role: ${detail.role}`)}
+              ></IonAlert>
+            </IonCard>
+          ))
+          :
+          <IonLabel><center><i>No records found</i></center></IonLabel>
+        }
+
+      </div>
+    )
+  }
+
+  const renderSLA = () => {
+    return (
+      <>
+        {workOrder &&
+          workOrder?.service_providers?.length > 0 &&
+          <>
+            <h2 className="section-title">Services and SLAs</h2>
+            {workOrder &&
+              workOrder?.service_providers.map((item, index) => (
+                <IonCard className="task-card" key={index}
+                  onClick={() => handleOpenSLA(item, workOrder)}>
+                  <IonCardHeader><b>Services and SLAs</b></IonCardHeader>
+                  <IonItem>
+                    <IonLabel>Service</IonLabel>
+                    <IonText className="ion-text-end">{item?.service?.service}</IonText>
+                  </IonItem>
+                  <IonItem>
+                    <IonLabel>Provider</IonLabel>
+                    <IonText>{item?.service_provider}</IonText>
+                  </IonItem>
+                  <IonItem>
+                    <IonLabel>SLA</IonLabel>
+                    <IonText>{item?.service?.sla?.sla_name}</IonText>
+                  </IonItem>
+                </IonCard>
+
+              ))
+            }
+          </>
+        }
+      </>
+    )
+  }
+
+  const handleOpenSLA = (sla, workOrder) => {
+    if (sla && workOrder) {
+      history.push({
+        pathname: '/sla',
+        state: { sla: sla, workOrder: workOrder }
+      })
+    }
+  }
 
   const handleDeleteSupply = async (supply) => {
     if (supply) {
@@ -1039,19 +1157,19 @@ const WorkOrder: React.FC = () => {
   }
 
 
-  // const handleDeleteTask = async (task) => {
-  //   if (task) {
-  //     try {
-  //       const req = await workOrderTaskApi. .delete(task.id);
-  //       console.log("req: " + JSON.stringify(req.data));
-  //       await fetchSupplyList();
+  const handleDeleteExpense = async (exp) => {
+    if (exp) {
+      try {
+        const req = await workOrderExpenseApi.delete(exp.id);
+        console.log("req: " + JSON.stringify(req.data));
+        await fetchExpenseList();
 
-  //     } catch (error) {
-  //       console.log("HandleDeleteSypply error: " + JSON.stringify(error.message));
+      } catch (error) {
+        console.log("handleDeleteExpense error: " + JSON.stringify(error.message));
 
-  //     }
-  //   }
-  // }
+      }
+    }
+  }
 
   const handleViewWOTasks = (task) => {
     modal.current?.dismiss();
@@ -1061,7 +1179,7 @@ const WorkOrder: React.FC = () => {
     })
   }
 
-  const handleSaveTask = () => {
+  const handleSaveTask = async () => {
     console.log("new tasks: " + JSON.stringify(formTask));
 
     try {
@@ -1076,8 +1194,9 @@ const WorkOrder: React.FC = () => {
       console.log("req:" + JSON.stringify(req));
       // presentToast("Successfully saved");
       setAddTask(false);
-      setTasks((prevRecords) => [...prevRecords, formTask]);
-      setFormTask({ work_order_id: id, assignee_id: '', title: '', description: '', priority: '' });
+      await fetchTasks();
+      await setTasks((prevRecords) => [...prevRecords, formTask]);
+      await setFormTask({ work_order_id: id, assignee_id: '', title: '', description: '', priority: '' });
     } catch (error) {
       console.log("handleSaveTask Error: " + error.message);
     }
@@ -1095,11 +1214,11 @@ const WorkOrder: React.FC = () => {
 
   const handleSaveSupply = async (newSupply) => {
     console.log("NewSupply: " + JSON.stringify(newSupply) + " | prevSupplies: " + JSON.stringify(workOrderSupplyList));
-
     await fetchSupplyList();
+  }
 
-    // setWorkOrderSupplyList((prevSupplies) => [...prevSupplies, newSupply]);
-
+  const handleSaveExpense = async () => {
+    await fetchExpenseList();
   }
 
   return (
@@ -1136,11 +1255,18 @@ const WorkOrder: React.FC = () => {
                               status={workOrder.active_status.status}
                             />
                           </h2>
-                          <Timeline workOrderId={id!} />
+                          {/* <Timeline workOrderId={id!} /> */}
+                          <IonLabel>
+                            {workOrder?.work_order_request?.work_order_description} | {workOrder?.work_order_request?.work_order_type?.work_order_type} <br />
+                            <h3>
+                              Starts on {workOrder?.start_date} , {workOrder?.work_order_request?.schedule?.start_time} - {workOrder?.work_order_request?.schedule?.end_time}
+                            </h3>
+                          </IonLabel>
                         </IonCol>
                       </IonRow>
                     </IonGrid>
 
+                    {/* Update work order status */}
                     {updateWorkOrder && <ModalComponent1 title={"Update Work Order"}
                       isOpen={updateWorkOrder}
                       onClose={() => setUpdateWorkOrder(false)}
@@ -1148,14 +1274,23 @@ const WorkOrder: React.FC = () => {
                     />
                     }
 
+                    <IonGrid className="header-section">
+                      <IonItem lines="none">
+                        <IonLabel>Total Cost: </IonLabel>
+                        <IonText><IonChip><b>{workOrder?.total_cost}</b></IonChip></IonText>
+                      </IonItem>
+                    </IonGrid>
+
                     {/* Attachments Section */}
                     <div className="attachments-section">
                       <div className="section-header">
-                        <IonIcon
-                          icon={documentAttachOutline}
-                          className="section-icon"
-                        />
-                        <h3>Attach Documents</h3>
+                        <IonItem>
+                          <IonIcon
+                            icon={documentAttachOutline}
+                            className="section-icon"
+                          />
+                          <>Attach Documents</>
+                        </IonItem>
                       </div>
                       <IonItem lines="none" className="upload-container">
                         <IonLabel>Upload Files</IonLabel>
@@ -1195,6 +1330,9 @@ const WorkOrder: React.FC = () => {
 
                     {/* Render Tasks */}
                     {renderTasks()}
+
+                    {/* Render SLAs */}
+                    {renderSLA()}
                   </>
                 ) : (
                   <Loading />

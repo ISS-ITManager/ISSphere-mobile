@@ -43,7 +43,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
               className="ion-text-muted"
               style={{ fontSize: "35px", color: "#333" }}
             />
-            {notifsCount && notifsCount > 0 &&
+            {notifsCount > 0 &&
               <div
                 className="notification-badge"
                 style={{
