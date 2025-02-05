@@ -19,7 +19,9 @@ api.interceptors.request.use(
 );
 export const permissionApi = {
   get: async (data: any) => {
-    const response = await api.get(`/permissions?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/permissions?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   permission: async () => {
@@ -45,8 +47,7 @@ export const permissionApi = {
     const response = await api.get(url);
     return response;
   },
-
-}
+};
 
 export const loginUser = async (email: string, password: string) => {
   const response = await api.post("/login", { email, password });
@@ -57,7 +58,7 @@ export const loginUser = async (email: string, password: string) => {
 export const logout = async () => {
   const response = await api.get(`/logout`);
   return response;
-}
+};
 
 // Fetch user data
 export const getUserData = async () => {
@@ -98,11 +99,104 @@ export const getGroups = async () => {
 };
 
 export const getEntitiesByGroupId = async (groupId: number) => {
-  const response = await api.get(`/entities/${groupId}`);
-  if (response.data.success) {
-    return response.data.data;
-  } else {
-    throw new Error("Failed to fetch entities for group");
+  try {
+    const response = await api.get(`/entities/list?group=${groupId}`);
+    if (response.data.success) {
+      return response.data.data; // Returns the entities data
+    } else {
+      throw new Error("Failed to fetch entities for group");
+    }
+  } catch (error) {
+    console.error("Error fetching entities:", error);
+    throw new Error("Error fetching entities");
+  }
+};
+
+export const getPropertiesByEntityId = async (entityId: number) => {
+  try {
+    const response = await api.get(`/properties/list?entity=${entityId}`);
+    if (response.data.success) {
+      return response.data.data; // Returns the properties data
+    } else {
+      throw new Error("Failed to fetch properties for entity");
+    }
+  } catch (error) {
+    console.error(error);
+    throw new Error("Error fetching properties");
+  }
+};
+
+export const getZonesByPropertyId = async (propertyId: number) => {
+  try {
+    const response = await api.get(`/zones/list?property=${propertyId}`);
+    if (response.data.success) {
+      return response.data.data; // Returns the properties data
+    } else {
+      throw new Error("Failed to fetch properties for zones");
+    }
+  } catch (error) {
+    console.error(error);
+    throw new Error("Error fetching properties");
+  }
+};
+
+export const getLevelByZoneId = async (zoneId: number) => {
+  try {
+    const response = await api.get(`/levels/list?zone=${zoneId}`);
+    if (response.data.success) {
+      return response.data.data; // Returns the properties data
+    } else {
+      throw new Error("Failed to fetch properties for zones");
+    }
+  } catch (error) {
+    console.error(error);
+    throw new Error("Error fetching properties");
+  }
+};
+
+export const getRoomByLevelId = async (levelId: number) => {
+  try {
+    const response = await api.get(`/rooms/list?level=${levelId}`);
+    if (response.data.success) {
+      return response.data.data; // Returns the properties data
+    } else {
+      throw new Error("Failed to fetch properties for zones");
+    }
+  } catch (error) {
+    console.error(error);
+    throw new Error("Error fetching properties");
+  }
+};
+
+export const storeWorkOrderAssets = async (data: any) => {
+  try {
+    const response = await api.post("/work-order-assets", data);
+    return response.data; // Return the data from the API response
+  } catch (error) {
+    console.error("Error storing work order assets:", error);
+    throw error;
+  }
+};
+
+export const getWorkOrderAssets = async (workOrderId: string) => {
+  try {
+    const response = await api.get(`/work-order-assets/list`, {
+      params: { work_order: workOrderId }, // Pass work_order ID as a query parameter
+    });
+    return response.data; // Return the list of work order assets
+  } catch (error) {
+    console.error("Error fetching work order assets:", error);
+    throw error;
+  }
+};
+
+export const deleteWorkOrderAsset = async (assetId: number) => {
+  try {
+    await api.delete(`/work-order-assets/${assetId}`);
+    return true;
+  } catch (error) {
+    console.error("Error deleting work order asset:", error);
+    return false;
   }
 };
 
@@ -133,11 +227,12 @@ export const workOrderAssetsCreateApi = {
   },
 };
 
-
 //Suppliers
 export const supplierApi = {
   get: async (data: any) => {
-    const response = await api.get(`/suppliers?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/suppliers?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -156,7 +251,7 @@ export const supplierApi = {
     const response = await api.get(`/suppliers/list`);
     return response;
   },
-}
+};
 
 // Fetch work order tasks by work_order_id
 
@@ -187,7 +282,7 @@ export const createTaskHistory = async (data) => {
   } catch (error) {
     throw error;
   }
-}
+};
 
 export const workOrderApi = {
   get: async (data: any) => {
@@ -195,21 +290,26 @@ export const workOrderApi = {
     const buildQuery = (data: Record<string, any>): string => {
       return Object.entries(data)
         .filter(([_, value]) => value !== undefined && value !== null)
-        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-        .join('&');
+        .map(
+          ([key, value]) =>
+            `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+        )
+        .join("&");
     };
-    const response = await api.get(`/work-orders?${buildQuery({
-      group: data.group,
-      entity: data.entity_id,
-      property: data.property_id,
-      zone: data.zone_id,
-      level: data.level_id,
-      room: data.room_id,
-      rental_type: data.rental_type_id,
-      page: data.page,
-      paginate: data.paginate,
-      keyword: data.keyword,
-    })}`);
+    const response = await api.get(
+      `/work-orders?${buildQuery({
+        group: data.group,
+        entity: data.entity_id,
+        property: data.property_id,
+        zone: data.zone_id,
+        level: data.level_id,
+        room: data.room_id,
+        rental_type: data.rental_type_id,
+        page: data.page,
+        paginate: data.paginate,
+        keyword: data.keyword,
+      })}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -225,27 +325,37 @@ export const workOrderApi = {
     return response;
   },
   list: async (workOrderRequestId: any) => {
-    const response = await api.get(`/work-orders/list?work_order_request=${workOrderRequestId}`);
+    const response = await api.get(
+      `/work-orders/list?work_order_request=${workOrderRequestId}`
+    );
     return response;
   },
   openResponseTime: async (id: any) => {
-    const response = await api.get(`/work-orders/open-response-time?work_order=${id}`);
+    const response = await api.get(
+      `/work-orders/open-response-time?work_order=${id}`
+    );
     return response;
   },
   responseTime: async (id: any) => {
-    const response = await api.get(`/work-orders/response-time?work_order=${id}`);
+    const response = await api.get(
+      `/work-orders/response-time?work_order=${id}`
+    );
     return response;
   },
   resolutionTime: async (id: any) => {
-    const response = await Axi.get(`/work-orders/resolution-time?work_order=${id}`);
+    const response = await Axi.get(
+      `/work-orders/resolution-time?work_order=${id}`
+    );
     return response;
   },
-}
+};
 
 // api for work order tasks
 export const workOrderTaskApi = {
   get: async (workOrderId: any) => {
-    const response = await api.get(`/work-order-tasks?work_order_id=${workOrderId}`);
+    const response = await api.get(
+      `/work-order-tasks?work_order_id=${workOrderId}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -261,16 +371,19 @@ export const workOrderTaskApi = {
     return response;
   },
   list: async (workOrderRequestId: any) => {
-    const response = await api.get(`/work-order-tasks/list?work_order_request=${workOrderRequestId}`);
+    const response = await api.get(
+      `/work-order-tasks/list?work_order_request=${workOrderRequestId}`
+    );
     return response;
   },
-
-}
+};
 
 //api for work order task history
 export const workOrderTaskHistoryApi = {
   get: async (workOrderTaskId: any) => {
-    const response = await api.get(`/work-order-task-histories?work_order_task_id=${workOrderTaskId}`);
+    const response = await api.get(
+      `/work-order-task-histories?work_order_task_id=${workOrderTaskId}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -286,19 +399,23 @@ export const workOrderTaskHistoryApi = {
     return response;
   },
   list: async (workOrderRequestId: any) => {
-    const response = await api.get(`/work-order-task-histories/list?work_order_request=${workOrderRequestId}`);
+    const response = await api.get(
+      `/work-order-task-histories/list?work_order_request=${workOrderRequestId}`
+    );
     return response;
   },
   updateStatus: async (data: any) => {
     const response = await api.post(`/work-order-statuses`, data);
     return response;
   },
-}
+};
 
 //assignee api
 export const assigneeApi = {
   get: async (data: any) => {
-    const response = await api.get(`/assignees?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/assignees?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -317,16 +434,17 @@ export const assigneeApi = {
     const response = await api.get(`/assignees/list`);
     return response;
   },
-}
+};
 
 //api for activity log
 export const workOrderActivityLogApi = {
-
   list: async (id: any) => {
-    const response = await api.get(`/work-order-activity-logs/list?work_order=${id}`);
+    const response = await api.get(
+      `/work-order-activity-logs/list?work_order=${id}`
+    );
     return response;
   },
-}
+};
 
 export const supplyApi = {
   show: async (id: any) => {
@@ -345,7 +463,7 @@ export const supplyApi = {
     const response = await api.get(`/supplies/list`);
     return response;
   },
-}
+};
 
 export const supplyCategoryApi = {
   show: async (id: any) => {
@@ -364,11 +482,13 @@ export const supplyCategoryApi = {
     const response = await api.post(`/supply-categories`, data);
     return response;
   },
-}
+};
 
 export const workOrderSupplyApi = {
   getStock: async (data: any) => {
-    const response = await api.get(`/work-order-supplies?supply_category=${data.supply_category}&supply=${data.supply}&supplier=${data.supplier}`);
+    const response = await api.get(
+      `/work-order-supplies?supply_category=${data.supply_category}&supply=${data.supply}&supplier=${data.supplier}`
+    );
     return response;
   },
   store: async (data: any) => {
@@ -376,18 +496,22 @@ export const workOrderSupplyApi = {
     return response;
   },
   list: async (worOrkerId: any) => {
-    const response = await api.get(`/work-order-supplies/list?work_order=${worOrkerId}`);
+    const response = await api.get(
+      `/work-order-supplies/list?work_order=${worOrkerId}`
+    );
     return response;
   },
   delete: async (id: any) => {
     const response = await api.delete(`/work-order-supplies/${id}`);
     return response;
   },
-}
+};
 
 export const workOrderCategoryApi = {
   get: async (data: any) => {
-    const response = await api.get(`/work-order-categories?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/work-order-categories?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -406,11 +530,13 @@ export const workOrderCategoryApi = {
     const response = await api.post(`/work-order-categories`, data);
     return response;
   },
-}
+};
 
 export const workOrderTypeApi = {
   get: async (data: any) => {
-    const response = await api.get(`/work-order-types?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}&work_order_category=${data.work_order_category}`);
+    const response = await api.get(
+      `/work-order-types?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}&work_order_category=${data.work_order_category}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -422,18 +548,22 @@ export const workOrderTypeApi = {
     return response;
   },
   list: async (categoryId: any) => {
-    const response = await api.get(`/work-order-types/list?work_order_category=${categoryId}`);
+    const response = await api.get(
+      `/work-order-types/list?work_order_category=${categoryId}`
+    );
     return response;
   },
   store: async (data: any) => {
     const response = await api.post(`/work-order-types`, data);
     return response;
   },
-}
+};
 
 export const groupApi = {
   get: async (data: any) => {
-    const response = await api.get(`/groups?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/groups?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -456,11 +586,13 @@ export const groupApi = {
     const response = await api.get(`/countries/list`);
     return response;
   },
-}
+};
 
 export const entityApi = {
   get: async (data: any) => {
-    const response = await api.get(`/entities?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/entities?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -479,11 +611,13 @@ export const entityApi = {
     const response = await api.get(`/entities/list?group=${groupId}`);
     return response;
   },
-}
+};
 
 export const propertyApi = {
   get: async (data: any) => {
-    const response = await api.get(`/properties?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/properties?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -502,12 +636,13 @@ export const propertyApi = {
     const response = await api.get(`/properties/list?entity=${entityId}`);
     return response;
   },
-}
-
+};
 
 export const zoneApi = {
   get: async (data: any) => {
-    const response = await api.get(`/zones?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/zones?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -526,12 +661,13 @@ export const zoneApi = {
     const response = await api.get(`/zones/list?property=${propertyId}`);
     return response;
   },
-}
-
+};
 
 export const levelApi = {
   get: async (data: any) => {
-    const response = await api.get(`/levels?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/levels?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -550,11 +686,13 @@ export const levelApi = {
     const response = await api.get(`/levels/list?zone=${zoneId}`);
     return response;
   },
-}
+};
 
 export const roomApi = {
   get: async (data: any) => {
-    const response = await api.get(`/rooms?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/rooms?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -573,11 +711,13 @@ export const roomApi = {
     const response = await api.get(`/rooms/list?level=${levelId}`);
     return response;
   },
-}
+};
 
 export const workOrderRequestApi = {
   get: async (data: any) => {
-    const response = await api.get(`/work-order-requests?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/work-order-requests?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -604,13 +744,13 @@ export const workOrderRequestApi = {
     const response = await api.post(`/work-order-requests/decline`, data);
     return response;
   },
-
-}
-
+};
 
 export const teamApi = {
   get: async (data: any) => {
-    const response = await api.get(`/teams?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/teams?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -629,11 +769,13 @@ export const teamApi = {
     const response = await api.post(`/teams`, data);
     return response;
   },
-}
+};
 
 export const serviceApi = {
   get: async (data: any) => {
-    const response = await api.get(`/services?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/services?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -649,14 +791,18 @@ export const serviceApi = {
     return response;
   },
   list: async (sla_priority: any) => {
-    const response = await api.get(`/services/list?sla_priority=${sla_priority}`);
+    const response = await api.get(
+      `/services/list?sla_priority=${sla_priority}`
+    );
     return response;
   },
-}
+};
 
 export const serviceProviderServiceApi = {
   get: async (data: any) => {
-    const response = await api.get(`/provider-services?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}&service_provider=${data.service_provider_id}`);
+    const response = await api.get(
+      `/provider-services?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}&service_provider=${data.service_provider_id}`
+    );
     return response;
   },
   show: async (id: any) => {
@@ -666,7 +812,7 @@ export const serviceProviderServiceApi = {
   update: async (id: any, data: any) => {
     const response = await api.post(`/provider-services/${id}`, data, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
     return response;
@@ -676,10 +822,12 @@ export const serviceProviderServiceApi = {
     return response;
   },
   list: async (serviceId: any) => {
-    const response = await api.get(`/provider-services/list?service=${serviceId}`);
+    const response = await api.get(
+      `/provider-services/list?service=${serviceId}`
+    );
     return response;
   },
-}
+};
 
 export const notificationApi = {
   get: async (limit: any) => {
@@ -695,15 +843,17 @@ export const notificationApi = {
     const response = await api.get(`/notifications`);
     return response;
   },
-}
+};
 
 export const userApi = {
   get: async (data: any) => {
-    const response = await api.get(`/users?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`);
+    const response = await api.get(
+      `/users?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+    );
     return response;
   },
   show: async (id: any) => {
     const response = await api.get(`/users/${id}`);
     return response;
   },
-}
+};
