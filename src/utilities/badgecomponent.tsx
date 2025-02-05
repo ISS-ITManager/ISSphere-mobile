@@ -75,7 +75,7 @@ const BadgeComponent: React.FC<BadgeComponentProps> = ({ status }) => {
         padding: "8px 18px",
         borderRadius: "20px",
         fontWeight: "bold",
-        marginBottom: "10px",
+        marginBottom: "1px",
         color,
         backgroundColor,
       }}

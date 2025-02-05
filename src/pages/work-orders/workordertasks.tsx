@@ -7,7 +7,7 @@ import { sendOutline, saveOutline, pencilOutline, folderOpenOutline, closeOutlin
 
 import { getWorkOrderTaskHistory, createTaskHistory, workOrderTaskApi, workOrderTaskHistoryApi, assigneeApi } from '../../api/api';
 import ModalComponent from '../../components/Modal';
-import { formatDate, presentToast } from '../../utilities/globalfns';
+import { formatDate, hasPermission, presentToast } from '../../utilities/globalfns';
 import "./workorder.css";
 import ModalComponent1 from '../../components/ModalComponent1';
 import BadgeComponent from '../../utilities/badgecomponent';
@@ -295,6 +295,7 @@ const WorkOrderTasks: React.FC = () => {
                     </IonItem>
                     <IonButton
                         onClick={handleOpenModal}
+                        disabled={!hasPermission("work-order-task.edit")}
                     >
                         Modify
                         <IonIcon icon={pencilOutline} />

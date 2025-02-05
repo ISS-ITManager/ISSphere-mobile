@@ -93,6 +93,7 @@ import BadgePriority from "../../utilities/badgePriority";
 import BadgeStatus from "../../utilities/BadgeStatus";
 import WorkOrderExpenses from "./workorder-components/expense";
 import { hasPermission } from "../../utilities/globalfns";
+import MasterComponent from "../../components/MasterComponent";
 
 // Define the WorkOrder type
 interface WorkOrder {
@@ -195,9 +196,6 @@ const WorkOrder: React.FC = () => {
 
   const [workOrderStatus, setWorkOrderStatus] = useState('');
   const [workOrderRemarks, setWorkOrderRemarks] = useState('');
-  const [responseTime, setResponseTime] = useState();
-  const [openResponseTime, setOpenResponseTime] = useState();
-  const [resolutionTime, setResolutionTime] = useState();
   const [workOrderExpenseList, setWorkOrderExpenseList] = useState([]);
   const [openExpense, setOpenExpense] = useState(false);
 
@@ -227,12 +225,12 @@ const WorkOrder: React.FC = () => {
   };
 
   const tabs = [
-    { name: "details", icon: informationCircleOutline, permissions: ['work-order.view-assignee', 'work-order.view'] },
-    { name: "assets", icon: listOutline, permissions: ['work-order-asset.view'] },
-    { name: "task", icon: fileTrayFullOutline, permissions: ['work-order-task.view', "work-order-task.view-list", 'work-order-task.edit', 'work-order-task.create'] },
-    { name: "supplies", icon: cubeOutline, permissions: ["work-order-supply.view", "work-order-supply.view-list", "work-order-supply.create", "work-order-supply.edit", "work-order-supply.delete"] },
-    { name: "expenses", icon: receiptOutline, permissions: [] },
-    { name: "activity", icon: timeOutline, permissions: [] }
+    { name: "details", icon: informationCircleOutline },
+    { name: "assets", icon: listOutline },
+    { name: "task", icon: fileTrayFullOutline },
+    { name: "supplies", icon: cubeOutline },
+    { name: "expenses", icon: receiptOutline },
+    { name: "activity", icon: timeOutline }
   ];
 
   const handleTabChange = (tab: string) => {
@@ -269,9 +267,9 @@ const WorkOrder: React.FC = () => {
         console.log("handleSaveWorkOrder error: " + JSON.stringify(error.message));
 
       }
-      setUpdateWorkOrder(false);
       await fetchWorkOrderDetails();
     }
+    setUpdateWorkOrder(false);
   }
 
   const getContentModalUpdateWO = (workOrder) => {
@@ -283,12 +281,12 @@ const WorkOrder: React.FC = () => {
           <IonList className="ion-padding">
             <IonLabel> Current Status: {workOrder?.active_status?.status}</IonLabel>
             <IonItem>
-              <IonLabel><b>Select Status</b></IonLabel>
+              <IonLabel><b>Status</b></IonLabel>
               <IonSelect
                 value={workOrderStatus}
                 label="Status"
                 onIonChange={(e) => setWorkOrderStatus(e.target.value)}>
-                {workOrder?.active_status?.status === "open" && <IonSelectOption value='in-progress'>In-Progress</IonSelectOption> }
+                {workOrder?.active_status?.status === "open" && <IonSelectOption value='in-progress'>In-Progress</IonSelectOption>}
                 {workOrder?.active_status?.status === "pending" &&
                   <>
                     <IonSelectOption value="in-progress">In-Progress</IonSelectOption>
@@ -312,7 +310,7 @@ const WorkOrder: React.FC = () => {
               </IonSelect>
             </IonItem>
             <IonItem>
-              <IonLabel>Remarks</IonLabel>
+              <IonLabel><b>Remarks</b></IonLabel>
               <IonTextarea
                 onIonInput={(e) => setWorkOrderRemarks(e.target.value)}
                 rows={4}
@@ -321,7 +319,11 @@ const WorkOrder: React.FC = () => {
             </IonItem>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem' }}>
               <IonButton fill="outline" onClick={() => setUpdateWorkOrder(false)}>Cancel</IonButton>
-              <IonButton onClick={() => handleSaveWorkOrder(workOrder)}>Continue</IonButton>
+              <IonButton
+                disabled={(!hasPermission("work-order-status.edit") || workOrder?.active_status?.status === "closed")}
+                onClick={() => handleSaveWorkOrder(workOrder)}>
+                Continue
+              </IonButton>
             </div>
           </IonList>
         }
@@ -627,6 +629,7 @@ const WorkOrder: React.FC = () => {
                 onClick={() => setAddTask(true)}
                 size="default"
                 slot="end"
+                disabled={!hasPermission("work-order-task.create")}
               >
                 <IonIcon icon={addOutline} slot="start" />
                 Add
@@ -641,19 +644,11 @@ const WorkOrder: React.FC = () => {
                     <IonCardHeader >
                       <IonLabel className="work-order-header">
                         <h2><b>{task.title} </b></h2>
-
                         <BadgeComponent status={task.status} />
-                        {/* <IonButton className="task-card-delete-button"
-                          id="delete-supply"
-                          color="danger"
-                          onClick={() => setDeleteSupply(true)}
-                        >
-                          <IonIcon
-                            icon={trashOutline} />
-                        </IonButton> */}
                       </IonLabel>
                     </IonCardHeader>
-                    <IonList onClick={() => handleViewWOTasks(task)}>
+                    <IonList
+                      onClick={() => handleViewWOTasks(task)}>
                       <IonItem>
                         <IonLabel><b>Description: </b></IonLabel>
                         <IonText>{task.description}</IonText>
@@ -761,6 +756,7 @@ const WorkOrder: React.FC = () => {
                 onClick={() => setOpenSupply(true)}
                 size="default"
                 slot="end"
+                disabled={!hasPermission("work-order-supply.create")}
               >
                 <IonIcon icon={addOutline} slot="start" />
                 Add
@@ -933,6 +929,7 @@ const WorkOrder: React.FC = () => {
                 {/* Task Card */}
                 <IonCard className="task-card bounce-in-right"
                   style={{ animationDelay: `${index * 0.1}s` }}
+                  disabled={!hasPermission("work-order-task.view")}
                   onClick={() => handleViewWOTasks(task)}
                 >
                   <IonCardHeader>
@@ -985,6 +982,7 @@ const WorkOrder: React.FC = () => {
                 <IonButton className="task-card-delete-button"
                   id="delete-supply"
                   color="danger"
+                  disabled={!hasPermission("work-order-supply.delete")}
                 >
                   <IonIcon
                     icon={trashOutline} />
@@ -1054,6 +1052,7 @@ const WorkOrder: React.FC = () => {
                 <IonButton className="task-card-delete-button"
                   id="delete-expense"
                   color="danger"
+                  disabled={!hasPermission("work-order-expense.delete")}
                 >
                   <IonIcon
                     icon={trashOutline} />
@@ -1163,6 +1162,7 @@ const WorkOrder: React.FC = () => {
         const req = await workOrderExpenseApi.delete(exp.id);
         console.log("req: " + JSON.stringify(req.data));
         await fetchExpenseList();
+        await fetchWorkOrderDetails();
 
       } catch (error) {
         console.log("handleDeleteExpense error: " + JSON.stringify(error.message));
@@ -1181,25 +1181,26 @@ const WorkOrder: React.FC = () => {
 
   const handleSaveTask = async () => {
     console.log("new tasks: " + JSON.stringify(formTask));
-
-    try {
-      let req = workOrderTaskApi.store({
-        assignee_id: formTask.assignee_id,
-        description: formTask.description,
-        priority: formTask.priority,
-        status: 'new',
-        title: formTask.title,
-        work_order_id: formTask.work_order_id
-      });
-      console.log("req:" + JSON.stringify(req));
-      // presentToast("Successfully saved");
-      setAddTask(false);
-      await fetchTasks();
-      await setTasks((prevRecords) => [...prevRecords, formTask]);
-      await setFormTask({ work_order_id: id, assignee_id: '', title: '', description: '', priority: '' });
-    } catch (error) {
-      console.log("handleSaveTask Error: " + error.message);
+    if (formTask.assignee_id && formTask.title && formTask.priority) {
+      try {
+        let req = workOrderTaskApi.store({
+          assignee_id: formTask.assignee_id,
+          description: formTask.description,
+          priority: formTask.priority,
+          status: 'new',
+          title: formTask.title,
+          work_order_id: formTask.work_order_id
+        });
+        // console.log("req:" + JSON.stringify(req));
+        await fetchTasks();
+        await setTasks((prevRecords) => [...prevRecords, formTask]);
+        await setFormTask({ work_order_id: id, assignee_id: '', title: '', description: '', priority: '' });
+      } catch (error) {
+        console.log("handleSaveTask Error: " + error.message);
+      }
     }
+    setAddTask(false);
+
   }
 
   const handleUpdateRecords = () => {
@@ -1219,14 +1220,16 @@ const WorkOrder: React.FC = () => {
 
   const handleSaveExpense = async () => {
     await fetchExpenseList();
+    await fetchWorkOrderDetails();
   }
 
   return (
+    
     <IonPage>
       <Header title="Work Order" />
       <IonContent className="ion-padding">
         <IonTabs>
-          <IonTabBar slot="bottom" className="custom-tab-bar">
+          <IonTabBar slot="bottom" className="custom-tab-bar" style={{overflowX:'auto', whiteSpace:'nowrap'}}>
             {tabs.map((tab) => (
               <IonTabButton
                 key={tab.name}
@@ -1255,7 +1258,7 @@ const WorkOrder: React.FC = () => {
                               status={workOrder.active_status.status}
                             />
                           </h2>
-                          {/* <Timeline workOrderId={id!} /> */}
+                          <Timeline workOrderId={id!} />
                           <IonLabel>
                             {workOrder?.work_order_request?.work_order_description} | {workOrder?.work_order_request?.work_order_type?.work_order_type} <br />
                             <h3>

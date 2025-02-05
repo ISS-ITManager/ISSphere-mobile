@@ -4,7 +4,7 @@ import ExploreContainer from '../components/ExploreContainer';
 import MasterComponent from '../components/MasterComponent';
 import './Home.css';
 import { notificationApi, workOrderRequestApi } from "../api/api";
-import { formatDate } from "../utilities/globalfns";
+import { formatDate, hasPermission } from "../utilities/globalfns";
 import { checkmarkDone } from "ionicons/icons";
 import { useHistory } from "react-router";
 
@@ -74,6 +74,7 @@ const NotificationPage: React.FC = () => {
                 </IonItem>
                 <IonItem lines="none">
                   <IonLabel
+                    aria-disabled={!hasPermission("work-order-request.view")}
                     onClick={() => handleOpenWOR(data.id)}
                   >
                     <b>{data.reference_number}</b>

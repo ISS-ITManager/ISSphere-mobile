@@ -7,7 +7,7 @@ import { addOutline, saveOutline, checkmarkCircleOutline, closeCircleOutline, ch
 
 import { workOrderCategoryApi, workOrderTypeApi, entityApi, workOrderTaskHistoryApi, assigneeApi, groupApi, propertyApi, zoneApi, levelApi, roomApi, workOrderRequestApi } from '../../api/api';
 import ModalComponent from '../../components/Modal';
-import { formatDate, presentToast } from '../../utilities/globalfns';
+import { formatDate, hasPermission, presentToast } from '../../utilities/globalfns';
 import ModalComponent1 from '../../components/ModalComponent1';
 
 
@@ -429,6 +429,7 @@ const WorkOrderRequestCreate: React.FC = () => {
                 </IonCard>
 
                 <IonButton
+                    disabled={!hasPermission("work-order-request.create")}
                     expand="block"
                     onClick={handleSaveWOReq}>
                     Save <IonIcon slot="start" icon={saveOutline} />
@@ -439,7 +440,7 @@ const WorkOrderRequestCreate: React.FC = () => {
 
     const viewContent = (selectedRequest) => {
         return (
-            <IonCard className="task-card animate__animated  animate__pulse" style={{marginTop: '-10px' }}>
+            <IonCard className="task-card animate__animated  animate__pulse" style={{ marginTop: '-10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '10px' }}>
                     <div>{getIsAcceptedColor(selectedRequest.work_order_request.is_accepted)}</div>
                     <div>{getPriority(selectedRequest.work_order_request.priority)}</div>

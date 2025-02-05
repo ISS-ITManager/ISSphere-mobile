@@ -5,7 +5,7 @@ import {
   IonToolbar,
   IonTitle,
   IonButton,
-  IonIcon,
+  IonIcon, IonButtons
 } from "@ionic/react";
 import { notificationsOutline, personCircleOutline } from "ionicons/icons";
 import BackButton from "./BackButton";
@@ -34,16 +34,27 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
   return (
     <IonHeader collapse="fade" className="ion-no-border">
       <IonToolbar className="ion-no-border">
-        <BackButton />
-        <IonTitle>{title}</IonTitle>
-        <div slot="end" className="ion-align-items-center">
-          <IonButton fill="clear" className="ion-padding-0" onClick={() => history.push("/notification")}>
+        <IonButtons slot="start">
+          <BackButton />
+        </IonButtons>
+
+        <IonTitle className="ion-text-center" style={{ flex: 1 }}>
+          {title}
+        </IonTitle>
+
+        <div slot="end" style={{ display: "flex", alignItems: "center" }}>
+          <IonButton
+            fill="clear"
+            className="ion-padding-0"
+            onClick={() => history.push("/notification")}
+            style={{ position: "relative" }}
+          >
             <IonIcon
               icon={notificationsOutline}
               className="ion-text-muted"
               style={{ fontSize: "35px", color: "#333" }}
             />
-            {notifsCount > 0 &&
+            {notifsCount > 0 && (
               <div
                 className="notification-badge"
                 style={{
@@ -63,7 +74,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
               >
                 {notifsCount}
               </div>
-            }
+            )}
           </IonButton>
 
           <IonButton
@@ -79,6 +90,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
           </IonButton>
         </div>
       </IonToolbar>
+
     </IonHeader>
   );
 };

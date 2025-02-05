@@ -9,27 +9,28 @@ import { saveOutline } from "ionicons/icons";
 import { useHistory } from "react-router";
 import { logOutOutline } from "ionicons/icons";
 import { logout } from "../api/api";
+import { getRenderingRef } from "ionicons/dist/types/stencil-public-runtime";
 
 const AccountPage: React.FC = () => {
   const history = useHistory();
   const [userDetails, setUserDetails] = useState();
+  const userData = JSON.parse(localStorage.getItem("userData"));
   const handleLogout = async () => {
     try {
       const req = await logout();
-      console.log("req: "+JSON.stringify(req));
+      console.log("req: " + JSON.stringify(req));
       localStorage.clear();
       history.push("/");
       window.location.reload();
     }
     catch (error) {
-      console.log("error logout: "+JSON.stringify(error));      
+      console.log("error logout: " + JSON.stringify(error));
     }
   }
 
 
   useEffect(() => {
     const retrieveNotifications = async () => {
-      const userData = JSON.parse(localStorage.getItem("userData"));
       // console.log("userData: " + userData.id);
 
       const req = await userApi.show(userData.user.id);
@@ -39,6 +40,15 @@ const AccountPage: React.FC = () => {
     retrieveNotifications();
 
   }, []);
+  const gender =
+    [{
+      id: 1,
+      name: "Male"
+    }, {
+      id: 2,
+      name: "Female"
+    }
+    ];
 
 
   return (
@@ -52,47 +62,59 @@ const AccountPage: React.FC = () => {
             <IonList className="ion-justify-content-evenly">
               <IonItem>
                 <IonLabel>First Name: </IonLabel>
-                <IonInput value={userDetails?.profile?.first_name || ''}></IonInput>
+                <IonInput className="ion-text-end" value={userDetails?.profile?.first_name || ''}></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Middle Name: </IonLabel>
-                <IonInput value={userDetails.profile.middle_name}></IonInput>
+                <IonInput className="ion-text-end" value={userDetails.profile.middle_name}></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Last Name: </IonLabel>
-                <IonInput value={userDetails.profile.last_name}></IonInput>
+                <IonInput className="ion-text-end" value={userDetails.profile.last_name}></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Birthdate: </IonLabel>
-                <IonInput value={userDetails.profile.birthdate}></IonInput>
+                <IonInput className="ion-text-end" value={userDetails.profile.birthdate}></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Sex: </IonLabel>
                 <IonSelect
-                  value={userDetails.profile.sex}
+                  value={userDetails?.profile?.sex}
+                  onIonChange={(e) => {
+                    // Handle selection change (if needed, e.g., update the user profile)
+                    console.log("Selected gender ID: ", e.target.value);
+                  }}
                 >
-                  <IonSelectOption value={"1"}>Male</IonSelectOption>
-                  <IonSelectOption value={"0"}>Female</IonSelectOption>
+                  {gender.map((item) => (
+                    <IonSelectOption 
+                      className="ion-text-end"
+                      key={item.id} value={item.id}>
+                      {item.name}
+                    </IonSelectOption>
+                  ))}
                 </IonSelect>
               </IonItem>
               <IonItem>
                 <IonLabel>Mobile: </IonLabel>
-                <IonInput value={userDetails.profile.mobile_number}></IonInput>
+                <IonInput className="ion-text-end" value={userDetails.profile.mobile_number}></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Email: </IonLabel>
-                <IonInput value={userDetails.email}></IonInput>
+                <IonInput className="ion-text-end" value={userDetails.email}></IonInput>
+              </IonItem>
+              <IonItem>
+                <IonLabel>Client Name: </IonLabel>
+                <IonText className="ion-text-end">{userData?.user?.client?.client}</IonText>
               </IonItem>
             </IonList>
-
           </IonCard>
           <IonButton expand="block">
             Save <IonIcon icon={saveOutline} slot="end" />
           </IonButton>
-        <IonButton expand="block" onClick={handleLogout} color="tertiary">
-          Logout
-          <IonIcon icon={logOutOutline} slot="end" />
-        </IonButton>
+          <IonButton expand="block" onClick={handleLogout} fill="outline">
+            Logout
+            <IonIcon icon={logOutOutline} slot="end" />
+          </IonButton>
         </>
       }
     </MasterComponent>

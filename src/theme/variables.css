@@ -36,5 +36,5 @@ ion-page {
 body {
   transition: background-color 0.3s ease;  
   font-family: 'Inter', sans-serif; /* Apply font-family to the entire app */
-
+  color: var(--ion-color-primary);
 }

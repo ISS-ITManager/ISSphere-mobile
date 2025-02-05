@@ -105,6 +105,16 @@ export const getEntitiesByGroupId = async (groupId: number) => {
     throw new Error("Failed to fetch entities for group");
   }
 };
+export const reportApi = {
+  workOrderPending: async (data: any) => {
+    const response = await api.get(`/reports/work-order-pending?download=false&client_id=${data.client_id}`);
+    return response;
+  },
+  workOrderClosed: async (data: any) => {
+    const response = await api.get(`/reports/work-order-closed?start_date=${data.start_date}&end_date=${data.end_date}&download=false&client_id=${data.client_id}`);
+    return response;
+  },
+}
 
 export const workOrderStatusApi = {
   list: async (workOrderId: string) => {
@@ -389,19 +399,19 @@ export const workOrderSupplyApi = {
   },
 }
 
-export const workOrderExpenseApi ={
-  
-  store: async (data : any) => {
-      const response = await api.post(`/work-order-expenses`, data);
-      return response;
+export const workOrderExpenseApi = {
+
+  store: async (data: any) => {
+    const response = await api.post(`/work-order-expenses`, data);
+    return response;
   },
-  list: async (id:any) => {
-      const response = await api.get(`/work-order-expenses/list?work_order=${id}`);
-      return response;
+  list: async (id: any) => {
+    const response = await api.get(`/work-order-expenses/list?work_order=${id}`);
+    return response;
   },
   delete: async (id: any) => {
-      const response = await api.delete(`/work-order-expenses/${id}`);
-      return response;
+    const response = await api.delete(`/work-order-expenses/${id}`);
+    return response;
   },
 }
 

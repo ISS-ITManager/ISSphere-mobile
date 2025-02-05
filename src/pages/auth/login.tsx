@@ -26,11 +26,11 @@ const Login: React.FC = () => {
   const history = useHistory();
 
   useEffect(() => {
-    PushNotifications.requestPermissions();
-    PushNotifications.register();
-    PushNotifications.addListener('registration', token => {
-      localStorage.setItem("deviceToken", token.value)
-    });
+    // PushNotifications.requestPermissions();
+    // PushNotifications.register();
+    // PushNotifications.addListener('registration', token => {
+    //   localStorage.setItem("deviceToken", token.value)
+    // });
 
   }, [])
 
