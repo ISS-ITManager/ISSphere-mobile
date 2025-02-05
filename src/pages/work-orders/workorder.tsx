@@ -214,6 +214,7 @@ const WorkOrder: React.FC = () => {
 
   const [workOrderStatus, setWorkOrderStatus] = useState("");
   const [workOrderRemarks, setWorkOrderRemarks] = useState("");
+  const [timelineKey, setTimelineKey] = useState(0);
 
   const handleApplyFilter = async () => {
     try {
@@ -251,6 +252,8 @@ const WorkOrder: React.FC = () => {
   const handleTabChange = (tab: string) => {
     setSelectedTab(tab);
     modal.current?.present();
+
+    setTimelineKey((prevKey) => prevKey + 1);
   };
 
   const handleInputChange = (e: any) => {
@@ -1369,7 +1372,7 @@ const WorkOrder: React.FC = () => {
                               status={workOrder.active_status.status}
                             />
                           </h2>
-                          <Timeline workOrderId={id!} />
+                          <Timeline key={timelineKey} workOrderId={id!} />{" "}
                         </IonCol>
                       </IonRow>
                     </IonGrid>
