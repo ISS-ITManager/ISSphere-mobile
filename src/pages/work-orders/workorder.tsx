@@ -39,7 +39,7 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonAlert,
-  IonChip
+  IonChip,
 } from "@ionic/react";
 import {
   addOutline,
@@ -81,6 +81,12 @@ import {
   getGroups,
   getEntitiesByGroupId,
   workOrderExpenseApi,
+  getPropertiesByEntityId,
+  getZonesByPropertyId,
+  getLevelByZoneId,
+  getRoomByLevelId,
+  getWorkOrderAssets,
+  deleteWorkOrderAsset,
 } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Timeline from "../../utilities/workordertimelinecomponent";
@@ -94,6 +100,7 @@ import BadgeStatus from "../../utilities/BadgeStatus";
 import WorkOrderExpenses from "./workorder-components/expense";
 import { hasPermission } from "../../utilities/globalfns";
 import MasterComponent from "../../components/MasterComponent";
+import DeletePopup from "../../utilities/DeletePopup";
 
 // Define the WorkOrder type
 interface WorkOrder {
@@ -158,6 +165,7 @@ const WorkOrder: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
     ""
   );
+  const [assets, setAssets] = useState<any[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<string | undefined>("");
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [assetOptions, setAssetOptions] = useState([]);
@@ -168,23 +176,34 @@ const WorkOrder: React.FC = () => {
 
   const [apiSuccess, setApiSuccess] = useState<boolean>(false);
   const [apiData, setApiData] = useState<any>(null);
+  const deletePopupRef = useRef<DeletePopupRef>(null);
 
   const [tasks, setTasks] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
+  const [selectedEntity, setSelectedEntity] = useState<number | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
+  const [selectedZone, setSelectedZone] = useState<number | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
+
   const [entities, setEntities] = useState<any[]>([]);
+  const [properties, setProperties] = useState([]);
+  const [zones, setZones] = useState([]);
+  const [levels, setLevels] = useState([]);
+  const [rooms, setRooms] = useState([]);
 
   const [loadingTasks, setLoadingTasks] = useState<boolean>(false);
   const [assignees, setAssignees] = useState([]);
   const [addTask, setAddTask] = useState(false);
   const [formTask, setFormTask] = useState({
     work_order_id: id,
-    assignee_id: '',
-    title: '',
-    description: '',
-    priority: '',
-    status: '',
-  })
+    assignee_id: "",
+    title: "",
+    description: "",
+    priority: "",
+    status: "",
+  });
   const [activityLogs, setActivityLogs] = useState([]);
   // const [returnMsg, setReturnMsg] = useState<string>("");
   const [supplierList, setSupplierList] = useState([]);
@@ -194,8 +213,9 @@ const WorkOrder: React.FC = () => {
   const [openSupply, setOpenSupply] = useState(false);
   const [updateWorkOrder, setUpdateWorkOrder] = useState(false);
 
-  const [workOrderStatus, setWorkOrderStatus] = useState('');
-  const [workOrderRemarks, setWorkOrderRemarks] = useState('');
+  const [workOrderStatus, setWorkOrderStatus] = useState("");
+  const [workOrderRemarks, setWorkOrderRemarks] = useState("");
+  const [timelineKey, setTimelineKey] = useState(0);
   const [workOrderExpenseList, setWorkOrderExpenseList] = useState([]);
   const [openExpense, setOpenExpense] = useState(false);
 
@@ -230,42 +250,43 @@ const WorkOrder: React.FC = () => {
     { name: "task", icon: fileTrayFullOutline },
     { name: "supplies", icon: cubeOutline },
     { name: "expenses", icon: receiptOutline },
-    { name: "activity", icon: timeOutline }
+    { name: "activity", icon: timeOutline },
   ];
 
   const handleTabChange = (tab: string) => {
     setSelectedTab(tab);
     modal.current?.present();
+
+    setTimelineKey((prevKey) => prevKey + 1);
   };
 
   const handleInputChange = (e: any) => {
     const { name, value } = e.target;
-    setFormTask(prevFormData => ({
+    setFormTask((prevFormData) => ({
       ...prevFormData,
-      [name]: value
+      [name]: value,
     }));
   };
-
 
   const handleUpdateWorkOrder = async () => {
     setUpdateWorkOrder(true);
 
   }
   const handleSaveWorkOrder = async (workOrder) => {
-    // console.log("handleSaveWorkOrder: " + JSON.stringify(workOrder));
+    // console.log("handleSaveWorkOrder: "  +  JSON.stringify(workOrder));
     if (workOrder && workOrderStatus) {
       try {
         let data = {
           work_order: workOrder.id,
           status: workOrderStatus,
-          remarks: workOrderRemarks
-        }
+          remarks: workOrderRemarks,
+        };
         const req = await workOrderApi.workOrderStatus(data);
         console.log("handleSaveWorkOrder req: " + JSON.stringify(req.data));
-
       } catch (error) {
-        console.log("handleSaveWorkOrder error: " + JSON.stringify(error.message));
-
+        console.log(
+          "handleSaveWorkOrder error: " + JSON.stringify(error.message)
+        );
       }
       await fetchWorkOrderDetails();
     }
@@ -277,7 +298,7 @@ const WorkOrder: React.FC = () => {
 
     return (
       <>
-        {workOrder &&
+        {workOrder && (
           <IonList className="ion-padding">
             <IonLabel> Current Status: {workOrder?.active_status?.status}</IonLabel>
             <IonItem>
@@ -326,10 +347,10 @@ const WorkOrder: React.FC = () => {
               </IonButton>
             </div>
           </IonList>
-        }
+        )}
       </>
-    )
-  }
+    );
+  };
 
   const fetchWorkOrderDetails = async () => {
     if (!id) {
@@ -343,7 +364,6 @@ const WorkOrder: React.FC = () => {
       const data = await getWorkOrderDetails(id);
       setWorkOrder(data.data);
       // console.log("getWorkOrderDetails: " + JSON.stringify(data.data));
-
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unknown error occurred.";
@@ -365,6 +385,38 @@ const WorkOrder: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    // Fetch work order assets on component mount
+    const fetchAssetsLists = async () => {
+      try {
+        const response = await getWorkOrderAssets(id); // Pass workOrderId here
+        setAssets(response.data); // Update state with the fetched assets
+      } catch (error) {
+        console.error("Error fetching assets:", error);
+      } finally {
+        setLoading(false); // Set loading to false when done
+      }
+    };
+
+    fetchAssetsLists();
+  }, [id]);
+
+  const refreshAssets = async () => {
+    setLoading(true);
+    try {
+      const response = await getWorkOrderAssets(id); // Assuming workOrderId is passed correctly
+      setAssets(response.data); // Update state with the fetched assets
+    } catch (error) {
+      console.error("Error fetching assets:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshAssets(); // Initial fetch when the component mounts
+  }, []);
+
   const fetchTasks = async () => {
     if (!id) return;
 
@@ -384,7 +436,8 @@ const WorkOrder: React.FC = () => {
     } finally {
       setLoadingTasks(false);
     }
-  };
+  }
+
 
   useEffect(() => {
     fetchTasks();
@@ -437,19 +490,15 @@ const WorkOrder: React.FC = () => {
     }
   }, [selectedCategory]);
 
-
   const fetchSupplyList = async () => {
     try {
       const req = await workOrderSupplyApi.list(id);
       console.log("supplyList: " + JSON.stringify(req.data.data));
       setWorkOrderSupplyList(req.data.data);
-
-    }
-    catch (error) {
+    } catch (error) {
       console.log("fetchSupplyList error: " + error.message);
-
     }
-  }
+  };
 
 
   const fetchExpenseList = async () => {
@@ -464,18 +513,14 @@ const WorkOrder: React.FC = () => {
   }
 
   useEffect(() => {
-
     const fetchSuppliers = async () => {
       try {
         const req = await supplierApi.list();
         // console.log("supplierList: " + JSON.stringify(req.data.data));
 
         setSupplierList(req.data.data);
-      }
-      catch (error) {
-
-      }
-    }
+      } catch (error) { }
+    };
 
     const fetchSupplyCategory = async () => {
       try {
@@ -483,11 +528,8 @@ const WorkOrder: React.FC = () => {
         // console.log("supplyCat: " + JSON.stringify(req.data.data));
 
         setSupplyCategory(req.data.data);
-      }
-      catch (error) {
-
-      }
-    }
+      } catch (error) { }
+    };
 
     const fetchSupplies = async () => {
       try {
@@ -495,11 +537,8 @@ const WorkOrder: React.FC = () => {
         // console.log("supplies: " + JSON.stringify(req.data.data));
 
         setSupplyList(req.data.data);
-      }
-      catch (error) {
-
-      }
-    }
+      } catch (error) { }
+    };
     fetchSupplyList();
     fetchSuppliers();
     fetchSupplyCategory();
@@ -526,7 +565,7 @@ const WorkOrder: React.FC = () => {
           setLoading(false);
         }
       }
-    }
+    };
 
     fetchActivityLogs();
   }, [id]);
@@ -539,14 +578,14 @@ const WorkOrder: React.FC = () => {
         const data = await assigneeApi.list();
         setAssignees(data.data.data);
         // console.log("assignees: " + JSON.stringify(data.data.data));
-
       } catch (error) {
         console.log(error);
       }
-    }
+    };
     fetchAssignees();
-  }, [])
+  }, []);
 
+  // Fetch groups once on mount
   useEffect(() => {
     const fetchGroups = async () => {
       try {
@@ -562,23 +601,106 @@ const WorkOrder: React.FC = () => {
     fetchGroups();
   }, []);
 
+  // Fetch entities when selectedGroup changes
   useEffect(() => {
-    console.log("Selected Group:", selectedGroup);
-    if (selectedGroup !== null && selectedGroup !== undefined) {
-      const fetchEntities = async () => {
-        try {
-          const data = await getEntitiesByGroupId(selectedGroup);
-          console.log("Fetched Entities:", data);
-          setEntities(data);
-          console.log("Fetched Entitiess:", entities);
-        } catch (err) {
-          console.error("Error fetching entities:", err);
-          setError("Failed to fetch entities");
-        }
-      };
-      fetchEntities();
-    }
+    if (!selectedGroup) return;
+
+    const fetchEntities = async () => {
+      try {
+        const data = await getEntitiesByGroupId(selectedGroup);
+        setEntities(data);
+      } catch (err) {
+        setError("Failed to fetch entities");
+      }
+    };
+
+    fetchEntities();
   }, [selectedGroup]);
+
+  // Fetch properties when selectedEntity changes
+  useEffect(() => {
+    if (!selectedEntity) return;
+
+    const fetchProperties = async () => {
+      try {
+        const data = await getPropertiesByEntityId(selectedEntity);
+        if (Array.isArray(data)) {
+          setProperties(data);
+        } else {
+          setError("Unexpected data format from API");
+        }
+      } catch (err) {
+        setError("Failed to fetch properties");
+      }
+    };
+
+    fetchProperties();
+  }, [selectedEntity]);
+
+  // Fetch zones when selectedProperty changes
+  useEffect(() => {
+    if (!selectedProperty) return;
+
+    const fetchZones = async () => {
+      try {
+        const data = await getZonesByPropertyId(selectedProperty);
+        if (Array.isArray(data)) {
+          setZones(data);
+        } else {
+          setError("Unexpected data format from API");
+        }
+      } catch (err) {
+        setError("Failed to fetch zones");
+      }
+    };
+
+    fetchZones();
+  }, [selectedProperty]);
+
+  // Fetch levels when selectedZone changes
+  useEffect(() => {
+    if (!selectedZone) return;
+
+    const fetchLevels = async () => {
+      try {
+        const data = await getLevelByZoneId(selectedZone);
+        if (Array.isArray(data)) {
+          setLevels(data);
+        } else {
+          setError("Unexpected data format from API");
+        }
+      } catch (err) {
+        setError("Failed to fetch zones");
+      }
+    };
+
+    fetchLevels();
+  }, [selectedZone]);
+
+  // Fetch rooms when selectedRoom changes
+  useEffect(() => {
+    if (!selectedLevel) return;
+
+    console.log("Fetching rooms for Level:", selectedLevel); // Debugging log
+
+    const fetchRooms = async () => {
+      try {
+        const data = await getRoomByLevelId(selectedLevel);
+        console.log("Fetched rooms:", data); // Debugging log
+        if (Array.isArray(data) && data.length > 0) {
+          setRooms(data);
+        } else {
+          setRooms([]); // Ensure state is updated even if empty
+          setError("No rooms available for this level");
+        }
+      } catch (err) {
+        setRooms([]);
+        setError("Failed to fetch rooms");
+      }
+    };
+
+    fetchRooms();
+  }, [selectedLevel]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -596,6 +718,9 @@ const WorkOrder: React.FC = () => {
         setPageTitle("Work Order Assets");
         return (
           <Assets
+            workOrderId={id}
+            assets={assets}
+            onSuccess={refreshAssets}
             selectedAction={selectedAction}
             selectedCategory={selectedCategory}
             selectedAsset={selectedAsset}
@@ -611,6 +736,24 @@ const WorkOrder: React.FC = () => {
             selectedGroup={selectedGroup}
             entities={entities}
             setEntities={setEntities}
+            selectedEntity={selectedEntity}
+            setSelectedEntity={setSelectedEntity}
+            properties={properties}
+            setProperties={setProperties}
+            selectedProperty={selectedProperty}
+            setSelectedProperty={setSelectedProperty}
+            zones={zones}
+            setZones={setZones}
+            selectedZone={selectedZone}
+            setSelectedZone={setSelectedZone}
+            levels={levels}
+            setLevels={setLevels}
+            selectedLevel={selectedLevel}
+            setSelectedLevel={setSelectedLevel}
+            rooms={rooms}
+            setRooms={setRooms}
+            selectedRoom={selectedRoom}
+            setSelectedRoom={setSelectedRoom}
             onApplyFilter={handleApplyFilter}
             apiSuccess={apiSuccess}
             apiData={apiData}
@@ -622,9 +765,10 @@ const WorkOrder: React.FC = () => {
         handleUpdateRecords();
         return (
           <>
-
             <IonItem>
-              <IonLabel><h2>Task List</h2></IonLabel>
+              <IonLabel>
+                <h2>Task List</h2>
+              </IonLabel>
               <IonButton
                 onClick={() => setAddTask(true)}
                 size="default"
@@ -636,12 +780,16 @@ const WorkOrder: React.FC = () => {
               </IonButton>
             </IonItem>
 
-            <div style={{ maxHeight: '65%', overflowY: 'auto' }}>
-              {tasks && tasks
-                .map((task, index) => (
-                  <IonCard key={index} className="bounce-in-right task-card" color="light"
-                    style={{ animationDelay: `${index * 0.1}s` }}>
-                    <IonCardHeader >
+            <div style={{ maxHeight: "65%", overflowY: "auto" }}>
+              {tasks &&
+                tasks.map((task, index) => (
+                  <IonCard
+                    key={index}
+                    className="bounce-in-right task-card"
+                    color="light"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <IonCardHeader>
                       <IonLabel className="work-order-header">
                         <h2><b>{task.title} </b></h2>
                         <BadgeComponent status={task.status} />
@@ -650,28 +798,46 @@ const WorkOrder: React.FC = () => {
                     <IonList
                       onClick={() => handleViewWOTasks(task)}>
                       <IonItem>
-                        <IonLabel><b>Description: </b></IonLabel>
+                        <IonLabel>
+                          <b>Description: </b>
+                        </IonLabel>
                         <IonText>{task.description}</IonText>
                       </IonItem>
                       <IonItem>
-                        <IonLabel><b>Priority: </b></IonLabel>
+                        <IonLabel>
+                          <b>Priority: </b>
+                        </IonLabel>
                         <BadgePriority priority={task.priority} />
                       </IonItem>
-                      <IonItem >
-                        <IonLabel><b>Start Date: </b></IonLabel>
+                      <IonItem>
+                        <IonLabel>
+                          <b>Start Date: </b>
+                        </IonLabel>
                         <IonText>{formatDate(task.start_date)}</IonText>
                       </IonItem>
-                      <IonItem >
-                        <IonLabel><b>Completed Date: </b></IonLabel>
-                        <IonText>{task.completed_date === null ? 'N/A' : formatDate(task.completed_date)}</IonText>
+                      <IonItem>
+                        <IonLabel>
+                          <b>Completed Date: </b>
+                        </IonLabel>
+                        <IonText>
+                          {task.completed_date === null
+                            ? "N/A"
+                            : formatDate(task.completed_date)}
+                        </IonText>
                       </IonItem>
                     </IonList>
                   </IonCard>
                 ))}
 
-              {tasks?.length === 0 && <IonLabel><center><i>No records found</i></center></IonLabel>}
+              {tasks?.length === 0 && (
+                <IonLabel>
+                  <center>
+                    <i>No records found</i>
+                  </center>
+                </IonLabel>
+              )}
 
-              {addTask &&
+              {addTask && (
                 <IonModal
                   isOpen={addTask}
                   onDidDismiss={() => setAddTask(false)}
@@ -680,7 +846,9 @@ const WorkOrder: React.FC = () => {
                     <IonToolbar>
                       <IonTitle>Add Task</IonTitle>
                       <IonButtons slot="end">
-                        <IonButton onClick={() => setAddTask(false)}><IonIcon icon={closeOutline} /></IonButton>
+                        <IonButton onClick={() => setAddTask(false)}>
+                          <IonIcon icon={closeOutline} />
+                        </IonButton>
                       </IonButtons>
                     </IonToolbar>
                   </IonHeader>
@@ -695,7 +863,9 @@ const WorkOrder: React.FC = () => {
                           placeholder="Select assginee"
                         >
                           {assignees.map((person, index) => (
-                            <IonSelectOption value={person.id} key={index}>{person.first_name} {person.last_name}</IonSelectOption>
+                            <IonSelectOption value={person.id} key={index}>
+                              {person.first_name} {person.last_name}
+                            </IonSelectOption>
                           ))}
                         </IonSelect>
                       </IonItem>
@@ -727,19 +897,19 @@ const WorkOrder: React.FC = () => {
                           placeholder="Select priority"
                         >
                           <IonSelectOption value="low">Low</IonSelectOption>
-                          <IonSelectOption value="medium">Medium</IonSelectOption>
+                          <IonSelectOption value="medium">
+                            Medium
+                          </IonSelectOption>
                           <IonSelectOption value="high">High</IonSelectOption>
                         </IonSelect>
                       </IonItem>
                     </IonList>
-                    <IonButton
-                      expand="block"
-                      onClick={handleSaveTask}>
+                    <IonButton expand="block" onClick={handleSaveTask}>
                       Save <IonIcon slot="start" icon={saveOutline} />
                     </IonButton>
                   </IonContent>
                 </IonModal>
-              }
+              )}
             </div>
           </>
         );
@@ -748,10 +918,11 @@ const WorkOrder: React.FC = () => {
         setPageTitle("Work Order Supplies");
 
         return (
-
-          < >
+          <>
             <IonItem>
-              <IonLabel><h2>Supply List</h2></IonLabel>
+              <IonLabel>
+                <h2>Supply List</h2>
+              </IonLabel>
               <IonButton
                 onClick={() => setOpenSupply(true)}
                 size="default"
@@ -762,14 +933,15 @@ const WorkOrder: React.FC = () => {
                 Add
               </IonButton>
             </IonItem>
-            <div style={{ maxHeight: '65%', overflowY: 'auto' }}>
+            <div style={{ maxHeight: "65%", overflowY: "auto" }}>
               {renderSupplies()}
 
-              {openSupply &&
-                <ModalComponent1 title={"Add Supply"}
+              {openSupply && (
+                <ModalComponent1
+                  title={"Add Supply"}
                   isOpen={openSupply}
                   onClose={() => setOpenSupply(false)}
-                  getContentModal={() =>
+                  getContentModal={() => (
                     <WorkOrderSupplies
                       workOrder={id}
                       supplierList={supplierList}
@@ -777,15 +949,49 @@ const WorkOrder: React.FC = () => {
                       supplyList={supplyList}
                       closeModal={() => setOpenSupply(false)}
                       onSave={handleSaveSupply}
-                    />}
+                    />
+                  )}
                 />
-              }
-
-
+              )}
             </div>
           </>
-
         );
+
+      case "expenses":
+        setPageTitle("Other Expense");
+        return <>
+          <IonItem>
+            <IonLabel><h2>Other Expenses</h2></IonLabel>
+            <IonButton
+              onClick={() => setOpenExpense(true)}
+              size="default"
+              slot="end"
+            >
+              <IonIcon icon={addOutline} slot="start" />
+              Add
+            </IonButton>
+          </IonItem>
+
+          <div style={{ maxHeight: '65%', overflowY: 'auto' }}>
+            {renderExpenses()}
+            {openExpense &&
+              <ModalComponent1
+                title={"Work Order Expenses"}
+                isOpen={openExpense}
+                onClose={() => setOpenExpense(false)}
+                getContentModal={() =>
+                  <WorkOrderExpenses
+                    workOrder={id}
+                    closeModal={() => setOpenExpense(false)}
+                    onSave={handleSaveExpense}
+                  />
+                } />
+            }
+          </div>
+
+        </>
+
+
 
       case "expenses":
         setPageTitle("Other Expense");
@@ -824,22 +1030,25 @@ const WorkOrder: React.FC = () => {
       case "activity":
         setPageTitle("Activity Logs");
         return (
-          <IonContent style={{ maxHeight: '70%', overflowY: 'auto' }}>
+          <IonContent style={{ maxHeight: "70%", overflowY: "auto" }}>
             <div>
-              {activityLogs && activityLogs.map((item, index) => (
-                <IonCard key={index} className='ion-padding task-card'>
-                  <IonItem>
-                    <IonLabel>{formatDate(item.created_at)}</IonLabel>
-                  </IonItem>
-                  <IonItem>
-                    <IonText>{item.activity}</IonText>
-                  </IonItem>
-                  <IonItem>
-                    <IonIcon icon={personCircleOutline} /> <IonLabel>{item.first_name} {item.middle_name} {item.last_name}</IonLabel>
-                  </IonItem>
-
-                </IonCard>
-              ))}
+              {activityLogs &&
+                activityLogs.map((item, index) => (
+                  <IonCard key={index} className="ion-padding task-card">
+                    <IonItem>
+                      <IonLabel>{formatDate(item.created_at)}</IonLabel>
+                    </IonItem>
+                    <IonItem>
+                      <IonText>{item.activity}</IonText>
+                    </IonItem>
+                    <IonItem>
+                      <IonIcon icon={personCircleOutline} />{" "}
+                      <IonLabel>
+                        {item.first_name} {item.middle_name} {item.last_name}
+                      </IonLabel>
+                    </IonItem>
+                  </IonCard>
+                ))}
             </div>
           </IonContent>
         );
@@ -862,7 +1071,9 @@ const WorkOrder: React.FC = () => {
               placeholder="Select assginee"
             >
               {assignees.map((person, index) => (
-                <IonSelectOption value={person.id} key={index}>{person.first_name} {person.last_name}</IonSelectOption>
+                <IonSelectOption value={person.id} key={index}>
+                  {person.first_name} {person.last_name}
+                </IonSelectOption>
               ))}
             </IonSelect>
           </IonItem>
@@ -899,19 +1110,16 @@ const WorkOrder: React.FC = () => {
             </IonSelect>
           </IonItem>
         </IonList>
-        <IonButton
-          expand="block"
-          onClick={handleSaveTask}>
+        <IonButton expand="block" onClick={handleSaveTask}>
           Save <IonIcon slot="start" icon={saveOutline} />
         </IonButton>
       </IonContent>
-    )
-  }
+    );
+  };
 
   const renderTasks = () => {
     const completedTasks = tasks.filter((task) => task.status === "completed");
     // console.log("completed tasks: " + JSON.stringify(completedTasks));
-
 
     return (
       <div className="timeline-container">
@@ -1037,8 +1245,8 @@ const WorkOrder: React.FC = () => {
         }
 
       </div>
-    )
-  }
+    );
+  };
 
   const renderExpenses = () => {
     return (
@@ -1147,14 +1355,13 @@ const WorkOrder: React.FC = () => {
         const req = await workOrderSupplyApi.delete(supply.id);
         console.log("req: " + JSON.stringify(req.data));
         await fetchSupplyList();
-
       } catch (error) {
-        console.log("HandleDeleteSypply error: " + JSON.stringify(error.message));
-
+        console.log(
+          "HandleDeleteSypply error: " + JSON.stringify(error.message)
+        );
       }
     }
-  }
-
+  };
 
   const handleDeleteExpense = async (exp) => {
     if (exp) {
@@ -1174,10 +1381,10 @@ const WorkOrder: React.FC = () => {
   const handleViewWOTasks = (task) => {
     modal.current?.dismiss();
     history.push({
-      pathname: '/viewWO',
-      state: { workOrderTasks: task }
-    })
-  }
+      pathname: "/viewWO",
+      state: { workOrderTasks: task },
+    });
+  };
 
   const handleSaveTask = async () => {
     console.log("new tasks: " + JSON.stringify(formTask));
@@ -1208,10 +1415,12 @@ const WorkOrder: React.FC = () => {
     if (state?.updatedTask) {
       setTasks((prevRecords) =>
         prevRecords.map((record) =>
-          record.id === state.updatedTask.id ? state.updatedTask : record));
+          record.id === state.updatedTask.id ? state.updatedTask : record
+        )
+      );
       history.replace({ ...history.location, state: undefined });
     }
-  }
+  };
 
   const handleSaveSupply = async (newSupply) => {
     console.log("NewSupply: " + JSON.stringify(newSupply) + " | prevSupplies: " + JSON.stringify(workOrderSupplyList));
@@ -1221,15 +1430,31 @@ const WorkOrder: React.FC = () => {
   const handleSaveExpense = async () => {
     await fetchExpenseList();
     await fetchWorkOrderDetails();
-  }
+  };
+
+  const handleDelete = async (assetId: number) => {
+    deletePopupRef.current?.showDeleteConfirmation(
+      "Are you sure you want to delete this asset?",
+      async () => {
+        try {
+          const success = await deleteWorkOrderAsset(assetId);
+          if (success) {
+            refreshAssets();
+          }
+        } catch (error) {
+          console.error("Error deleting asset:", error);
+        }
+      }
+    );
+  };
 
   return (
-    
+
     <IonPage>
       <Header title="Work Order" />
       <IonContent className="ion-padding">
         <IonTabs>
-          <IonTabBar slot="bottom" className="custom-tab-bar" style={{overflowX:'auto', whiteSpace:'nowrap'}}>
+          <IonTabBar slot="bottom" className="custom-tab-bar" style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
             {tabs.map((tab) => (
               <IonTabButton
                 key={tab.name}
@@ -1251,14 +1476,16 @@ const WorkOrder: React.FC = () => {
                     <IonGrid className="header-section">
                       <IonRow className="header-row">
                         <IonCol className="header-content ion-text-center">
-
-                          <h2 className="work-order-header" onClick={() => handleUpdateWorkOrder(workOrder)}>
+                          <h2
+                            className="work-order-header"
+                            onClick={() => handleUpdateWorkOrder(workOrder)}
+                          >
                             {workOrder.reference_number}
                             <BadgeComponent
                               status={workOrder.active_status.status}
                             />
                           </h2>
-                          <Timeline workOrderId={id!} />
+                          <Timeline key={timelineKey} workOrderId={id!} />{" "}
                           <IonLabel>
                             {workOrder?.work_order_request?.work_order_description} | {workOrder?.work_order_request?.work_order_type?.work_order_type} <br />
                             <h3>
@@ -1331,6 +1558,55 @@ const WorkOrder: React.FC = () => {
                       </IonList>
                     </div>
 
+                    <div className="assets-section">
+                      <div className="assets-header">
+                        <h3>Asset List</h3>
+                        <p>List of assets used in this work order.</p>
+                      </div>
+                      {assets.length > 0 ? (
+                        <IonList className="assets-list">
+                          {assets.map((asset, index) => (
+                            <IonItem key={index} className="asset-item">
+                              <IonGrid>
+                                <IonRow className="align-items-center">
+                                  <IonCol size="2">
+                                    <div className="serial-number">
+                                      <IonIcon
+                                        icon={cubeOutline}
+                                        className="cube-icon"
+                                      />
+                                      <IonText>{asset.serialNumber}</IonText>
+                                    </div>
+                                  </IonCol>
+                                  <IonCol size="4">
+                                    <IonText className="new-status">
+                                      {asset.action}
+                                    </IonText>
+                                  </IonCol>
+                                  <IonCol size="5">
+                                    <IonText>{asset.description}</IonText>
+                                  </IonCol>
+                                  <IonCol size="1" className="text-right">
+                                    <IonIcon
+                                      icon={trashOutline}
+                                      className="delete-icon"
+                                      onClick={() => handleDelete(asset.id)} // Call delete function
+                                      style={{
+                                        cursor: "pointer",
+                                        color: "red",
+                                      }} // Make it clickable
+                                    />
+                                  </IonCol>
+                                </IonRow>
+                              </IonGrid>
+                            </IonItem>
+                          ))}
+                        </IonList>
+                      ) : (
+                        <p>No assets found</p>
+                      )}
+                      <DeletePopup ref={deletePopupRef} />
+                    </div>
                     {/* Render Tasks */}
                     {renderTasks()}
 
@@ -1353,6 +1629,6 @@ const WorkOrder: React.FC = () => {
       </IonContent>
     </IonPage>
   );
-};
+}
 
 export default WorkOrder;

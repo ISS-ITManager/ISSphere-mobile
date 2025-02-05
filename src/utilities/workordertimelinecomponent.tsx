@@ -42,22 +42,57 @@ const Timeline: React.FC<TimelineProps> = ({ workOrderId }) => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // useEffect(() => {
+  //   const fetchWorkOrderStatuses = async () => {
+  //     try {
+  //       const response = await workOrderStatusApi.list(workOrderId);
+  //       if (response && response.success && Array.isArray(response.data)) {
+  //         setWorkOrderStatuses(response.data);
+  //       } else {
+  //         setWorkOrderStatuses([]);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching work order statuses:", error);
+  //       setWorkOrderStatuses([]);
+  //     }
+  //   };
+
+  //   fetchWorkOrderStatuses();
+  // }, [workOrderId]);
+
   useEffect(() => {
-    const fetchWorkOrderStatuses = async () => {
-      try {
-        const response = await workOrderStatusApi.list(workOrderId);
-        if (response && response.success && Array.isArray(response.data)) {
-          setWorkOrderStatuses(response.data);
-        } else {
+    const savedWorkOrderId = localStorage.getItem("workOrderId");
+
+    if (workOrderId !== savedWorkOrderId) {
+      localStorage.setItem("workOrderId", workOrderId);
+
+      const fetchWorkOrderStatuses = async () => {
+        try {
+          const response = await workOrderStatusApi.list(workOrderId);
+          if (response && response.success && Array.isArray(response.data)) {
+            setWorkOrderStatuses(response.data);
+            localStorage.setItem(
+              "workOrderStatuses",
+              JSON.stringify(response.data)
+            );
+          } else {
+            setWorkOrderStatuses([]);
+          }
+        } catch (error) {
+          console.error("Error fetching work order statuses:", error);
           setWorkOrderStatuses([]);
         }
-      } catch (error) {
-        console.error("Error fetching work order statuses:", error);
-        setWorkOrderStatuses([]);
-      }
-    };
+      };
 
-    fetchWorkOrderStatuses();
+      fetchWorkOrderStatuses();
+    } else {
+      console.log("Using cached data from localStorage.");
+      // Check if cached data exists in localStorage and set it to state
+      const cachedData = localStorage.getItem("workOrderStatuses");
+      if (cachedData) {
+        setWorkOrderStatuses(JSON.parse(cachedData));
+      }
+    }
   }, [workOrderId]);
 
   useEffect(() => {
@@ -159,6 +194,10 @@ const Timeline: React.FC<TimelineProps> = ({ workOrderId }) => {
     return Math.floor(widthInPx);
   };
 
+  const fadeInAnimation = {
+    animation: "fadeIn 0.5s ease-in-out",
+  };
+
   return (
     <div
       style={{
@@ -170,7 +209,14 @@ const Timeline: React.FC<TimelineProps> = ({ workOrderId }) => {
       ref={containerRef}
     >
       {workOrderStatuses.map((status) => (
-        <div key={status.id} style={{ display: "flex", alignItems: "center" }}>
+        <div
+          key={status.id}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            ...fadeInAnimation, // Apply fade-in animation to each status
+          }}
+        >
           <div
             style={{
               borderRadius: "8px",
@@ -190,9 +236,7 @@ const Timeline: React.FC<TimelineProps> = ({ workOrderId }) => {
           </div>
           <IonPopover trigger={`popover_${status.id}`}>
             <div style={{ padding: "12px", textAlign: "center" }}>
-              {/* status as badge */}
               {status.status}
-              {/* duration as hh:mm */}
               {status.duration}
               <small style={{ display: "flex", alignItems: "center" }}>
                 <User

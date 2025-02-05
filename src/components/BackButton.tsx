@@ -3,7 +3,7 @@ import { useHistory } from "react-router"
 import {chevronBackOutline} from 'ionicons/icons';
 
 const BackButton = () => {
-    const history = useHistory();
+  const history = useHistory();
 
     const handleBackClick = () => {
         history.goBack();
