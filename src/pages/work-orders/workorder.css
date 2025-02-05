@@ -248,8 +248,6 @@
   animation: bounceInRight 0.8s ease-out forwards;
 }
 
-
-
 .unread-indicator {
   background: var(--ion-color-primary);
 
@@ -266,4 +264,65 @@
 
 .ion-item {
   font-size: small;
+}
+
+.assets-section {
+  margin: 17px;
+  padding: 10px;
+  border: 2px solid var(--ion-color-primary);
+  /* background: var(--ion-color-light); */
+  border-radius: 20px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.assets-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.assets-header p {
+  font-size: 14px;
+  color: #666;
+}
+
+.assets-list {
+  margin-top: 10px;
+}
+
+.asset-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px;
+  /* border-bottom: 1px solid #ddd; */
+}
+
+.asset-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-grow: 1;
+}
+
+.serial-number {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+}
+
+.cube-icon {
+  color: var(--ion-color-primary);
+  font-size: 1.5rem;
+}
+
+.new-status {
+  color: #007bff;
+  font-weight: bold;
+}
+
+.delete-icon {
+  cursor: pointer;
+  color: #dc3545;
+  font-size: 1.5rem;
 }
