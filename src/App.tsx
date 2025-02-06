@@ -86,7 +86,7 @@ const App: React.FC = () => {
           </Route>
           <Route exact path="/workOrderRequest/:id">
             <WorkOrderRequestView />
-          </Route>          
+          </Route>
           <Route exact path="/approveWO">
             <WorkOrderRequestApprove />
           </Route>
@@ -94,7 +94,7 @@ const App: React.FC = () => {
             <WorkOrderSLA />
           </Route>
           <Route exact path="/">
-            <Redirect to="/login" />
+            {localStorage.getItem("userData") !== null ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}
           </Route>
           <Route exact path="/notification">
             <NotificationPage />

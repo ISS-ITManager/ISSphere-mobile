@@ -77,7 +77,7 @@ const WorkOrderRequestView: React.FC = () => {
     return (
         <MasterComponent title={"View Work Order Request"}>
             {selectedRequest && <>
-                <IonCard className="task-card animate__animated  animate__pulse" style={{ marginTop: '-10px' }}>
+                <IonCard className="ion-padding task-card animate__animated  animate__pulse" style={{ marginTop: '-10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '10px' }}>
                         <div>{getIsAcceptedColor(selectedRequest?.work_order_request?.is_accepted)}</div>
                         <div>{getPriority(selectedRequest.work_order_request?.priority)}</div>

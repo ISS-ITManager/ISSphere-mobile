@@ -1,4 +1,4 @@
-import { IonButton, IonIcon } from "@ionic/react";
+import { IonButton, IonButtons, IonIcon } from "@ionic/react";
 import { useHistory } from "react-router"
 import {chevronBackOutline} from 'ionicons/icons';
 
@@ -15,9 +15,12 @@ const BackButton = () => {
             btn-sm mt-1 rounded-pill' onClick={handleBackClick}>
                 <i className='bx bx-chevron-left' ></i> Back
             </button> */}
-            <IonButton onClick={handleBackClick} fill="clear" shape="round">
-                <IonIcon icon={chevronBackOutline} /> Back
+            <IonButtons slot="start">
+            <IonButton 
+                onClick={handleBackClick} fill="clear" shape="round">
+                <IonIcon icon={chevronBackOutline} /> 
             </IonButton>
+            </IonButtons>
         </>
     )
 }

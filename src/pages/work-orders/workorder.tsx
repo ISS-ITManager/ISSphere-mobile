@@ -40,6 +40,7 @@ import {
   IonCardTitle,
   IonAlert,
   IonChip,
+  useIonAlert,
 } from "@ionic/react";
 import {
   addOutline,
@@ -202,7 +203,9 @@ const WorkOrder: React.FC = () => {
     title: "",
     description: "",
     priority: "",
-    status: "",
+    status: "new",
+    start_date: new Date().toLocaleDateString(),
+    end_date: "N/A"
   });
   const [activityLogs, setActivityLogs] = useState([]);
   // const [returnMsg, setReturnMsg] = useState<string>("");
@@ -218,6 +221,7 @@ const WorkOrder: React.FC = () => {
   const [timelineKey, setTimelineKey] = useState(0);
   const [workOrderExpenseList, setWorkOrderExpenseList] = useState([]);
   const [openExpense, setOpenExpense] = useState(false);
+  const [presentAlert] = useIonAlert();
 
   const handleApplyFilter = async () => {
     try {
@@ -333,6 +337,7 @@ const WorkOrder: React.FC = () => {
             <IonItem>
               <IonLabel><b>Remarks</b></IonLabel>
               <IonTextarea
+                className="ion-text-end"
                 onIonInput={(e) => setWorkOrderRemarks(e.target.value)}
                 rows={4}
                 placeholder="Type your remarks here"
@@ -547,26 +552,25 @@ const WorkOrder: React.FC = () => {
     fetchExpenseList();
   }, [])
 
+  const fetchActivityLogs = async () => {
+    if (id) {
+      try {
+        setLoading(true);
+        const data = await workOrderActivityLogApi.list(id);
+        // console.log("activityLogs: " + JSON.stringify(data.data.data));
+
+        setActivityLogs(data.data.data);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "An unknown error occurred.";
+        setError(`Failed to fetch work order details: ${errorMessage}`);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
   //fetch activityLogs
   useEffect(() => {
-    const fetchActivityLogs = async () => {
-      if (id) {
-        try {
-          setLoading(true);
-          const data = await workOrderActivityLogApi.list(id);
-          // console.log("activityLogs: " + JSON.stringify(data.data.data));
-
-          setActivityLogs(data.data.data);
-        } catch (err) {
-          const errorMessage =
-            err instanceof Error ? err.message : "An unknown error occurred.";
-          setError(`Failed to fetch work order details: ${errorMessage}`);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
     fetchActivityLogs();
   }, [id]);
 
@@ -959,73 +963,40 @@ const WorkOrder: React.FC = () => {
 
       case "expenses":
         setPageTitle("Other Expense");
-        return <>
-          <IonItem>
-            <IonLabel><h2>Other Expenses</h2></IonLabel>
-            <IonButton
-              onClick={() => setOpenExpense(true)}
-              size="default"
-              slot="end"
-            >
-              <IonIcon icon={addOutline} slot="start" />
-              Add
-            </IonButton>
-          </IonItem>
+        return (
+          <>
+            <IonItem>
+              <IonLabel><h2>Other Expenses</h2></IonLabel>
+              <IonButton
+                disabled={!hasPermission("work-order-expense.create")}
+                onClick={() => setOpenExpense(true)}
+                size="default"
+                slot="end"
+              >
+                <IonIcon icon={addOutline} slot="start" />
+                Add
+              </IonButton>
+            </IonItem>
 
-          <div style={{ maxHeight: '65%', overflowY: 'auto' }}>
-            {renderExpenses()}
-            {openExpense &&
-              <ModalComponent1
-                title={"Work Order Expenses"}
-                isOpen={openExpense}
-                onClose={() => setOpenExpense(false)}
-                getContentModal={() =>
-                  <WorkOrderExpenses
-                    workOrder={id}
-                    closeModal={() => setOpenExpense(false)}
-                    onSave={handleSaveExpense}
-                  />
-                } />
-            }
-          </div>
+            <div style={{ maxHeight: '65%', overflowY: 'auto' }}>
+              {renderExpenses()}
+              {openExpense &&
+                <ModalComponent1
+                  title={"Work Order Expenses"}
+                  isOpen={openExpense}
+                  onClose={() => setOpenExpense(false)}
+                  getContentModal={() =>
+                    <WorkOrderExpenses
+                      workOrder={id}
+                      closeModal={() => setOpenExpense(false)}
+                      onSave={handleSaveExpense}
+                    />
+                  } />
+              }
+            </div>
 
-        </>
-
-
-
-      case "expenses":
-        setPageTitle("Other Expense");
-        return <>
-          <IonItem>
-            <IonLabel><h2>Other Expenses</h2></IonLabel>
-            <IonButton
-              onClick={() => setOpenExpense(true)}
-              size="default"
-              slot="end"
-            >
-              <IonIcon icon={addOutline} slot="start" />
-              Add
-            </IonButton>
-          </IonItem>
-
-          <div style={{ maxHeight: '65%', overflowY: 'auto' }}>
-            {renderExpenses()}
-            {openExpense &&
-              <ModalComponent1
-                title={"Work Order Expenses"}
-                isOpen={openExpense}
-                onClose={() => setOpenExpense(false)}
-                getContentModal={() =>
-                  <WorkOrderExpenses
-                    workOrder={id}
-                    closeModal={() => setOpenExpense(false)}
-                    onSave={handleSaveExpense}
-                  />
-                } />
-            }
-          </div>
-
-        </>
+          </>
+        );
 
       case "activity":
         setPageTitle("Activity Logs");
@@ -1188,7 +1159,25 @@ const WorkOrder: React.FC = () => {
               style={{ animationDelay: `${index * 0.1}s` }}>
               <IonCardHeader>
                 <IonButton className="task-card-delete-button"
-                  id="delete-supply"
+
+                  onClick={() =>
+                    presentAlert({
+                      header: 'Delete Supply',
+                      message: `Are you sure you want to delete "${stock.supply}" from this work order?`,
+                      buttons: [{
+                        text: 'Cancel',
+                        role: 'cancel'
+                      },
+                      {
+                        text: 'OK',
+                        role: 'confirm',
+                        handler: () =>
+                          handleDeleteSupply(stock)
+                        ,
+                      },
+                      ],
+                    })
+                  }
                   color="danger"
                   disabled={!hasPermission("work-order-supply.delete")}
                 >
@@ -1219,25 +1208,7 @@ const WorkOrder: React.FC = () => {
                 </IonItem>
               </IonList>
 
-              <IonAlert
-                header="Delete Supply"
-                trigger="delete-supply"
-                message={"Are you sure you want to delete this supply from this work order?"}
-                buttons={[
-                  {
-                    text: 'Cancel',
-                    role: 'cancel'
-                  },
-                  {
-                    text: 'OK',
-                    role: 'confirm',
-                    handler: () => {
-                      handleDeleteSupply(stock)
-                    },
-                  },
-                ]}
-                onDidDismiss={({ detail }) => console.log(`Dismissed with role: ${detail.role}`)}
-              ></IonAlert>
+
             </IonCard>
           ))
           :
@@ -1249,6 +1220,7 @@ const WorkOrder: React.FC = () => {
   };
 
   const renderExpenses = () => {
+
     return (
       <div>
         {workOrderExpenseList && workOrderExpenseList?.length > 0 ?
@@ -1257,8 +1229,26 @@ const WorkOrder: React.FC = () => {
             <IonCard key={index} className="bounce-in-right task-card" color="light"
               style={{ animationDelay: `${index * 0.1}s` }}>
               <IonCardHeader>
-                <IonButton className="task-card-delete-button"
-                  id="delete-expense"
+                <IonButton
+                  className="task-card-delete-button"
+                  onClick={() =>
+                    presentAlert({
+                      header: 'Delete Expense',
+                      message: `Are you sure you want to delete "${exp.remarks}" expense from this work order?`,
+                      buttons: [{
+                        text: 'Cancel',
+                        role: 'cancel'
+                      },
+                      {
+                        text: 'OK',
+                        role: 'confirm',
+                        handler: () =>
+                          handleDeleteExpense(exp)
+                        ,
+                      },
+                      ],
+                    })
+                  }
                   color="danger"
                   disabled={!hasPermission("work-order-expense.delete")}
                 >
@@ -1269,39 +1259,20 @@ const WorkOrder: React.FC = () => {
               <IonList >
                 <IonItem>
                   <IonLabel><b>Remarks:</b></IonLabel>
-                  <IonText>{exp.remarks}</IonText>
+                  <IonText className="ion-text-end">{exp.remarks}</IonText>
                 </IonItem>
                 <IonItem>
                   <IonLabel><b>Amount:</b></IonLabel>
-                  <IonText>QAR {exp.amount}</IonText>
+                  <IonText className="ion-text-end">QAR {exp.amount}</IonText>
                 </IonItem>
               </IonList>
 
-              <IonAlert
-                header="Delete Expense"
-                trigger="delete-expense"
-                message={"Are you sure you want to delete this expense from this work order?"}
-                buttons={[
-                  {
-                    text: 'Cancel',
-                    role: 'cancel'
-                  },
-                  {
-                    text: 'OK',
-                    role: 'confirm',
-                    handler: () => {
-                      handleDeleteExpense(exp)
-                    },
-                  },
-                ]}
-                onDidDismiss={({ detail }) => console.log(`Dismissed with role: ${detail.role}`)}
-              ></IonAlert>
+
             </IonCard>
           ))
           :
           <IonLabel><center><i>No records found</i></center></IonLabel>
         }
-
       </div>
     )
   }
@@ -1355,6 +1326,8 @@ const WorkOrder: React.FC = () => {
         const req = await workOrderSupplyApi.delete(supply.id);
         console.log("req: " + JSON.stringify(req.data));
         await fetchSupplyList();
+        await fetchWorkOrderDetails();
+        await fetchActivityLogs();
       } catch (error) {
         console.log(
           "HandleDeleteSypply error: " + JSON.stringify(error.message)
@@ -1370,7 +1343,7 @@ const WorkOrder: React.FC = () => {
         console.log("req: " + JSON.stringify(req.data));
         await fetchExpenseList();
         await fetchWorkOrderDetails();
-
+        await fetchActivityLogs();
       } catch (error) {
         console.log("handleDeleteExpense error: " + JSON.stringify(error.message));
 
@@ -1396,12 +1369,13 @@ const WorkOrder: React.FC = () => {
           priority: formTask.priority,
           status: 'new',
           title: formTask.title,
-          work_order_id: formTask.work_order_id
+          work_order_id: formTask.work_order_id,
         });
         // console.log("req:" + JSON.stringify(req));
         await fetchTasks();
         await setTasks((prevRecords) => [...prevRecords, formTask]);
         await setFormTask({ work_order_id: id, assignee_id: '', title: '', description: '', priority: '' });
+        await fetchActivityLogs();
       } catch (error) {
         console.log("handleSaveTask Error: " + error.message);
       }
@@ -1425,11 +1399,14 @@ const WorkOrder: React.FC = () => {
   const handleSaveSupply = async (newSupply) => {
     console.log("NewSupply: " + JSON.stringify(newSupply) + " | prevSupplies: " + JSON.stringify(workOrderSupplyList));
     await fetchSupplyList();
+    await fetchWorkOrderDetails();
+    await fetchActivityLogs();
   }
 
   const handleSaveExpense = async () => {
     await fetchExpenseList();
     await fetchWorkOrderDetails();
+    await fetchActivityLogs();
   };
 
   const handleDelete = async (assetId: number) => {
@@ -1519,7 +1496,7 @@ const WorkOrder: React.FC = () => {
                             icon={documentAttachOutline}
                             className="section-icon"
                           />
-                          <>Attach Documents</>
+                          <label>Attach Documents</label>
                         </IonItem>
                       </div>
                       <IonItem lines="none" className="upload-container">
@@ -1560,7 +1537,7 @@ const WorkOrder: React.FC = () => {
 
                     <div className="assets-section">
                       <div className="assets-header">
-                        <h3>Asset List</h3>
+                        <IonLabel>Asset List</IonLabel>
                         <p>List of assets used in this work order.</p>
                       </div>
                       {assets.length > 0 ? (

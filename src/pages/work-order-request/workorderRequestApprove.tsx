@@ -139,6 +139,23 @@ const WorkOrderRequestApprove: React.FC = () => {
             console.log("req: " + JSON.stringify(req.data));
 
             if (req.data) {
+                setFormData({
+                    work_order_request: workOrderRequest?.work_order_request?.id,
+                    start_date: null,
+                    start_time: null,
+                    end_date: null,
+                    end_time: null,
+                    is_repeating: '',
+                    recurrence: '',
+                    days_of_week: [],
+                    assignment_mode: '',
+                    priority: '',
+                    services: [],
+                    service_providers: [],
+                    teams: [],
+                    assignees: []
+                });
+                setStep(1);
                 history.push({
                     pathname: '/createWOR',
                     state: { formData: formData }

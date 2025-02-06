@@ -123,7 +123,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
 
         setInprogressWOs(req.data.data?.inprogress_work_orders);
         setOpenWOs(req.data.data?.open_work_orders);
-        setPendingWOs(parseInt(req.data.data?.open_work_orders) + parseInt(req.data.data?.inprogress_work_orders));
+        // setPendingWOs(parseInt(req.data.data?.open_work_orders) + parseInt(req.data.data?.inprogress_work_orders));
       } catch (error) {
         console.log("getPendingWOs error: " + JSON.stringify(error.message));
       }
@@ -253,15 +253,15 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
 
   const openWOsData = {
     labels: [
-      'Pending',
+      // 'Pending',
       'Open',
       'In-Progress'
     ],
     datasets: [{
       label: 'Open Work Orders',
-      data: [pendingWOs, openWOs, inprogressWOs],
+      data: [openWOs, inprogressWOs],
       backgroundColor: [
-        'rgb(55,145,220)',
+        // 'rgb(55,145,220)',
         'rgb(9,8,154)',
         'rgb(254,145,31)'
       ],
@@ -298,24 +298,26 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
               </div>
             </IonCardContent>
           </IonCard> */}
-          <IonCard
-            className="minimal-work-order-card fade-in"
-            style={{ backgroundColor: "var(--ion-color-secondary)" }}
-          >
-            <IonCardContent>
-              <p className="chart-description">
-                <b>Total Open Work Orders</b>
-              </p>
-              <div className="chart-container">
-                <Pie data={openWOsData} />
-              </div>
-            </IonCardContent>
-          </IonCard>
+          {(openWOs > 0 || pendingWOs > 0 || inprogressWOs > 0) &&
+            <IonCard
+              className="minimal-work-order-card fade-in"
+              style={{ backgroundColor: "var(--ion-color-secondary)" }}
+            >
+              <IonCardContent>
+                <p className="chart-description">
+                  <b>Total Pending Work Orders</b>
+                </p>
+                <center><div className="chart-container">
+                  <Pie data={openWOsData} />
+                </div></center>
+              </IonCardContent>
+            </IonCard>
+          }
 
           {/* Work Orders List */}
-          <div className="work-orders-section">
-            <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
+          <div >
             <IonList>
+              <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
               {Array.isArray(workOrders) && workOrders.length === 0 ? (
                 <IonText className="no-work-orders ion-padding">
                   No work orders available
@@ -324,9 +326,9 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 workOrders.map((order, index) => (
                   <IonCard
                     key={index}
-                    className="minimal-work-order-card bounce-in-left task-card"
+                    className="ion-padding task-card minimal-work-order-card bounce-in-left "
                     onClick={() => history.push(`/work-orders/${order.id}`)}
-                  // style={{ marginLeft: '8px' }}
+                    style={{ marginLeft: '4%' }}
                   >
                     <IonCardHeader>
                       <IonCardTitle>

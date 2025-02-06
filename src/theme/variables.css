@@ -2,7 +2,7 @@
   /* Default Theme */
   --ion-color-primary: #3f51b5;
   --ion-color-secondary: #0000;
-  --ion-background-color: #f4ebeb; /* Default white background */
+  --ion-background-color:  #ffffff; /* #f4ebeb Default white background */
   --ion-font-family: 'Inter', sans-serif; /* Ionic variable for global font */
 
 }
@@ -29,8 +29,17 @@
 ion-page {
   background-color: var(
     --ion-background-color
-  ); /* Dynamically uses the theme's background color */
+  )!important; /* Dynamically uses the theme's background color */
 }
+ion-item {
+  background-color: var(--ion-background-color) !important; /* Dynamically uses the theme's background color */
+}
+ion-list {
+  background-color: var(--ion-background-color) !important; /* Dynamically uses the theme's background color */
+}
+
+
+
 
 /* Optional: For smooth transition when switching themes */
 body {

@@ -32,12 +32,9 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
     fetchNotifsCount();
   }, [])
   return (
-    <IonHeader collapse="fade" className="ion-no-border">
-      <IonToolbar className="ion-no-border">
-        <IonButtons slot="start">
-          <BackButton />
-        </IonButtons>
-
+    <IonHeader collapse="fade" >
+      <IonToolbar>
+        <BackButton />
         <IonTitle className="ion-text-center" style={{ flex: 1 }}>
           {title}
         </IonTitle>
@@ -52,7 +49,9 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             <IonIcon
               icon={notificationsOutline}
               className="ion-text-muted"
-              style={{ fontSize: "35px", color: "#333" }}
+              style={{ fontSize: "35px", 
+              // color: "#333"
+             }}
             />
             {notifsCount > 0 && (
               <div
@@ -85,7 +84,9 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             <IonIcon
               icon={personCircleOutline}
               className="ion-text-muted"
-              style={{ fontSize: "35px", color: "#333" }}
+              style={{ fontSize: "35px", 
+              // color: "#333" 
+            }}
             />
           </IonButton>
         </div>

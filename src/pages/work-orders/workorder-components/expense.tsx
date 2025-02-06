@@ -19,7 +19,7 @@ const WorkOrderExpenses = ({ workOrder, closeModal, onSave }) => {
     const saveWorkOrderExpense = async (workOrder, remarks, amount) => {
         if (workOrder && remarks && amount) {
             try {
-                const req = workOrderExpenseApi.store({
+                const req = await workOrderExpenseApi.store({
                     amount:amount,
                     remarks: remarks,
                     work_order: workOrder

@@ -13,6 +13,7 @@ import {
   IonButton,
 } from "@ionic/react";
 import {
+  location,
   clipboard,
   documentText,
   calendar,
@@ -21,6 +22,8 @@ import {
   locationOutline,
   time,
   closeOutline,
+  peopleOutline,
+  people,
 } from "ionicons/icons";
 
 const WorkOrderDetails = ({ workOrder }: { workOrder: any }) => {
@@ -186,7 +189,7 @@ const WorkOrderDetails = ({ workOrder }: { workOrder: any }) => {
       >
         <IonIcon
           slot="start"
-          icon={locationOutline}
+          icon={location}
           style={{ color: "var(--ion-color-primary)", fontSize: "30px" }} // Increased icon size
         />
         <IonLabel>
@@ -231,6 +234,38 @@ const WorkOrderDetails = ({ workOrder }: { workOrder: any }) => {
             Status
           </h3>
           <p>{workOrder.active_status.status}</p>
+        </IonLabel>
+      </IonItem>
+
+      {/* Assignees */}
+      <IonItem
+        style={{
+          paddingLeft: "0",
+          paddingRight: "0",
+        }}
+      >
+        <IonIcon
+          slot="start"
+          icon={people}
+          style={{ color: "var(--ion-color-primary)", fontSize: "30px" }} // Increased icon size
+        />
+        <IonLabel>
+          <h3
+            style={{
+              fontWeight: "600",
+              fontSize: "18px", // Increased font size
+              color: "#333",
+              marginBottom: "4px",
+            }}
+          >
+            Assignees
+          </h3>
+          <IonList>
+
+            {workOrder?.assignees.map((person, index) => (
+              <p key={index}>{person.first_name} {person.last_name}</p>
+            ))}
+          </IonList>
         </IonLabel>
       </IonItem>
     </IonList>

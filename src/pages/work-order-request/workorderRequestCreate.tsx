@@ -13,6 +13,8 @@ import ModalComponent1 from '../../components/ModalComponent1';
 
 const WorkOrderRequestCreate: React.FC = () => {
     const history = useHistory();
+    const location = useLocation();
+    const { formData } = location.state ? location.state : { formData: null };
     const [category, setCategory] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [selectedType, setSelectedType] = useState<string>('');
@@ -192,12 +194,19 @@ const WorkOrderRequestCreate: React.FC = () => {
             try {
                 const req = await workOrderRequestApi.store({ work_order_description: currentDescrp, work_order_type: selectedType, zone: selectedZone });
                 console.log("workOrderRequestApi: " + JSON.stringify(req));
-                present(req.data.message, 1500, top);
+                present({
+                    message: req.data.message,
+                    duration: 1500,
+                    position: 'top',
+                });
                 clearFields();
-                await fetchWOR();
-                setOpenCreate(false);
             } catch (error) {
 
+            }
+
+            let req = await fetchWOR();
+            if (req) {
+                setOpenCreate(false);
             }
         }
     }
@@ -228,6 +237,7 @@ const WorkOrderRequestCreate: React.FC = () => {
         // console.log("req: " + JSON.stringify(req.data.data));
         setWorkOrderRequests(req.data.data.data);
         setFilteredWOR(req.data.data.data);
+        return req.data.data.data;
     }
 
     const getIsAcceptedColor = (is_accepted) => {
@@ -489,8 +499,10 @@ const WorkOrderRequestCreate: React.FC = () => {
     }
 
     const handleCloseCreateModal = async () => {
-        setOpenCreate(false);
-        await fetchWOR();
+        let req = await fetchWOR();
+        if (req) {
+            setOpenCreate(false);
+        }
     }
 
     const handleCloseDeclineModal = async () => {
@@ -509,11 +521,15 @@ const WorkOrderRequestCreate: React.FC = () => {
                     const req = await workOrderRequestApi.decline({ work_order_request: id, remarks });
                     closeDecline();
                 } catch (error) {
-                    console.error("Error saving remarks:", error);
-                    presentToast("Error saving remarks.");
+                    console.error("Error saving remarks:", error.message);
+                    // presentToast("Error saving remarks.");
                 }
             } else {
-                presentToast("Please provide valid remarks.");
+                present({
+                    message: "Please provide valid remarks.",
+                    duration: 1500,
+                    position: 'top',
+                });
             }
         };
 
@@ -542,7 +558,7 @@ const WorkOrderRequestCreate: React.FC = () => {
         const reqData = await fetchRequestOrder(workOrderRequest.id);
         // console.log("selectedRequest: "+JSON.stringify(selectedRequest));
         if (workOrderRequest && reqData) {
-            history.push({
+            await history.push({
                 pathname: '/approveWO',
                 state: { workOrderRequest: reqData }
             });
@@ -590,14 +606,19 @@ const WorkOrderRequestCreate: React.FC = () => {
 
     useEffect(() => {
         fetchWOR();
-    }, [])
+        const state: any = history.location.state;
+        if (formData || state?.formData) {
+            console.log("from approvedPage: " + JSON.stringify(formData) + " | state: " + JSON.stringify(state?.formData));
+            fetchWOR();
+        }
+    }, [location.state])
 
     return (
         <MasterComponent title={"Work Order Request"}>
             <IonItem>
                 {/* <IonLabel><h2><b>Work Order Requests List</b></h2></IonLabel> */}
                 <IonSearchbar
-                    placeholder='Search Work Order Request'
+                    placeholder='Search here'
                     value={searchTerm}
                     onIonInput={handleSearch}
                 />
@@ -613,7 +634,7 @@ const WorkOrderRequestCreate: React.FC = () => {
             {/* Display Work Order Request details */}
             {!openCreate &&
                 <IonList>
-                    <div style={{ marginLeft: '-15px' }}>
+                    <div>
                         {filteredWOR.map((task, index) => (
                             <IonCard key={index} className="task-card bounce-in-right"
                                 style={{ animationDelay: `${index * 0.1}s` }}
@@ -632,10 +653,15 @@ const WorkOrderRequestCreate: React.FC = () => {
                                     <IonCardSubtitle>{task.work_order_category} | {task.work_order_type}</IonCardSubtitle>
                                     {task.is_accepted === "0" &&
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '10px' }}>
-                                            <IonButton color="primary" onClick={() => handleOpenApprove(task)}>
+                                            <IonButton color="primary"
+                                                disabled={!hasPermission("work-order-request-schedule.create")}
+                                                onClick={() => handleOpenApprove(task)}>
                                                 <IonIcon icon={checkmarkOutline} />
                                                 Accept</IonButton>
-                                            <IonButton color="danger" onClick={() => handleDecline(task)}>
+                                            <IonButton
+                                                disabled={!hasPermission("work-order-request.decline")}
+                                                color="danger"
+                                                onClick={() => handleDecline(task)}>
                                                 <IonIcon icon={closeOutline} />Decline</IonButton>
                                         </div>}
                                 </IonCardContent>
