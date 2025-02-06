@@ -17,8 +17,10 @@ import {
   IonItem,
   IonLabel,
   IonChip,
+  IonButton,
+  IonGrid,
 } from "@ionic/react";
-import { Bar } from "react-chartjs-2";
+import { Bar, Doughnut, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -27,6 +29,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  ArcElement,
 } from "chart.js";
 import Header from "../../components/HeaderDashboard";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -40,8 +43,12 @@ import {
   checkmarkCircleOutline,
   briefcaseOutline,
   caretForwardOutline,
+  chevronDown,
+  hourglassOutline,
+  folderOpenOutline,
+  pauseOutline
 } from "ionicons/icons";
-import { getUserData, getWorkOrders } from "../../api/api";
+import { getUserData, getWorkOrders, reportApi } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Loading from "../../utilities/loadingpage";
 import "./dashboard.css";
@@ -54,7 +61,8 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 );
 
 const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
@@ -65,6 +73,11 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   const [error, setError] = useState<string>("");
   const history = useHistory();
   const [barColor, setBarColor] = useState("");
+  const [pendingWOs, setPendingWOs] = useState(0);
+  const [inprogressWOs, setInprogressWOs] = useState(0);
+  const [openWOs, setOpenWOs] = useState(0);
+  const [closedWOs, setClosedWOs] = useState(0);
+
 
   // Update the date and time
   const updateDateTime = () => {
@@ -101,6 +114,54 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     }
   }, [storedTheme]); // Effect depends on the theme
 
+
+  const getPendingWOs = async (client_id) => {
+    if (client_id) {
+      try {
+        const req = await reportApi.workOrderPending({ client_id: client_id });
+        console.log("req: " + JSON.stringify(req));
+
+        setInprogressWOs(req.data.data?.inprogress_work_orders);
+        setOpenWOs(req.data.data?.open_work_orders);
+        // setPendingWOs(parseInt(req.data.data?.open_work_orders) + parseInt(req.data.data?.inprogress_work_orders));
+      } catch (error) {
+        console.log("getPendingWOs error: " + JSON.stringify(error.message));
+      }
+    }
+  }
+  function getCurrentMonthDates() {
+    const currentDate = new Date();
+
+    // Get the start date of the current month (set the day to 1)
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+    // Return both the start of the month and the current date in "YYYY-MM-DD" format
+    return {
+      startOfMonth: startOfMonth.toISOString().split('T')[0],  // "YYYY-MM-DD"
+      currentDate: currentDate.toISOString().split('T')[0],    // "YYYY-MM-DD"
+    };
+  }
+  const getClosedWOs = async (client_id) => {
+    if (client_id) {
+      try {
+        const { startOfMonth, currentDate } = getCurrentMonthDates();
+        const req = await reportApi.workOrderClosed({
+          start_date: startOfMonth,
+          end_date: currentDate,
+          download: false,
+          client_id: client_id
+        });
+        setClosedWOs(req.data?.data);
+        console.log("closedWOs: " + JSON.stringify(req.data?.data));
+
+      } catch (error) {
+        console.log("getClosedWOs error: " + JSON.stringify(error.message));
+      }
+    }
+  }
+
+
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -120,6 +181,9 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
         // console.log("workOrdersArray: " + JSON.stringify(workOrdersArray));
 
         setWorkOrders(workOrdersArray);
+
+        await getPendingWOs(user?.user?.client_id);
+        await getClosedWOs(user?.user?.client_id);
 
         return () => clearInterval(interval); // Cleanup interval
       } catch (err) {
@@ -187,6 +251,25 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     },
   };
 
+  const openWOsData = {
+    labels: [
+      // 'Pending',
+      'Open',
+      'In-Progress'
+    ],
+    datasets: [{
+      label: 'Open Work Orders',
+      data: [openWOs, inprogressWOs],
+      backgroundColor: [
+        // 'rgb(55,145,220)',
+        'rgb(9,8,154)',
+        'rgb(254,145,31)'
+      ],
+      hoverOffset: 4
+    }]
+  }
+
+
   return (
     <IonApp>
       <IonPage>
@@ -203,7 +286,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
         {/* IonContent (Content of the Page) */}
         <IonContent className="dashboard-content">
           {/* Work Orders Chart */}
-          <h2 className="section-title">Work Orders Completed</h2>
+          {/* <h2 className="section-title">Work Orders Completed</h2>
           <IonCard
             className="minimal-work-order-card fade-in"
             style={{ backgroundColor: "var(--ion-color-secondary)" }}
@@ -214,31 +297,42 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 <Bar data={chartData} options={chartOptions} />
               </div>
             </IonCardContent>
-          </IonCard>
+          </IonCard> */}
+          {(openWOs > 0 || pendingWOs > 0 || inprogressWOs > 0) &&
+            <IonCard
+              className="minimal-work-order-card fade-in"
+              style={{ backgroundColor: "var(--ion-color-secondary)" }}
+            >
+              <IonCardContent>
+                <p className="chart-description">
+                  <b>Total Pending Work Orders</b>
+                </p>
+                <center><div className="chart-container">
+                  <Pie data={openWOsData} />
+                </div></center>
+              </IonCardContent>
+            </IonCard>
+          }
 
           {/* Work Orders List */}
-          <div className="work-orders-section">
-            <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
+          <div >
             <IonList>
+              <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
               {Array.isArray(workOrders) && workOrders.length === 0 ? (
-                <IonText className="no-work-orders">
+                <IonText className="no-work-orders ion-padding">
                   No work orders available
                 </IonText>
               ) : (
                 workOrders.map((order, index) => (
                   <IonCard
                     key={index}
-                    className="minimal-work-order-card bounce-in-left task-card"
+                    className="ion-padding task-card minimal-work-order-card bounce-in-left "
                     onClick={() => history.push(`/work-orders/${order.id}`)}
-                    style={{ marginLeft: '8px' }}
+                    style={{ marginLeft: '4%' }}
                   >
                     <IonCardHeader>
                       <IonCardTitle>
                         <div className="work-order-header">
-                          {/* <IonIcon
-                            icon={briefcaseOutline}
-                            className="icon-title"
-                          /> */}
                           {order.work_order_reference_number}
                           <BadgeComponent status={order.status} />
                         </div>
@@ -246,14 +340,14 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                     </IonCardHeader>
                     <IonItem lines="none">
                       <IonLabel><b>Description:</b></IonLabel>
-                      <IonText>{order.work_order_description}</IonText>
+                      <IonText className="ion-text-end">{order.work_order_description}</IonText>
                     </IonItem>
                     <IonItem lines="none">
                       <IonLabel><b>Schedule:</b></IonLabel>
                       <IonText>
                         {order.end_date === order.start_date
                           ? order.start_date
-                          : `from ${order.start_date} to ${order.end_date}`}
+                          : ` ${order.start_date} - ${order.end_date}`}
                       </IonText>
                     </IonItem>
                     <IonItem lines="none" >
@@ -284,64 +378,13 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                           order?.room}
                       </IonText>
                     </IonItem>
-                    {/* <IonCardContent className="work-order-content">
-                      <div className="work-order-header">
-                        <h1 className="work-order-title">
-                          <IonIcon
-                            icon={briefcaseOutline}
-                            className="icon-title"
-                          />
-                          <b>{order.work_order_reference_number}</b>
-                        </h1>
-                        <BadgeComponent status={order.status} />
-                      </div>
-
-                      <div className="work-order-grid">
-                        <IonRow className="work-order-item">
-                          <IonCol size="auto">
-                            <IonIcon icon={calendarOutline} className="icon" />
-                            <span>
-                              <strong>Start:</strong>{" "}
-                              {new Date(order.start_date).toLocaleDateString(
-                                "en-US"
-                              )}
-                            </span>
-                          </IonCol>
-                          <IonCol size="auto">
-                            <IonIcon
-                              icon={calendarClearOutline}
-                              className="icon"
-                            />
-                            <span>
-                              <strong>End:</strong>{" "}
-                              {new Date(order.end_date).toLocaleDateString(
-                                "en-US"
-                              )}
-                            </span>
-                          </IonCol>
-                        </IonRow>
-
-                        <div className="work-order-item">
-                          <IonRow className="work-order-item">
-                            <IonCol size="auto">
-                              <IonIcon
-                                icon={informationCircleOutline}
-                                className="icon"
-                              />
-                              <span>
-                                {order.work_order_description ||
-                                  "No Description"}
-                              </span>
-                            </IonCol>
-                          </IonRow>
-                        </div>
-                      </div>
-                    </IonCardContent> */}
                   </IonCard>
                 ))
               )}
             </IonList>
           </div>
+
+
         </IonContent>
         {/* Floating Tab Buttons */}
         <FloatingTabButtons />

@@ -9,6 +9,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ userName }) => {
   const [dateTime, setDateTime] = useState(new Date());
+  const userData = JSON.parse(localStorage.getItem("userData"));
+  // console.log("userData: "+JSON.stringify(userData?.user?.client?.client));
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -35,14 +38,17 @@ const Header: React.FC<HeaderProps> = ({ userName }) => {
         backgroundRepeat: "no-repeat",
       }}
     >
+
       <div className="header-content">
         <div className="greeting-section">
           <IonText>
             <h2 className="greeting"> <b>{userName}</b></h2>
             <p className="date-time">{formattedDate}</p>
+            {/* <p className="date-time">{userData?.user?.client?.client}</p> */}
           </IonText>
         </div>
       </div>
+      <p className="date-time" style={{ marginTop: '50px' }}><b>{userData?.user?.client?.client}</b></p>
     </div>
   );
 };

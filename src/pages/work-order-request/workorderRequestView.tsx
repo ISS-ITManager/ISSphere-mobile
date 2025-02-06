@@ -12,7 +12,7 @@ const WorkOrderRequestView: React.FC = () => {
     const location = useLocation();
     const { selectedRequest } = location.state ? location.state : { selectedRequest: {} };
     const [workOrderList, setWorkOrderList] = useState([]);
-    // console.log("selectedREquest: "+JSON.stringify(selectedRequest));
+    console.log("selectedREquest: "+JSON.stringify(selectedRequest));
 
     const retrieveRelatedWO = async (id) => {
         if (id) {
@@ -22,7 +22,7 @@ const WorkOrderRequestView: React.FC = () => {
                 console.log("req: " + JSON.stringify(req.data.data));
 
             } catch (error) {
-                console.log("retrieveRelatedWO: " + JSON.stringify(error));
+                console.log("retrieveRelatedWO: " + JSON.stringify(error.message));
 
             }
         }
@@ -77,7 +77,7 @@ const WorkOrderRequestView: React.FC = () => {
     return (
         <MasterComponent title={"View Work Order Request"}>
             {selectedRequest && <>
-                <IonCard className="task-card animate__animated  animate__pulse" style={{ marginLeft: '5px', marginTop: '-10px' }}>
+                <IonCard className="ion-padding task-card animate__animated  animate__pulse" style={{ marginTop: '-10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '10px' }}>
                         <div>{getIsAcceptedColor(selectedRequest?.work_order_request?.is_accepted)}</div>
                         <div>{getPriority(selectedRequest.work_order_request?.priority)}</div>
@@ -139,7 +139,7 @@ const WorkOrderRequestView: React.FC = () => {
                                         <IonText>
                                             {item.end_date === item.start_date
                                                 ? item.start_date
-                                                : `from ${item.start_date} to ${item.end_date}`}
+                                                : `From ${item.start_date} To ${item.end_date}`}
                                         </IonText>
                                         <IonLabel>
                                             <IonChip className="ion-text-uppercase" outline={true} color="warning">

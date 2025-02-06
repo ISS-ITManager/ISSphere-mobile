@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   IonApp,
   IonPage,
@@ -11,6 +11,7 @@ import {
   IonImg,
   IonIcon,
 } from "@ionic/react";
+import { PushNotifications } from '@capacitor/push-notifications';
 import { useHistory } from "react-router-dom";
 import { loginUser, permissionApi } from "../../api/api";
 import BD from "../../assets/images/abstract.png";//bdsf.png";
@@ -23,6 +24,15 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const history = useHistory();
+
+  useEffect(() => {
+    // PushNotifications.requestPermissions();
+    // PushNotifications.register();
+    // PushNotifications.addListener('registration', token => {
+    //   localStorage.setItem("deviceToken", token.value)
+    // });
+
+  }, [])
 
   const handleLogin = async () => {
     setIsLoading(true);
@@ -42,7 +52,7 @@ const Login: React.FC = () => {
         setErrorMessage("Invalid credentials, please try again.");
       }
     } catch (error) {
-      setErrorMessage("Error logging in. Please try again later."+error);
+      setErrorMessage("Error logging in. Please try again later." + error);
     }
     setIsLoading(false);
   };
@@ -62,7 +72,7 @@ const Login: React.FC = () => {
                 <h3>Facility Management</h3>
               </div>
             </div> */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom:'20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
               <IonImg src={sphere} style={{ width: '60px' }} />
 
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>

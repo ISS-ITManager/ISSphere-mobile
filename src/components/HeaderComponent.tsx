@@ -11,7 +11,7 @@ const HeaderComponent = ({ title }) => {
         <IonHeader>
             <IonToolbar>
 
-                <IonGrid>
+                {/* <IonGrid>
                     <IonRow>
                         <IonCol>
                             {!backButton && (
@@ -24,7 +24,9 @@ const HeaderComponent = ({ title }) => {
 
                             <IonTitle>{title}</IonTitle>
                     </IonRow>
-                </IonGrid>
+                </IonGrid> */}
+                <BackButton/>
+                <IonTitle>{title}</IonTitle>
             </IonToolbar>
         </IonHeader>
     )

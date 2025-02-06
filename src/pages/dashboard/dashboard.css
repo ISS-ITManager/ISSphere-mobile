@@ -1,10 +1,14 @@
 /* General Dashboard Styles */
 .dashboard-content {
-  padding: 20px; /* Adds space from screen edges */
+  padding: 20px;
+  /* Adds space from screen edges */
   background-color: var(--ion-color-secondary);
   z-index: 10;
 }
-
+.chart-container {
+  width: 70%;
+  align-items: center;
+}
 /* User Card - Enhanced Layout */
 .user-card {
   margin-bottom: 25px;
@@ -50,7 +54,7 @@
   font-weight: bold;
   margin-bottom: 15px;
   padding-left: 4%;
-  color: var(--ion-color-dark);
+  color: var(--ion-color-primary);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -112,7 +116,7 @@
 }
 
 .no-work-orders {
-  font-size: 17px;
+  font-size: 15px;
   font-style: italic;
   color: var(--ion-color-medium);
   text-align: center;
@@ -120,11 +124,14 @@
 
 .work-order-card {
   margin-bottom: 20px;
-  margin-left: 1px; /* Ensure the card has left margin */
-  margin-right: 1px; /* Ensure the card has right margin */
+  margin-left: 1px;
+  /* Ensure the card has left margin */
+  margin-right: 1px;
+  /* Ensure the card has right margin */
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  padding: 10px; /* in between rows */
+  padding: 10px;
+  /* in between rows */
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -193,9 +200,12 @@
 
 .work-order-description .icon,
 .work-order-dates .icon {
-  font-size: 18px; /* Maintain icon size */
-  color: var(--ion-color-primary); /* Ensure consistent color */
-  margin-right: 8px; /* Add gap between the icon and text */
+  font-size: 18px;
+  /* Maintain icon size */
+  color: var(--ion-color-primary);
+  /* Ensure consistent color */
+  margin-right: 8px;
+  /* Add gap between the icon and text */
 }
 
 .work-order-status {
@@ -235,11 +245,16 @@
 /* IOS */
 /* iOS-style User Information Card */
 .ios-card {
-  border-radius: 20px; /* Rounded corners */
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); /* Enhanced shadow for depth */
-  margin: 25px; /* Spacing around the card */
-  padding: 20px; /* Increased padding for more spacious design */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effect */
+  border-radius: 20px;
+  /* Rounded corners */
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  /* Enhanced shadow for depth */
+  margin: 25px;
+  /* Spacing around the card */
+  padding: 20px;
+  /* Increased padding for more spacious design */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* Smooth transition for hover effect */
 }
 
 .user-card-content {
@@ -249,14 +264,19 @@
 }
 
 .user-icon {
-  font-size: 50px; /* Larger icon for a more prominent user icon */
-  margin-right: 20px; /* Space between icon and text */
-  color: #007aff; /* iOS-style blue color for the icon */
-  transition: transform 0.2s ease; /* Smooth transition for icon on hover */
+  font-size: 50px;
+  /* Larger icon for a more prominent user icon */
+  margin-right: 20px;
+  /* Space between icon and text */
+  color: #007aff;
+  /* iOS-style blue color for the icon */
+  transition: transform 0.2s ease;
+  /* Smooth transition for icon on hover */
 }
 
 .user-icon:hover {
-  transform: scale(1.1); /* Slight scale up effect on hover */
+  transform: scale(1.1);
+  /* Slight scale up effect on hover */
 }
 
 .user-info {
@@ -265,17 +285,23 @@
 }
 
 .user-name {
-  font-size: 20px; /* Larger font size for a more prominent name */
+  font-size: 20px;
+  /* Larger font size for a more prominent name */
   font-weight: 600;
-  color: #1c1c1c; /* Darker text color for better contrast */
-  letter-spacing: 0.5px; /* Slight letter spacing for readability */
-  margin-bottom: 5px; /* Space between name and time */
+  color: #1c1c1c;
+  /* Darker text color for better contrast */
+  letter-spacing: 0.5px;
+  /* Slight letter spacing for readability */
+  margin-bottom: 5px;
+  /* Space between name and time */
 }
 
 .user-time {
   font-size: 15px;
-  color: #8e8e93; /* Subtle gray color for the time text */
-  font-weight: 500; /* Slightly bolder time text */
+  color: #8e8e93;
+  /* Subtle gray color for the time text */
+  font-weight: 500;
+  /* Slightly bolder time text */
 }
 
 /* Optional: Add a subtle background color change on card interaction */
@@ -285,14 +311,17 @@
 /* Overlapping Container */
 .overlapping-container {
   position: absolute;
-  top: 0; /* Position at the top of the page */
+  top: 0;
+  /* Position at the top of the page */
   left: 0;
   right: 0;
   background: var(--ion-background-color);
   border-top-left-radius: 30px;
   border-top-right-radius: 30px;
-  z-index: 10; /* Ensures the container overlaps the header */
-  margin-top: 170px; /* You can adjust the margin based on the header's height */
+  z-index: 10;
+  /* Ensures the container overlaps the header */
+  margin-top: 170px;
+  /* You can adjust the margin based on the header's height */
   height: 100vh;
 }
 
@@ -306,6 +335,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -317,13 +347,16 @@
     transform: translateX(-100%);
     opacity: 0;
   }
+
   60% {
     transform: translateX(30px);
     opacity: 1;
   }
+
   80% {
     transform: translateX(-10px);
   }
+
   100% {
     transform: translateX(0);
   }
@@ -339,23 +372,26 @@
   border-radius: 30px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
-  padding: 10px; /* Adjust padding */
+  padding: 10px;
+  /* Adjust padding */
   border: 2px solid var(--ion-color-primary);
+  margin: 10px;
 }
 
-.minimal-work-order-card:hover {
+/* .minimal-work-order-card:hover {
   transform: translateY(-3px);
-}
+} */
 
 .work-order-content {
-  padding: 8px; /* Adjust padding */
+  padding: 8px;
+  /* Adjust padding */
 }
 
 .work-order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0px;
+  /* margin-bottom: 0px; */
 }
 
 .work-order-title {
@@ -374,7 +410,8 @@
 .work-order-grid {
   display: flex;
   flex-direction: column;
-  gap: 0px; /* Adjusted gap */
+  gap: 0px;
+  /* Adjusted gap */
 }
 
 .work-order-item {
@@ -399,5 +436,5 @@
 
 ion-item {
   font-size: 14px;
-  font-family: var(--ion-font-family); 
+  font-family: var(--ion-font-family);
 }

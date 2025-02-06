@@ -111,6 +111,16 @@ export const getEntitiesByGroupId = async (groupId: number) => {
     throw new Error("Error fetching entities");
   }
 };
+export const reportApi = {
+  workOrderPending: async (data: any) => {
+    const response = await api.get(`/reports/work-order-pending?download=false&client_id=${data.client_id}`);
+    return response;
+  },
+  workOrderClosed: async (data: any) => {
+    const response = await api.get(`/reports/work-order-closed?start_date=${data.start_date}&end_date=${data.end_date}&download=false&client_id=${data.client_id}`);
+    return response;
+  },
+}
 
 export const getPropertiesByEntityId = async (entityId: number) => {
   try {
@@ -338,6 +348,10 @@ export const workOrderApi = {
     const response = await api.post(`/work-orders`, data);
     return response;
   },
+  workOrderStatus: async (data: any) => {
+    const response = await api.post(`/work-order-statuses`, data);
+    return response;
+  },
   list: async (workOrderRequestId: any) => {
     const response = await api.get(
       `/work-orders/list?work_order_request=${workOrderRequestId}`
@@ -357,7 +371,7 @@ export const workOrderApi = {
     return response;
   },
   resolutionTime: async (id: any) => {
-    const response = await Axi.get(
+    const response = await api.get(
       `/work-orders/resolution-time?work_order=${id}`
     );
     return response;
@@ -520,6 +534,22 @@ export const workOrderSupplyApi = {
     return response;
   },
 };
+
+export const workOrderExpenseApi = {
+
+  store: async (data: any) => {
+    const response = await api.post(`/work-order-expenses`, data);
+    return response;
+  },
+  list: async (id: any) => {
+    const response = await api.get(`/work-order-expenses/list?work_order=${id}`);
+    return response;
+  },
+  delete: async (id: any) => {
+    const response = await api.delete(`/work-order-expenses/${id}`);
+    return response;
+  },
+}
 
 export const workOrderCategoryApi = {
   get: async (data: any) => {
