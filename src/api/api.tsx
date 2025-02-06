@@ -225,6 +225,20 @@ export const workOrderStatusApi = {
   },
 };
 
+export const fetchSupplies = async () => {
+  try {
+    const response = await api.get(`/supply-stocks/list`);
+    if (response.data.success) {
+      return response.data.data; // Return supplies data
+    } else {
+      throw new Error(response.data.message || "Failed to fetch supplies.");
+    }
+  } catch (error) {
+    console.error("Error fetching supplies:", error);
+    throw new Error("Error fetching supplies.");
+  }
+};
+
 export const workOrderAssetsCreateApi = {
   list: async (params: {
     work_order: string;
