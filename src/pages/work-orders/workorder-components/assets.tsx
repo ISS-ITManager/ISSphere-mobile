@@ -8,11 +8,26 @@ import {
   IonSpinner,
   IonButton,
   IonIcon,
+  IonInput,
+  IonList,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonListHeader,
 } from "@ionic/react";
-import { filterOutline, saveOutline } from "ionicons/icons";
-import { storeWorkOrderAssets } from "../../../api/api";
+import {
+  filterOutline,
+  saveOutline,
+  trashOutlineaddOutline,
+  addOutline,
+  trashOutline,
+  addCircleOutline,
+} from "ionicons/icons";
+import { storeWorkOrderAssets, fetchSupplies } from "../../../api/api";
 import ErrorPopup from "../../../utilities/ErrorPopup";
 import SuccessPopup from "../../../utilities/SuccessPopup";
+import "../workorder.css";
 
 interface AssetsProps {
   workOrderId: string;
@@ -91,6 +106,12 @@ const Assets: React.FC<AssetsProps> = ({
   console.log("Assets: " + JSON.stringify(apiData, null, 2));
 
   const [selectedAssetId, setSelectedAssetId] = useState<number | null>(null);
+  const [selectedSupplies, setSelectedSupplies] = useState<
+    { id: number; supply: string; quantity: number; batch_number: string }[]
+  >([]);
+  const [selectedSupply, setSelectedSupply] = useState<string | null>(null);
+  const [supplyQuantity, setSupplyQuantity] = useState<number>(1);
+  const [supplies, setSupplies] = useState<any[]>([]);
 
   const errorPopupRef = useRef<{ showError: (msg: string) => void } | null>(
     null
@@ -98,6 +119,76 @@ const Assets: React.FC<AssetsProps> = ({
   const successPopupRef = useRef<{ showSuccess: (msg: string) => void } | null>(
     null
   );
+
+  // const handleAssets = async () => {
+  //   if (!selectedAction || selectedAssetId === null) {
+  //     console.error("Missing selected action or asset.");
+  //     errorPopupRef.current?.showError(
+  //       "Please select an action and an asset before saving."
+  //     );
+  //     return;
+  //   }
+
+  //   if (selectedAction === "transfer" && selectedRoom === null) {
+  //     console.error("Missing selected room for transfer.");
+  //     errorPopupRef.current?.showError(
+  //       "Please select a room before transferring the asset."
+  //     );
+  //     return;
+  //   }
+
+  //   const payload: any = {
+  //     work_order: workOrderId,
+  //     action: selectedAction,
+  //     asset_stocks: [selectedAssetId],
+  //   };
+
+  //   if (selectedAction === "transfer") {
+  //     payload.room = selectedRoom;
+  //   }
+
+  //   console.log("Payload: ", payload);
+
+  //   try {
+  //     const response = await storeWorkOrderAssets(payload);
+
+  //     if (response?.success) {
+  //       console.log("Save successful: ", response);
+  //       successPopupRef.current?.showSuccess(
+  //         response?.message || "Asset has been added successfully!"
+  //       );
+  //       onSuccess();
+  //     } else {
+  //       console.error(
+  //         "Error saving: ",
+  //         response?.message || "Unknown error occurred."
+  //       );
+  //       errorPopupRef.current?.showError(
+  //         response?.message || "Something went wrong."
+  //       );
+  //     }
+  //   } catch (error: any) {
+  //     console.error("An error occurred:", error);
+  //     const errorMessage =
+  //       error?.response?.data?.message ||
+  //       error?.message ||
+  //       "Something went wrong. Please try again.";
+  //     errorPopupRef.current?.showError(errorMessage);
+  //   }
+  // };
+
+  useEffect(() => {
+    const getSupplies = async () => {
+      try {
+        const suppliesData = await fetchSupplies();
+        setSupplies(suppliesData); // Store supplies data
+      } catch (error) {
+        console.error("Failed to fetch supplies", error);
+      }
+    };
+
+    getSupplies(); // Call the function when the component mounts
+  }, []);
 
   const handleAssets = async () => {
     if (!selectedAction || selectedAssetId === null) {
@@ -108,10 +199,18 @@ const Assets: React.FC<AssetsProps> = ({
       return;
     }
 
-    if (selectedAction === "transfer" && selectedRoom === null) {
-      console.error("Missing selected room for transfer.");
+    if (
+      selectedAction === "transfer" &&
+      !selectedGroup &&
+      !selectedEntity &&
+      !selectedProperty &&
+      !selectedZone &&
+      !selectedLevel &&
+      !selectedRoom
+    ) {
+      console.error("Missing selected location for transfer.");
       errorPopupRef.current?.showError(
-        "Please select a room before transferring the asset."
+        "Please select a valid location before transferring the asset."
       );
       return;
     }
@@ -122,8 +221,19 @@ const Assets: React.FC<AssetsProps> = ({
       asset_stocks: [selectedAssetId],
     };
 
-    if (selectedAction === "transfer") {
+    // Determine the most specific level and add to the payload
+    if (selectedRoom) {
       payload.room = selectedRoom;
+    } else if (selectedLevel) {
+      payload.level = selectedLevel;
+    } else if (selectedZone) {
+      payload.zone = selectedZone;
+    } else if (selectedProperty) {
+      payload.property = selectedProperty;
+    } else if (selectedEntity) {
+      payload.entity = selectedEntity;
+    } else if (selectedGroup) {
+      payload.group = selectedGroup;
     }
 
     console.log("Payload: ", payload);
@@ -134,9 +244,18 @@ const Assets: React.FC<AssetsProps> = ({
       if (response?.success) {
         console.log("Save successful: ", response);
         successPopupRef.current?.showSuccess(
-          response?.message || "Asset has been added successfully!"
+          response?.message || "Asset has been transferred successfully!"
         );
         onSuccess();
+
+        setSelectedAction("");
+        setSelectedAssetId(null);
+        setSelectedGroup(null);
+        setSelectedEntity(null);
+        setSelectedProperty(null);
+        setSelectedZone(null);
+        setSelectedLevel(null);
+        setSelectedRoom(null);
       } else {
         console.error(
           "Error saving: ",
@@ -156,83 +275,281 @@ const Assets: React.FC<AssetsProps> = ({
     }
   };
 
+  // Handle adding supply to the list
+  const handleAddSupply = () => {
+    if (!selectedAssetId) {
+      errorPopupRef.current?.showError("Please select an asset.");
+      return;
+    }
+
+    if (!selectedSupply) {
+      errorPopupRef.current?.showError("Please select a supply.");
+      return;
+    }
+
+    if (supplyQuantity <= 0) {
+      errorPopupRef.current?.showError("Quantity must be at least 1.");
+      return;
+    }
+
+    // Prevent duplicate supply entries
+    const isDuplicate = selectedSupplies.some(
+      (s) => s.id === selectedSupply.id
+    );
+    if (isDuplicate) {
+      errorPopupRef.current?.showError(
+        "This supply is already added. Please update the quantity if needed."
+      );
+      return;
+    }
+
+    setSelectedSupplies((prevSupplies) => [
+      ...prevSupplies,
+      {
+        id: selectedSupply.id,
+        supply: selectedSupply.supply,
+        batch_number: selectedSupply.batch_number,
+        quantity: supplyQuantity,
+      },
+    ]);
+
+    // Reset selection
+    setSelectedSupply(null);
+    setSupplyQuantity(1);
+  };
+
+  // Handle removing supply from the list
+  const handleRemoveSupply = (index: number) => {
+    setSelectedSupplies((prevSupplies) =>
+      prevSupplies.filter((_, i) => i !== index)
+    );
+  };
+
+  // Handle the repair action
+  const handleRepair = async () => {
+    if (!selectedAssetId) {
+      errorPopupRef.current?.showError("Please select an asset.");
+      return;
+    }
+
+    if (selectedSupplies.length === 0) {
+      errorPopupRef.current?.showError("Please add at least one supply.");
+      return;
+    }
+
+    const payload = {
+      work_order: 12, // Replace with actual work order ID
+      action: "repair",
+      asset_stocks: [selectedAssetId],
+      supplies: selectedSupplies,
+    };
+
+    try {
+      console.log("Submitting repair request:", payload);
+      // If successful, reset form
+      setSelectedSupplies([]);
+      setSelectedAssetId(null);
+    } catch (error) {
+      errorPopupRef.current?.showError("An error occurred while saving.");
+    }
+  };
+
+  // const handleRemoveSupply = (index: number) => {
+  //   setSelectedSupplies((prevSupplies) =>
+  //     prevSupplies.filter((_, i) => i !== index)
+  //   );
+  // };
+
+  // const handleRepair = async () => {
+  //   if (!selectedAssetId || selectedSupplies.length === 0) {
+  //     console.error("Missing selected asset or supplies.");
+  //     errorPopupRef.current?.showError(
+  //       "Please select an asset and at least one supply before saving."
+  //     );
+  //     return;
+  //   }
+
+  //   const payload: any = {
+  //     work_order: workOrderId,
+  //     action: "repair",
+  //     asset_stocks: [selectedAssetId],
+  //     supplies: selectedSupplies, // Pass the selected supplies to the payload
+  //   };
+
+  //   try {
+  //     const response = await storeWorkOrderAssets(payload);
+
+  //     if (response?.success) {
+  //       console.log("Repair successful: ", response);
+  //       successPopupRef.current?.showSuccess(
+  //         response?.message || "Asset repair has been successfully submitted!"
+  //       );
+  //       onSuccess();
+
+  //       // Reset the fields after success
+  //       setSelectedAssetId(null);
+  //       setSelectedSupplies([]);
+  //     } else {
+  //       console.error(
+  //         "Error saving: ",
+  //         response?.message || "Unknown error occurred."
+  //       );
+  //       errorPopupRef.current?.showError(
+  //         response?.message || "Something went wrong."
+  //       );
+  //     }
+  //   } catch (error: any) {
+  //     console.error("An error occurred:", error);
+  //     const errorMessage =
+  //       error?.response?.data?.message ||
+  //       error?.message ||
+  //       "Something went wrong. Please try again.";
+  //     errorPopupRef.current?.showError(errorMessage);
+  //   }
+  // };
+
+  const customActionSheetOptions = {
+    header: "Actions",
+    subHeader: "Select Action",
+  };
+  const customActionSheetOptionsCategory = {
+    header: "Category",
+    subHeader: "Select Category",
+  };
+  const customActionSheetOptionsAssets = {
+    header: "Assets",
+    subHeader: "Select Asset",
+  };
+  const customActionSheetOptionsNewAsset = {
+    header: "New Asset",
+    subHeader: "Select New Asset",
+  };
+  const customActionSheetOptionsGroup = {
+    header: "Group List",
+    subHeader: "Select Group",
+  };
+  const customActionSheetOptionsEntity = {
+    header: "Entity List",
+    subHeader: "Select Entity",
+  };
+  const customActionSheetOptionsProperty = {
+    header: "Property List",
+    subHeader: "Select Property",
+  };
+  const customActionSheetOptionsZone = {
+    header: "Zone List",
+    subHeader: "Select Zone",
+  };
+  const customActionSheetOptionsLevel = {
+    header: "Level List",
+    subHeader: "Select Level",
+  };
+  const customActionSheetOptionsRoom = {
+    header: "Rooms List",
+    subHeader: "Select Room",
+  };
+  const customActionSheetOptionsSupply = {
+    header: "Supply List",
+    subHeader: "Select Supplies",
+  };
+
   return (
     <div>
       <ErrorPopup ref={errorPopupRef} />
       <SuccessPopup ref={successPopupRef} />
-      <IonItem>
-        <IonLabel>Actions</IonLabel>
-        <IonSelect
-          value={selectedAction}
-          onIonChange={(e) => setSelectedAction(e.detail.value)}
-          placeholder="Select Action"
-          slot="end"
-        >
-          {["new", "transfer", "repair", "condemn", "remove"].map(
-            (action, index) => (
-              <IonSelectOption key={index} value={action}>
-                {action}
-              </IonSelectOption>
-            )
-          )}
-        </IonSelect>
-      </IonItem>
+      <div className="filter-card">
+        <div className="filter-header">
+          <IonText>
+            <h3>FILTER OPTION</h3>
+          </IonText>
+        </div>
 
-      <IonItem>
-        <IonLabel>Category</IonLabel>
-        <IonSelect
-          value={selectedCategory}
-          onIonChange={(e) => setSelectedCategory(e.detail.value)}
-          placeholder="Select Category"
-          slot="end"
-        >
-          {loadingCategories ? (
-            <IonSelectOption value="" disabled>
-              <IonSpinner />
-            </IonSelectOption>
-          ) : (
-            categoryOptions.map((category) => (
-              <IonSelectOption key={category.id} value={category.id}>
-                {category.asset_category}
-              </IonSelectOption>
-            ))
-          )}
-        </IonSelect>
-      </IonItem>
+        <div className="filter-content">
+          {/* Actions Select */}
+          <IonItem>
+            <IonSelect
+              value={selectedAction}
+              onIonChange={(e) => setSelectedAction(e.detail.value)}
+              placeholder="Select Action"
+              className="full-width"
+              label="Actions"
+              interfaceOptions={customActionSheetOptions}
+              interface="action-sheet"
+            >
+              {["new", "transfer", "repair", "condemn", "remove"].map(
+                (action, index) => (
+                  <IonSelectOption key={index} value={action}>
+                    {action}
+                  </IonSelectOption>
+                )
+              )}
+            </IonSelect>
+          </IonItem>
 
-      <IonItem>
-        <IonLabel>Asset</IonLabel>
-        <IonSelect
-          value={selectedAsset}
-          onIonChange={(e) => setSelectedAsset(e.detail.value)}
-          placeholder="Select Asset"
-          disabled={!selectedCategory}
-          slot="end"
-        >
-          {loadingAssets ? (
-            <IonSelectOption value="" disabled>
-              <IonSpinner />
-            </IonSelectOption>
-          ) : (
-            assetOptions.map((asset) => (
-              <IonSelectOption key={asset.id} value={asset.id}>
-                {asset.asset}
-              </IonSelectOption>
-            ))
-          )}
-        </IonSelect>
-      </IonItem>
+          {/* Category Select */}
+          <IonItem className="custom-item">
+            <IonSelect
+              value={selectedCategory}
+              onIonChange={(e) => setSelectedCategory(e.detail.value)}
+              placeholder="Select Category"
+              className="full-width"
+              label="Assets Category"
+              interfaceOptions={customActionSheetOptionsCategory}
+              interface="action-sheet"
+            >
+              {loadingCategories ? (
+                <IonSelectOption value="" disabled>
+                  <IonSpinner />
+                </IonSelectOption>
+              ) : (
+                categoryOptions.map((category) => (
+                  <IonSelectOption key={category.id} value={category.id}>
+                    {category.asset_category}
+                  </IonSelectOption>
+                ))
+              )}
+            </IonSelect>
+          </IonItem>
 
-      <IonButton
-        color={selectedAction ? "primary" : "secondary"}
-        expand="block"
-        style={{ borderRadius: "1px" }}
-        onClick={onApplyFilter}
-        disabled={!selectedAction || !selectedCategory || !selectedAsset}
-      >
-        <IonIcon slot="start" icon={filterOutline}></IonIcon>
-        Apply Filters
-      </IonButton>
+          {/* Asset Select */}
+          <IonItem className="custom-item">
+            <IonSelect
+              value={selectedAsset}
+              onIonChange={(e) => setSelectedAsset(e.detail.value)}
+              placeholder="Select Asset"
+              disabled={!selectedCategory}
+              className="full-width"
+              label="Asset"
+              interfaceOptions={customActionSheetOptionsAssets}
+              interface="action-sheet"
+            >
+              {loadingAssets ? (
+                <IonSelectOption value="" disabled>
+                  <IonSpinner />
+                </IonSelectOption>
+              ) : (
+                assetOptions.map((asset) => (
+                  <IonSelectOption key={asset.id} value={asset.id}>
+                    {asset.asset}
+                  </IonSelectOption>
+                ))
+              )}
+            </IonSelect>
+          </IonItem>
+
+          {/* Apply Filter Button */}
+          <IonButton
+            color={selectedAction ? "primary" : "secondary"}
+            expand="block"
+            className="apply-btn"
+            onClick={onApplyFilter}
+            disabled={!selectedAction || !selectedCategory || !selectedAsset}
+          >
+            <IonIcon slot="start" icon={filterOutline}></IonIcon>
+            Apply Filters
+          </IonButton>
+        </div>
+      </div>
 
       {apiSuccess && selectedAction === "new" && (
         <>
@@ -240,10 +557,12 @@ const Assets: React.FC<AssetsProps> = ({
             <h3>NEW ASSET</h3>
           </IonText>
           <IonItem>
-            <IonLabel>Select New Asset</IonLabel>
             <IonSelect
               placeholder="Select New Asset"
-              slot="end"
+              className="full-width"
+              label="Select New Asset"
+              interfaceOptions={customActionSheetOptionsNewAsset}
+              interface="action-sheet"
               onIonChange={(e) => setSelectedAssetId(e.detail.value)} // Store the selected asset ID
             >
               {apiData.length > 0 ? (
@@ -274,11 +593,13 @@ const Assets: React.FC<AssetsProps> = ({
           </IonText>
 
           <IonItem>
-            <IonLabel>Select Asset</IonLabel>
             <IonSelect
-              placeholder="Select New Asset"
-              slot="end"
+              placeholder="Select Asset"
               onIonChange={(e) => setSelectedAssetId(e.detail.value)} // Store the selected asset ID
+              className="full-width"
+              label="Select Asset"
+              interfaceOptions={customActionSheetOptionsAssets}
+              interface="action-sheet"
             >
               {apiData.length > 0 ? (
                 apiData.map((item) => (
@@ -296,10 +617,12 @@ const Assets: React.FC<AssetsProps> = ({
 
           {/* Group Selection */}
           <IonItem>
-            <IonLabel>Select Group</IonLabel>
             <IonSelect
               placeholder="Select Group"
-              slot="end"
+              className="full-width"
+              label="Select Group"
+              interfaceOptions={customActionSheetOptionsGroup}
+              interface="action-sheet"
               onIonChange={(e) => {
                 setSelectedGroup(e.detail.value);
                 setSelectedEntity(null); // Reset dependent dropdowns
@@ -320,10 +643,12 @@ const Assets: React.FC<AssetsProps> = ({
           {/* Entity Selection */}
           {selectedGroup && (
             <IonItem>
-              <IonLabel>Select Entity</IonLabel>
               <IonSelect
                 placeholder="Select Entity"
-                slot="end"
+                className="full-width"
+                label="Select Entity"
+                interfaceOptions={customActionSheetOptionsEntity}
+                interface="action-sheet"
                 onIonChange={(e) => {
                   setSelectedEntity(e.detail.value);
                   setSelectedProperty(null);
@@ -350,10 +675,12 @@ const Assets: React.FC<AssetsProps> = ({
           {/* Property Selection */}
           {selectedEntity && (
             <IonItem>
-              <IonLabel>Select Property</IonLabel>
               <IonSelect
                 placeholder="Select Property"
-                slot="end"
+                className="full-width"
+                label="Select Property"
+                interfaceOptions={customActionSheetOptionsProperty}
+                interface="action-sheet"
                 onIonChange={(e) => {
                   setSelectedProperty(e.detail.value);
                   setSelectedZone(null);
@@ -379,10 +706,12 @@ const Assets: React.FC<AssetsProps> = ({
           {/* Zone Selection */}
           {selectedProperty && (
             <IonItem>
-              <IonLabel>Select Zone</IonLabel>
               <IonSelect
                 placeholder="Select Zone"
-                slot="end"
+                className="full-width"
+                label="Select Zone"
+                interfaceOptions={customActionSheetOptionsZone}
+                interface="action-sheet"
                 onIonChange={(e) => {
                   setSelectedZone(e.detail.value);
                   setSelectedLevel(null);
@@ -407,10 +736,12 @@ const Assets: React.FC<AssetsProps> = ({
           {/* Level Selection */}
           {selectedZone && (
             <IonItem>
-              <IonLabel>Select Level</IonLabel>
               <IonSelect
                 placeholder="Select Level"
-                slot="end"
+                className="full-width"
+                label="Select Level"
+                interfaceOptions={customActionSheetOptionsLevel}
+                interface="action-sheet"
                 onIonChange={(e) => {
                   setSelectedLevel(e.detail.value);
                   setSelectedRoom(null);
@@ -434,10 +765,12 @@ const Assets: React.FC<AssetsProps> = ({
           {/* Room Selection */}
           {selectedLevel && (
             <IonItem>
-              <IonLabel>Select Room</IonLabel>
               <IonSelect
                 placeholder="Select Room"
-                slot="end"
+                className="full-width"
+                label="Select Room"
+                interfaceOptions={customActionSheetOptionsRoom}
+                interface="action-sheet"
                 onIonChange={(e) => setSelectedRoom(e.detail.value)} // Update selected room
               >
                 {rooms.length > 0 ? (
@@ -461,38 +794,103 @@ const Assets: React.FC<AssetsProps> = ({
           </IonButton>
         </>
       )}
-
       {apiSuccess && selectedAction === "repair" && (
         <>
           <IonText>
             <h3>REPAIR ASSET</h3>
           </IonText>
           <IonItem>
-            <IonLabel>Select Asset Stock</IonLabel>
-            <IonSelect placeholder="Select Asset Stock" slot="end">
-              {/* Replace with dynamic data if available */}
-              <IonSelectOption value="stock1">Stock 1</IonSelectOption>
-              <IonSelectOption value="stock2">Stock 2</IonSelectOption>
+            <IonSelect
+              placeholder="Select Asset"
+              className="full-width"
+              label="Select Asset"
+              interfaceOptions={customActionSheetOptionsAssets}
+              interface="action-sheet"
+              onIonChange={(e) => setSelectedAssetId(e.detail.value)} // Store the selected asset ID
+            >
+              {apiData.length > 0 ? (
+                apiData.map((item) => (
+                  <IonSelectOption key={item.id} value={item.id}>
+                    {item.asset} - {item.serial_number}
+                  </IonSelectOption>
+                ))
+              ) : (
+                <IonSelectOption value="" disabled>
+                  No assets available
+                </IonSelectOption>
+              )}
             </IonSelect>
           </IonItem>
 
           <IonItem>
-            <IonLabel>Supplies</IonLabel>
             <IonSelect
-              placeholder="Select Supplies"
-              multiple
-              onIonChange={(e) =>
-                console.log("Selected Supplies:", e.detail.value)
-              }
+              placeholder="Select Supply"
+              className="full-width"
+              label="Select Supply"
+              interfaceOptions={customActionSheetOptionsSupply}
+              interface="action-sheet"
+              value={selectedSupply}
+              onIonChange={(e) => setSelectedSupply(e.detail.value)}
             >
-              {/* Replace with dynamic supply options */}
-              <IonSelectOption value="supply1">Supply 1</IonSelectOption>
-              <IonSelectOption value="supply2">Supply 2</IonSelectOption>
-              <IonSelectOption value="supply3">Supply 3</IonSelectOption>
+              {supplies.length > 0 ? (
+                supplies.map((item) => (
+                  <IonSelectOption key={item.id} value={item}>
+                    {item.supplier}, {item.supply} - {item.batch_number}{" "}
+                    (Balance: {item.balance}) {item.cost} QR
+                  </IonSelectOption>
+                ))
+              ) : (
+                <IonSelectOption value="" disabled>
+                  No supplies available
+                </IonSelectOption>
+              )}
             </IonSelect>
           </IonItem>
 
-          <IonButton expand="block" color="primary">
+          <IonItem>
+            <IonLabel>Quantity</IonLabel>
+            <IonInput
+              type="number"
+              value={supplyQuantity}
+              min="1"
+              onIonChange={(e) => setSupplyQuantity(Number(e.detail.value))}
+            />
+          </IonItem>
+
+          <IonButton
+            expand="block"
+            color="primary"
+            onClick={handleAddSupply}
+            disabled={
+              !selectedAssetId || !selectedSupply || supplyQuantity <= 0
+            }
+          >
+            Add Supply
+          </IonButton>
+
+          {/* List of Added Supplies */}
+          <IonText>
+            <h3>SUPPLY ADDED</h3>
+          </IonText>
+          <IonList>
+            {selectedSupplies.map((supply, index) => (
+              <IonItem key={index}>
+                <IonLabel>
+                  {supply.quantity}x {supply.supply} (Batch:{" "}
+                  {supply.batch_number})
+                </IonLabel>
+                <IonButton
+                  fill="clear"
+                  color="danger"
+                  onClick={() => handleRemoveSupply(index)}
+                >
+                  <IonIcon icon={trashOutline} />
+                </IonButton>
+              </IonItem>
+            ))}
+          </IonList>
+
+          <IonButton expand="block" color="primary" onClick={handleRepair}>
             <IonIcon slot="start" icon={saveOutline}></IonIcon>
             Save
           </IonButton>
