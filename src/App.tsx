@@ -46,7 +46,12 @@ import NotificationPage from "./pages/Notification";
 import AccountPage from "./pages/Account";
 import WorkOrderRequestView from "./pages/work-order-request/workorderRequestView";
 import WorkOrderSLA from "./pages/work-orders/workordersla";
-// import Notification from "./pages/notification";
+import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import EchoInstance from "../src/utilities/EchoInstance";
+import { EchoStart } from "./utilities/EchoHandler";
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
 setupIonicReact();
 
@@ -58,6 +63,71 @@ const App: React.FC = () => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme && savedTheme !== "default") {
       document.body.classList.add(savedTheme);
+    }
+  }, []);
+
+  // useEffect(() => {
+  //   PushNotifications.requestPermissions().then((result)=> {
+  //     if(result.receive === "granted") {
+  //       PushNotifications.register();
+  //     }
+  //   })
+
+  //   PushNotifications.addListener('pushNotificationReceived', (notification)=> {
+  //     console.log('Received notification: ', notification);      
+  //   })
+
+
+  //   PushNotifications.addListener('registration', (token) => {
+  //     console.log('Push notification token:', token.value);
+
+  //   });
+
+  // }, [])
+
+  useEffect(() => {
+    try {
+
+      // Request permission for push notifications
+      PushNotifications.requestPermissions().then((result) => {
+        if (result.receive === "granted") {
+          alert("Push Notification Permission Granted");
+        } else {
+          console.log("Push Notification Permission Denied");
+        }
+      });
+    }
+    catch (error) {
+      console.log("error: " + error.message);
+
+    }
+
+  }, []);
+
+  useEffect(() => {
+    try {
+
+      // Initialize Echo with Reverb parameters (host, port, key)
+      const echo = new Echo({
+        broadcaster: 'pusher',
+        key: import.meta.env.VITE_API_REVERB_KEY,
+        wsHost: import.meta.env.VITE_API_REVERB_HOST,  // The WebSocket host
+        wsPort: import.meta.env.VITE_API_REVERB_PORT,  // The WebSocket port
+        forceTLS: false,
+        disableStats: true,
+      });
+      const channel = "view.work.order.status.update." + localStorage.getItem("userData")?.user?.client_id;
+
+      // Listen for incoming notifications
+      echo.channel(channel)  // Change this to your channel
+        .listen('UpdateWorkOrderStatus', (data) => {
+          alert('UpdateWorkOrderStatus: ', data);
+          // You can show a local notification here or trigger UI changes
+        });
+    }
+    catch (error) {
+      console.log("error: " + JSON.stringify(error.message));
+
     }
   }, []);
 

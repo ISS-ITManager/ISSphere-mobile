@@ -119,7 +119,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     if (client_id) {
       try {
         const req = await reportApi.workOrderPending({ client_id: client_id });
-        console.log("req: " + JSON.stringify(req));
+        // console.log("req: " + JSON.stringify(req));
 
         setInprogressWOs(req.data.data?.inprogress_work_orders);
         setOpenWOs(req.data.data?.open_work_orders);
