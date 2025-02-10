@@ -190,6 +190,317 @@ const Assets: React.FC<AssetsProps> = ({
     getSupplies(); // Call the function when the component mounts
   }, []);
 
+  // const handleAssets = async () => {
+  //   if (!selectedAction || selectedAssetId === null) {
+  //     console.error("Missing selected action or asset.");
+  //     errorPopupRef.current?.showError(
+  //       "Please select an action and an asset before saving."
+  //     );
+  //     return;
+  //   }
+
+  //   if (
+  //     selectedAction === "transfer" &&
+  //     !selectedGroup &&
+  //     !selectedEntity &&
+  //     !selectedProperty &&
+  //     !selectedZone &&
+  //     !selectedLevel &&
+  //     !selectedRoom
+  //   ) {
+  //     console.error("Missing selected location for transfer.");
+  //     errorPopupRef.current?.showError(
+  //       "Please select a valid location before transferring the asset."
+  //     );
+  //     return;
+  //   }
+
+  //   const payload: any = {
+  //     work_order: workOrderId,
+  //     action: selectedAction,
+  //     asset_stocks: [selectedAssetId],
+  //   };
+
+  //   // Determine the most specific level and add to the payload
+  //   if (selectedRoom) {
+  //     payload.room = selectedRoom;
+  //   } else if (selectedLevel) {
+  //     payload.level = selectedLevel;
+  //   } else if (selectedZone) {
+  //     payload.zone = selectedZone;
+  //   } else if (selectedProperty) {
+  //     payload.property = selectedProperty;
+  //   } else if (selectedEntity) {
+  //     payload.entity = selectedEntity;
+  //   } else if (selectedGroup) {
+  //     payload.group = selectedGroup;
+  //   }
+
+  //   console.log("Payload: ", payload);
+
+  //   try {
+  //     const response = await storeWorkOrderAssets(payload);
+
+  //     if (response?.success) {
+  //       console.log("Save successful: ", response);
+  //       successPopupRef.current?.showSuccess(
+  //         response?.message || "Asset has been transferred successfully!"
+  //       );
+  //       onSuccess();
+
+  //       setSelectedAction("");
+  //       setSelectedAssetId(null);
+  //       setSelectedGroup(null);
+  //       setSelectedEntity(null);
+  //       setSelectedProperty(null);
+  //       setSelectedZone(null);
+  //       setSelectedLevel(null);
+  //       setSelectedRoom(null);
+  //     } else {
+  //       console.error(
+  //         "Error saving: ",
+  //         response?.message || "Unknown error occurred."
+  //       );
+  //       errorPopupRef.current?.showError(
+  //         response?.message || "Something went wrong."
+  //       );
+  //     }
+  //   } catch (error: any) {
+  //     console.error("An error occurred:", error);
+  //     const errorMessage =
+  //       error?.response?.data?.message ||
+  //       error?.message ||
+  //       "Something went wrong. Please try again.";
+  //     errorPopupRef.current?.showError(errorMessage);
+  //   }
+  // };
+
+  // const handleAssets = async () => {
+  //   if (!selectedAction || selectedAssetId === null) {
+  //     console.error("Missing selected action or asset.");
+  //     errorPopupRef.current?.showError(
+  //       "Please select an action and an asset before saving."
+  //     );
+  //     return;
+  //   }
+
+  //   // Validation for Transfer
+  //   if (
+  //     selectedAction === "transfer" &&
+  //     !selectedGroup &&
+  //     !selectedEntity &&
+  //     !selectedProperty &&
+  //     !selectedZone &&
+  //     !selectedLevel &&
+  //     !selectedRoom
+  //   ) {
+  //     console.error("Missing selected location for transfer.");
+  //     errorPopupRef.current?.showError(
+  //       "Please select a valid location before transferring the asset."
+  //     );
+  //     return;
+  //   }
+
+  //   // Validation for Repair
+  //   if (selectedAction === "repair") {
+  //     if (selectedSupplies.length === 0) {
+  //       console.error("No supplies selected for repair.");
+  //       errorPopupRef.current?.showError("Please add at least one supply.");
+  //       return;
+  //     }
+  //   }
+
+  //   // Construct Payload
+  //   const payload: any = {
+  //     work_order: workOrderId,
+  //     action: selectedAction,
+  //     asset_stocks: [selectedAssetId],
+  //   };
+
+  //   // If action is "repair", add selected supplies to the payload
+  //   if (selectedAction === "repair") {
+  //     payload.asset_stock_supplies = selectedSupplies.reduce((acc, supply) => {
+  //       if (!acc[selectedAssetId]) {
+  //         acc[selectedAssetId] = {};
+  //       }
+  //       acc[selectedAssetId][supply.id] = supply.quantity;
+  //       return acc;
+  //     }, {});
+  //   }
+
+  //   // If action is "transfer", add location details
+  //   if (selectedAction === "transfer") {
+  //     if (selectedRoom) {
+  //       payload.room = selectedRoom;
+  //     } else if (selectedLevel) {
+  //       payload.level = selectedLevel;
+  //     } else if (selectedZone) {
+  //       payload.zone = selectedZone;
+  //     } else if (selectedProperty) {
+  //       payload.property = selectedProperty;
+  //     } else if (selectedEntity) {
+  //       payload.entity = selectedEntity;
+  //     } else if (selectedGroup) {
+  //       payload.group = selectedGroup;
+  //     }
+  //   }
+
+  //   console.log("Payload: ", payload);
+
+  //   try {
+  //     const response = await storeWorkOrderAssets(payload);
+
+  //     if (response?.success) {
+  //       console.log("Save successful: ", response);
+  //       successPopupRef.current?.showSuccess(
+  //         response?.message || "Operation completed successfully!"
+  //       );
+  //       onSuccess();
+
+  //       // Reset Fields
+  //       setSelectedAction("");
+  //       setSelectedAssetId(null);
+  //       setSelectedSupplies([]);
+  //       setSelectedSupply(null);
+  //       setSupplyQuantity(1);
+  //       setSelectedGroup(null);
+  //       setSelectedEntity(null);
+  //       setSelectedProperty(null);
+  //       setSelectedZone(null);
+  //       setSelectedLevel(null);
+  //       setSelectedRoom(null);
+  //     } else {
+  //       console.error(
+  //         "Error saving: ",
+  //         response?.message || "Unknown error occurred."
+  //       );
+  //       errorPopupRef.current?.showError(
+  //         response?.message || "Something went wrong."
+  //       );
+  //     }
+  //   } catch (error: any) {
+  //     console.error("An error occurred:", error);
+  //     const errorMessage =
+  //       error?.response?.data?.message ||
+  //       error?.message ||
+  //       "Something went wrong. Please try again.";
+  //     errorPopupRef.current?.showError(errorMessage);
+  //   }
+  // };
+
+  // const handleAssets = async () => {
+  //   if (!selectedAction || selectedAssetId === null) {
+  //     console.error("Missing selected action or asset.");
+  //     errorPopupRef.current?.showError(
+  //       "Please select an action and an asset before saving."
+  //     );
+  //     return;
+  //   }
+
+  //   // Validation for Transfer
+  //   if (
+  //     selectedAction === "transfer" &&
+  //     !selectedGroup &&
+  //     !selectedEntity &&
+  //     !selectedProperty &&
+  //     !selectedZone &&
+  //     !selectedLevel &&
+  //     !selectedRoom
+  //   ) {
+  //     console.error("Missing selected location for transfer.");
+  //     errorPopupRef.current?.showError(
+  //       "Please select a valid location before transferring the asset."
+  //     );
+  //     return;
+  //   }
+
+  //   // Validation for Repair
+  //   if (selectedAction === "repair") {
+  //     if (selectedSupplies.length === 0) {
+  //       console.error("No supplies selected for repair.");
+  //       errorPopupRef.current?.showError("Please add at least one supply.");
+  //       return;
+  //     }
+  //   }
+
+  //   // Construct Payload
+  //   const payload: any = {
+  //     work_order: workOrderId,
+  //     action: selectedAction,
+  //     asset_stocks: [selectedAssetId],
+  //   };
+
+  //   // If action is "repair", add selected supplies to the payload
+  //   if (selectedAction === "repair") {
+  //     payload.asset_stock_supplies = selectedSupplies.reduce((acc, supply) => {
+  //       if (!acc[selectedAssetId]) {
+  //         acc[selectedAssetId] = {};
+  //       }
+  //       acc[selectedAssetId][supply.id] = supply.quantity;
+  //       return acc;
+  //     }, {});
+  //   }
+
+  //   // If action is "transfer", add location details
+  //   if (selectedAction === "transfer") {
+  //     if (selectedRoom) {
+  //       payload.room = selectedRoom;
+  //     } else if (selectedLevel) {
+  //       payload.level = selectedLevel;
+  //     } else if (selectedZone) {
+  //       payload.zone = selectedZone;
+  //     } else if (selectedProperty) {
+  //       payload.property = selectedProperty;
+  //     } else if (selectedEntity) {
+  //       payload.entity = selectedEntity;
+  //     } else if (selectedGroup) {
+  //       payload.group = selectedGroup;
+  //     }
+  //   }
+
+  //   console.log("Payload: ", payload);
+
+  //   try {
+  //     const response = await storeWorkOrderAssets(payload);
+
+  //     if (response?.success) {
+  //       console.log("Save successful: ", response);
+  //       successPopupRef.current?.showSuccess(
+  //         response?.message || "Operation completed successfully!"
+  //       );
+  //       onSuccess();
+
+  //       // Reset Fields
+  //       setSelectedAction("");
+  //       setSelectedAssetId(null);
+  //       setSelectedSupplies([]);
+  //       setSelectedSupply(null);
+  //       setSupplyQuantity(1);
+  //       setSelectedGroup(null);
+  //       setSelectedEntity(null);
+  //       setSelectedProperty(null);
+  //       setSelectedZone(null);
+  //       setSelectedLevel(null);
+  //       setSelectedRoom(null);
+  //     } else {
+  //       console.error(
+  //         "Error saving: ",
+  //         response?.message || "Unknown error occurred."
+  //       );
+  //       errorPopupRef.current?.showError(
+  //         response?.message || "Something went wrong."
+  //       );
+  //     }
+  //   } catch (error: any) {
+  //     console.error("An error occurred:", error);
+  //     const errorMessage =
+  //       error?.response?.data?.message ||
+  //       error?.message ||
+  //       "Something went wrong. Please try again.";
+  //     errorPopupRef.current?.showError(errorMessage);
+  //   }
+  // };
+
   const handleAssets = async () => {
     if (!selectedAction || selectedAssetId === null) {
       console.error("Missing selected action or asset.");
@@ -199,6 +510,7 @@ const Assets: React.FC<AssetsProps> = ({
       return;
     }
 
+    // Validation for Transfer
     if (
       selectedAction === "transfer" &&
       !selectedGroup &&
@@ -215,25 +527,53 @@ const Assets: React.FC<AssetsProps> = ({
       return;
     }
 
+    // Validation for Repair
+    if (selectedAction === "repair") {
+      if (selectedSupplies.length === 0) {
+        console.error("No supplies selected for repair.");
+        errorPopupRef.current?.showError("Please add at least one supply.");
+        return;
+      }
+    }
+
+    // Construct Payload
     const payload: any = {
       work_order: workOrderId,
       action: selectedAction,
       asset_stocks: [selectedAssetId],
     };
 
-    // Determine the most specific level and add to the payload
-    if (selectedRoom) {
-      payload.room = selectedRoom;
-    } else if (selectedLevel) {
-      payload.level = selectedLevel;
-    } else if (selectedZone) {
-      payload.zone = selectedZone;
-    } else if (selectedProperty) {
-      payload.property = selectedProperty;
-    } else if (selectedEntity) {
-      payload.entity = selectedEntity;
-    } else if (selectedGroup) {
-      payload.group = selectedGroup;
+    // If action is "repair", add selected supplies to the payload
+    if (selectedAction === "repair") {
+      payload.asset_stock_supplies = selectedSupplies.reduce((acc, supply) => {
+        if (!acc[selectedAssetId]) {
+          acc[selectedAssetId] = {};
+        }
+        acc[selectedAssetId][supply.id] = supply.quantity;
+        return acc;
+      }, {});
+    }
+
+    // If action is "transfer", add location details
+    if (selectedAction === "transfer") {
+      if (selectedRoom) {
+        payload.room = selectedRoom;
+      } else if (selectedLevel) {
+        payload.level = selectedLevel;
+      } else if (selectedZone) {
+        payload.zone = selectedZone;
+      } else if (selectedProperty) {
+        payload.property = selectedProperty;
+      } else if (selectedEntity) {
+        payload.entity = selectedEntity;
+      } else if (selectedGroup) {
+        payload.group = selectedGroup;
+      }
+    }
+
+    // If action is "condemn" or "remove", just send the action and asset_stocks (no additional fields needed)
+    if (selectedAction === "condemn" || selectedAction === "remove") {
+      payload.action = selectedAction;
     }
 
     console.log("Payload: ", payload);
@@ -244,12 +584,16 @@ const Assets: React.FC<AssetsProps> = ({
       if (response?.success) {
         console.log("Save successful: ", response);
         successPopupRef.current?.showSuccess(
-          response?.message || "Asset has been transferred successfully!"
+          response?.message || "Operation completed successfully!"
         );
         onSuccess();
 
+        // Reset Fields
         setSelectedAction("");
         setSelectedAssetId(null);
+        setSelectedSupplies([]);
+        setSelectedSupply(null);
+        setSupplyQuantity(1);
         setSelectedGroup(null);
         setSelectedEntity(null);
         setSelectedProperty(null);
@@ -324,89 +668,6 @@ const Assets: React.FC<AssetsProps> = ({
       prevSupplies.filter((_, i) => i !== index)
     );
   };
-
-  // Handle the repair action
-  const handleRepair = async () => {
-    if (!selectedAssetId) {
-      errorPopupRef.current?.showError("Please select an asset.");
-      return;
-    }
-
-    if (selectedSupplies.length === 0) {
-      errorPopupRef.current?.showError("Please add at least one supply.");
-      return;
-    }
-
-    const payload = {
-      work_order: 12, // Replace with actual work order ID
-      action: "repair",
-      asset_stocks: [selectedAssetId],
-      supplies: selectedSupplies,
-    };
-
-    try {
-      console.log("Submitting repair request:", payload);
-      // If successful, reset form
-      setSelectedSupplies([]);
-      setSelectedAssetId(null);
-    } catch (error) {
-      errorPopupRef.current?.showError("An error occurred while saving.");
-    }
-  };
-
-  // const handleRemoveSupply = (index: number) => {
-  //   setSelectedSupplies((prevSupplies) =>
-  //     prevSupplies.filter((_, i) => i !== index)
-  //   );
-  // };
-
-  // const handleRepair = async () => {
-  //   if (!selectedAssetId || selectedSupplies.length === 0) {
-  //     console.error("Missing selected asset or supplies.");
-  //     errorPopupRef.current?.showError(
-  //       "Please select an asset and at least one supply before saving."
-  //     );
-  //     return;
-  //   }
-
-  //   const payload: any = {
-  //     work_order: workOrderId,
-  //     action: "repair",
-  //     asset_stocks: [selectedAssetId],
-  //     supplies: selectedSupplies, // Pass the selected supplies to the payload
-  //   };
-
-  //   try {
-  //     const response = await storeWorkOrderAssets(payload);
-
-  //     if (response?.success) {
-  //       console.log("Repair successful: ", response);
-  //       successPopupRef.current?.showSuccess(
-  //         response?.message || "Asset repair has been successfully submitted!"
-  //       );
-  //       onSuccess();
-
-  //       // Reset the fields after success
-  //       setSelectedAssetId(null);
-  //       setSelectedSupplies([]);
-  //     } else {
-  //       console.error(
-  //         "Error saving: ",
-  //         response?.message || "Unknown error occurred."
-  //       );
-  //       errorPopupRef.current?.showError(
-  //         response?.message || "Something went wrong."
-  //       );
-  //     }
-  //   } catch (error: any) {
-  //     console.error("An error occurred:", error);
-  //     const errorMessage =
-  //       error?.response?.data?.message ||
-  //       error?.message ||
-  //       "Something went wrong. Please try again.";
-  //     errorPopupRef.current?.showError(errorMessage);
-  //   }
-  // };
 
   const customActionSheetOptions = {
     header: "Actions",
@@ -890,7 +1151,7 @@ const Assets: React.FC<AssetsProps> = ({
             ))}
           </IonList>
 
-          <IonButton expand="block" color="primary" onClick={handleRepair}>
+          <IonButton expand="block" color="primary" onClick={handleAssets}>
             <IonIcon slot="start" icon={saveOutline}></IonIcon>
             Save
           </IonButton>
@@ -903,15 +1164,29 @@ const Assets: React.FC<AssetsProps> = ({
             <h3>CONDEMN ASSET</h3>
           </IonText>
           <IonItem>
-            <IonLabel>Select Asset Stock</IonLabel>
-            <IonSelect placeholder="Select Asset Stock" slot="end">
-              {/* Replace with dynamic asset stock options */}
-              <IonSelectOption value="stock1">Stock 1</IonSelectOption>
-              <IonSelectOption value="stock2">Stock 2</IonSelectOption>
+            <IonSelect
+              placeholder="Select Asset"
+              className="full-width"
+              label="Select Asset"
+              interfaceOptions={customActionSheetOptionsNewAsset}
+              interface="action-sheet"
+              onIonChange={(e) => setSelectedAssetId(e.detail.value)} // Store the selected asset ID
+            >
+              {apiData.length > 0 ? (
+                apiData.map((item) => (
+                  <IonSelectOption key={item.id} value={item.id}>
+                    {item.asset} - {item.serial_number}
+                  </IonSelectOption>
+                ))
+              ) : (
+                <IonSelectOption value="" disabled>
+                  No assets available
+                </IonSelectOption>
+              )}
             </IonSelect>
           </IonItem>
 
-          <IonButton expand="block" color="primary">
+          <IonButton expand="block" color="primary" onClick={handleAssets}>
             <IonIcon slot="start" icon={saveOutline}></IonIcon>
             Save
           </IonButton>
@@ -924,15 +1199,29 @@ const Assets: React.FC<AssetsProps> = ({
             <h3>REMOVE ASSET</h3>
           </IonText>
           <IonItem>
-            <IonLabel>Select Asset Stock</IonLabel>
-            <IonSelect placeholder="Select Asset Stock" slot="end">
-              {/* Replace with dynamic asset stock options */}
-              <IonSelectOption value="stock1">Stock 1</IonSelectOption>
-              <IonSelectOption value="stock2">Stock 2</IonSelectOption>
+            <IonSelect
+              placeholder="Select Asset"
+              className="full-width"
+              label="Select Asset"
+              interfaceOptions={customActionSheetOptionsNewAsset}
+              interface="action-sheet"
+              onIonChange={(e) => setSelectedAssetId(e.detail.value)} // Store the selected asset ID
+            >
+              {apiData.length > 0 ? (
+                apiData.map((item) => (
+                  <IonSelectOption key={item.id} value={item.id}>
+                    {item.asset} - {item.serial_number}
+                  </IonSelectOption>
+                ))
+              ) : (
+                <IonSelectOption value="" disabled>
+                  No assets available
+                </IonSelectOption>
+              )}
             </IonSelect>
           </IonItem>
 
-          <IonButton expand="block" color="primary">
+          <IonButton expand="block" color="primary" onClick={handleAssets}>
             <IonIcon slot="start" icon={saveOutline}></IonIcon>
             Save
           </IonButton>
