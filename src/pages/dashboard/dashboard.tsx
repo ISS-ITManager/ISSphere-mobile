@@ -37,6 +37,10 @@ import {
   chevronForward,
   calendarOutline,
   caretForwardOutline,
+  chevronDown,
+  hourglassOutline,
+  folderOpenOutline,
+  pauseOutline,
   lockOpen,
   hourglass,
 } from "ionicons/icons";
@@ -200,7 +204,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   // Get theme from localStorage initially
   const storedTheme = localStorage.getItem("theme") || "default";
 
-
   useEffect(() => {
     // Set bar color based on the theme
     const themeColors: Record<string, string> = {
@@ -220,7 +223,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     }
   }, [storedTheme]); // Effect depends on the theme
 
-
   const getPendingWOs = async (client_id) => {
     if (client_id) {
       try {
@@ -234,17 +236,21 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
         console.log("getPendingWOs error: " + JSON.stringify(error.message));
       }
     }
-  }
+  };
   function getCurrentMonthDates() {
     const currentDate = new Date();
 
     // Get the start date of the current month (set the day to 1)
-    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const startOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
 
     // Return both the start of the month and the current date in "YYYY-MM-DD" format
     return {
-      startOfMonth: startOfMonth.toISOString().split('T')[0],  // "YYYY-MM-DD"
-      currentDate: currentDate.toISOString().split('T')[0],    // "YYYY-MM-DD"
+      startOfMonth: startOfMonth.toISOString().split("T")[0], // "YYYY-MM-DD"
+      currentDate: currentDate.toISOString().split("T")[0], // "YYYY-MM-DD"
     };
   }
   const getClosedWOs = async (client_id) => {
@@ -255,15 +261,18 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
           start_date: startOfMonth,
           end_date: currentDate,
           download: false,
-          client_id: client_id
+          client_id: client_id,
         });
         setClosedWOs(req.data?.data);
+        console.log("closedWOs: " + JSON.stringify(req.data?.data));
+
         // console.log("closedWOs: " + JSON.stringify(req.data?.data));
 
       } catch (error) {
         console.log("getClosedWOs error: " + JSON.stringify(error.message));
       }
     }
+  };
   }
 
 
@@ -361,9 +370,24 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   const openWOsData = {
     labels: [
       // 'Pending',
-      'Open',
-      'In-Progress'
+      "Open",
+      "In-Progress",
     ],
+    
+    datasets: [
+      {
+        label: "Open Work Orders",
+        data: [openWOs, inprogressWOs],
+        backgroundColor: [
+          // 'rgb(55,145,220)',
+          "rgb(9,8,154)",
+          "rgb(254,145,31)",
+        ],
+        hoverOffset: 4,
+      },
+    ],
+  };
+
     datasets: [{
       label: 'Open Work Orders',
       data: [openWOs, inprogressWOs],
@@ -422,9 +446,12 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
               </div>
             </IonCardContent>
           </IonCard> */}
+          {(openWOs > 0 || pendingWOs > 0 || inprogressWOs > 0) && (
+
 
           {/* pending work orders */}
           {/* {(openWOs > 0 || pendingWOs > 0 || inprogressWOs > 0) &&
+
             <IonCard
               className="minimal-work-order-card fade-in"
               style={{ backgroundColor: "var(--ion-color-secondary)" }}
@@ -433,11 +460,15 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 <p className="chart-description">
                   <b>Total Pending Work Orders</b>
                 </p>
-                <center><div className="chart-container">
-                  <Pie data={openWOsData} />
-                </div></center>
+                <center>
+                  <div className="chart-container">
+                    <Pie data={openWOsData} />
+                  </div>
+                </center>
               </IonCardContent>
             </IonCard>
+
+          )}
           } */}
 
           <IonGrid>
@@ -486,8 +517,15 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
           </IonGrid>
 
           {/* Work Orders List */}
-          <div >
+          <div>
             <IonList>
+
+              <h2 className="section-title">
+                {" "}
+                {!userData?.user.is_assignee ? "" : "My "} Work Orders{" "}
+                {`(${workOrders.length})`}
+              </h2>
+
               <div className="see-all-div">
                 <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
                 <IonLabel onClick={() => handleSeeAllWOs()}>
@@ -495,11 +533,83 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   <IonIcon icon={chevronForward} />
                 </IonLabel>
               </div>
+
               {Array.isArray(workOrders) && workOrders.length === 0 ? (
                 <IonText className="no-work-orders ion-padding">
                   No work orders available
                 </IonText>
               ) : (
+
+                workOrders.map((order, index) => (
+                  <IonCard
+                    key={index}
+                    className="ion-padding task-card minimal-work-order-card bounce-in-left "
+                    onClick={() => history.push(`/work-orders/${order.id}`)}
+                    style={{ marginLeft: "4%" }}
+                  >
+                    <IonCardHeader>
+                      <IonCardTitle>
+                        <div className="work-order-header">
+                          {order.work_order_reference_number}
+                          <BadgeComponent status={order.status} />
+                        </div>
+                      </IonCardTitle>
+                    </IonCardHeader>
+                    <IonItem lines="none">
+                      <IonLabel>
+                        <b>Description:</b>
+                      </IonLabel>
+                      <IonText className="ion-text-end">
+                        {order.work_order_description}
+                      </IonText>
+                    </IonItem>
+                    <IonItem lines="none">
+                      <IonLabel>
+                        <b>Schedule:</b>
+                      </IonLabel>
+                      <IonText>
+                        {order.end_date === order.start_date
+                          ? order.start_date
+                          : ` ${order.start_date} - ${order.end_date}`}
+                      </IonText>
+                    </IonItem>
+                    <IonItem lines="none">
+                      <IonLabel>
+                        <IonChip
+                          className="ion-text-uppercase"
+                          outline={true}
+                          color="warning"
+                        >
+                          <IonIcon icon={calendarOutline} />
+                          <b>{order.day}</b>
+                        </IonChip>
+                      </IonLabel>
+                      <IonText className="ion-text-end">
+                        <b>
+                          {order.start_time} - {order.end_time}
+                        </b>
+                      </IonText>
+                    </IonItem>
+                    <IonItem>
+                      <IonLabel>
+                        <b>Location: </b>
+                      </IonLabel>
+                      <IonText className="ion-text-end">
+                        {order?.group}
+                        <IonIcon icon={caretForwardOutline} />
+                        {order?.entity}
+                        <IonIcon icon={caretForwardOutline} />
+                        {order?.property}
+                        <IonIcon icon={caretForwardOutline} />
+                        {order?.zone}
+                        <IonIcon icon={caretForwardOutline} />
+                        {order?.level}
+                        {<IonIcon icon={caretForwardOutline} /> && order?.room}
+                      </IonText>
+                    </IonItem>
+                  </IonCard>
+                ))
+
                 workOrders
                   .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
                   .map((order, index) => (
@@ -562,8 +672,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
               )}
             </IonList>
           </div>
-
-
         </IonContent>
         {/* Floating Tab Buttons */}
         <FloatingTabButtons />
