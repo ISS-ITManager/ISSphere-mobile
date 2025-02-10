@@ -46,7 +46,13 @@ import NotificationPage from "./pages/Notification";
 import AccountPage from "./pages/Account";
 import WorkOrderRequestView from "./pages/work-order-request/workorderRequestView";
 import WorkOrderSLA from "./pages/work-orders/workordersla";
-// import Notification from "./pages/notification";
+import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import EchoInstance from "../src/utilities/EchoInstance";
+import { EchoStart } from "./utilities/EchoHandler";
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+import WorkOrderList from "./pages/work-orders/workorderlist";
 
 setupIonicReact();
 
@@ -58,6 +64,75 @@ const App: React.FC = () => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme && savedTheme !== "default") {
       document.body.classList.add(savedTheme);
+    }
+  }, []);
+
+  // useEffect(() => {
+  //   PushNotifications.requestPermissions().then((result)=> {
+  //     if(result.receive === "granted") {
+  //       PushNotifications.register();
+  //     }
+  //   })
+
+  //   PushNotifications.addListener('pushNotificationReceived', (notification)=> {
+  //     console.log('Received notification: ', notification);      
+  //   })
+
+
+  //   PushNotifications.addListener('registration', (token) => {
+  //     console.log('Push notification token:', token.value);
+
+  //   });
+
+  // }, [])
+
+  useEffect(() => {
+    try {
+
+      // Request permission for push notifications
+      PushNotifications.requestPermissions().then((result) => {
+        if (result.receive === "granted") {
+          alert("Push Notification Permission Granted");
+        } else {
+          console.log("Push Notification Permission Denied");
+        }
+      });
+    }
+    catch (error) {
+      console.log("error: " + error.message);
+
+    }
+
+  }, []);
+
+  useEffect(() => {
+    const client_id = localStorage.getItem("userData")?.user?.client_id;
+    if (client_id) {
+      try {
+        // Initialize Echo with Reverb parameters (host, port, key)
+        const echo = new Echo({
+          broadcaster: "pusher", // Use pusher broadcaster
+          key: import.meta.env.VITE_PROD_API_REVERB_KEY,  // Your Reverb key
+          wsHost: import.meta.env.VITE_PROD_API_REVERB_HOST,  // WebSocket host
+          wsPort: import.meta.env.VITE_PROD_API_REVERB_PORT,  // WebSocket port
+          forceTLS: false, // Disable TLS if not required
+          disableStats: true,  // Optional: Disable statistics
+          client: Pusher, // Use Pusher client
+        });
+
+        // Construct the channel name dynamically
+        const channel = "view.work.order.status.update." + client_id;
+        // alert("channel: " + channel);
+
+        // Listen for incoming notifications
+        echo.channel(channel)
+          .listen('UpdateWorkOrderStatus', (data) => {
+            // alert('UpdateWorkOrderStatus: ', data);
+            // You can show a local notification here or trigger UI changes
+          });
+      } catch (error) {
+        alert("error under echo: " + error.message);
+      }
     }
   }, []);
 
@@ -77,6 +152,9 @@ const App: React.FC = () => {
           </Route>
           <Route exact path="/work-orders/:id">
             <WorkOrder />
+          </Route>
+          <Route exact path="/workOrderlist">
+            <WorkOrderList />
           </Route>
           <Route exact path="/viewWO">
             <WorkOrderTasks />

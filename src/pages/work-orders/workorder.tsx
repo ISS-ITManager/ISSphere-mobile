@@ -370,6 +370,7 @@ const WorkOrder: React.FC = () => {
                 value={workOrderRemarks}
               />
             </IonItem>
+
             <div
               style={{
                 display: "flex",
@@ -377,6 +378,58 @@ const WorkOrder: React.FC = () => {
                 padding: "1rem",
               }}
             >
+
+
+            {/* Attachments Section */}
+            {workOrderStatus === "completed" &&
+              <div className="attachments-section">
+                <div className="section-header">
+                  <IonItem>
+                    <IonIcon
+                      icon={documentAttachOutline}
+                      className="section-icon"
+                    />
+                    <label>Attach Documents</label>
+                  </IonItem>
+                </div>
+                <IonItem lines="none" className="upload-container">
+                  <IonLabel>Upload Files</IonLabel>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    style={{ display: "none" }}
+                    id="fileUpload"
+                  />
+                  <IonButton
+                    slot="end"
+                    onClick={() =>
+                      document.getElementById("fileUpload")?.click()
+                    }
+                    className="upload-btn"
+                  >
+                    <IonIcon icon={cloudUploadOutline} /> Upload
+                  </IonButton>
+                </IonItem>
+                <IonList className="file-list">
+                  {uploadedFiles.map((file, index) => (
+                    <IonItem key={index} className="file-item">
+                      <IonLabel>{file.name}</IonLabel>
+                      <IonButton
+                        slot="end"
+                        color="danger"
+                        onClick={() => removeFile(index)}
+                        className="remove-file-btn"
+                      >
+                        <IonIcon icon={closeOutline} />
+                      </IonButton>
+                    </IonItem>
+                  ))}
+                </IonList>
+              </div>
+            }
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem' }}>
+              <IonButton fill="outline" onClick={() => setUpdateWorkOrder(false)}>Cancel</IonButton>
               <IonButton
                 fill="outline"
                 onClick={() => setUpdateWorkOrder(false)}
@@ -1605,52 +1658,7 @@ const WorkOrder: React.FC = () => {
                       </IonItem>
                     </IonGrid>
 
-                    {/* Attachments Section */}
-                    <div className="attachments-section">
-                      <div className="section-header">
-                        <IonItem>
-                          <IonIcon
-                            icon={documentAttachOutline}
-                            className="section-icon"
-                          />
-                          <label>Attach Documents</label>
-                        </IonItem>
-                      </div>
-                      <IonItem lines="none" className="upload-container">
-                        <IonLabel>Upload Files</IonLabel>
-                        <input
-                          type="file"
-                          multiple
-                          onChange={handleFileUpload}
-                          style={{ display: "none" }}
-                          id="fileUpload"
-                        />
-                        <IonButton
-                          slot="end"
-                          onClick={() =>
-                            document.getElementById("fileUpload")?.click()
-                          }
-                          className="upload-btn"
-                        >
-                          <IonIcon icon={cloudUploadOutline} /> Upload
-                        </IonButton>
-                      </IonItem>
-                      <IonList className="file-list">
-                        {uploadedFiles.map((file, index) => (
-                          <IonItem key={index} className="file-item">
-                            <IonLabel>{file.name}</IonLabel>
-                            <IonButton
-                              slot="end"
-                              color="danger"
-                              onClick={() => removeFile(index)}
-                              className="remove-file-btn"
-                            >
-                              <IonIcon icon={closeOutline} />
-                            </IonButton>
-                          </IonItem>
-                        ))}
-                      </IonList>
-                    </div>
+
 
                     <div className="assets-section">
                       <div className="assets-header">

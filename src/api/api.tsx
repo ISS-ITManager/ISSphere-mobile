@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_APP_API_URL;
+const API_URL = import.meta.env.VITE_DEV_APP_API_URL;//VITE_PROD_APP_API_URL; //VITE_APP_API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -69,6 +69,10 @@ export const getUserData = async () => {
 
 export const getWorkOrders = async () => {
   const response = await api.get("/work-orders");
+  return response.data;
+};
+export const getWorkOrdersPaginate = async (len) => {
+  const response = await api.get(`/work-orders?paginate=${len}`);
   return response.data;
 };
 
