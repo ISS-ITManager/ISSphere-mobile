@@ -19,6 +19,7 @@ import {
   IonChip,
   IonButton,
   IonGrid,
+  IonBadge,
 } from "@ionic/react";
 import { Bar, Doughnut, Pie } from "react-chartjs-2";
 import {
@@ -32,27 +33,25 @@ import {
   ArcElement,
 } from "chart.js";
 import Header from "../../components/HeaderDashboard";
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
 import {
-  chevronForwardOutline,
-  personCircleOutline,
-  informationCircleOutline,
+  chevronForward,
   calendarOutline,
-  calendarClearOutline,
-  checkmarkCircleOutline,
-  briefcaseOutline,
   caretForwardOutline,
-  chevronDown,
-  hourglassOutline,
-  folderOpenOutline,
-  pauseOutline
+  lockOpen,
+  hourglass,
 } from "ionicons/icons";
+
 import { getUserData, getWorkOrders, reportApi } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Loading from "../../utilities/loadingpage";
 import "./dashboard.css";
 import FloatingTabButtons from "../../components/FloatingButtons";
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+import { PushNotifications } from '@capacitor/push-notifications';
+import InitializeEcho from "../../utilities/EchoInstance";
+import { LocalNotifications } from "@capacitor/local-notifications";
+import BadgeStatus from "../../utilities/BadgeStatus";
 
 // Registering chart.js components
 ChartJS.register(
@@ -77,7 +76,114 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   const [inprogressWOs, setInprogressWOs] = useState(0);
   const [openWOs, setOpenWOs] = useState(0);
   const [closedWOs, setClosedWOs] = useState(0);
+  const [workOrdersLen, setWorkOrdersLen] = useState(10);
 
+  const safeStringify = (obj, space = 2) => {
+    const cache = new Set();
+    return JSON.stringify(obj, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (cache.has(value)) {
+          return "[Circular]"; // Prevent circular references
+        }
+        cache.add(value);
+      }
+      return value;
+    }, space);
+  };
+
+  window.Pusher = Pusher;
+  const handlePusher = () => {
+    const userData = JSON.parse(localStorage.getItem("userData"));
+    if (userData?.user?.client_id) {
+      try {
+
+        try {
+
+          // const echo = InitializeEcho(import.meta.env.VITE_API_REVERB_KEY, import.meta.env.VITE_API_REVERB_HOST,import.meta.env.VITE_API_REVERB_PORT);
+          const echo = InitializeEcho(import.meta.env.VITE_PROD_API_REVERB_KEY, import.meta.env.VITE_PROD_API_REVERB_HOST, import.meta.env.VITE_PROD_API_REVERB_PORT);
+
+          // alert("echo: " + (echo));
+
+          const channel = `view.work.order.status.update.${userData?.user?.client_id}`;
+
+          echo.channel(channel)
+            .listen('UpdateWorkOrderStatus', (data) => {
+
+              try {
+                // Ensure that the event is properly serialized to avoid circular references
+                const serializedEvent = JSON.parse(JSON.stringify(data));
+
+                // alert('Received notification:' + serializedEvent);
+                // alert('UpdateWorkOrderStatus: ' + safeStringify(data));
+
+                LocalNotifications.schedule({
+                  notifications: [
+                    {
+
+                      title: "ISSphere",
+                      body: serializedEvent,
+                      id: Math.ceil(Math.random() * 100), // any random int
+                      schedule: {
+                        at: new Date(Date.now() + 5000),
+                        allowWhileIdle: true
+                      },
+                      ongoing: false,
+                    }
+                  ]
+                })
+
+
+
+                // Handle push notification
+              } catch (error) {
+                console.error('Error processing the event:', error);
+              }
+            });
+        }
+        catch (error) {
+          alert("error under new Echo: " + safeStringify(error))
+        }
+
+
+      } catch (error) {
+        alert("Error initializing Echo: " + error.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    // handlePusher();
+
+    PushNotifications.addListener('registration',
+      (token: Token) => {
+        // console.log('token: ', token.value);
+        localStorage.setItem('deviceToken', token.value);
+
+      }
+    );
+
+    LocalNotifications.addListener('registration',
+      (token: Token) => {
+        // console.log('token: ', token.value);
+        localStorage.setItem('deviceToken', token.value);
+
+      }
+    );
+
+
+    PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+      alert("pushNotificationActionPerformed: " + JSON.stringify(notification?.data));
+
+    });
+
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      alert("Notification: " + JSON.stringify(notification?.data));
+    });
+
+    return () => {
+      PushNotifications.removeAllListeners();
+    }
+  }, []);
 
   // Update the date and time
   const updateDateTime = () => {
@@ -119,7 +225,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     if (client_id) {
       try {
         const req = await reportApi.workOrderPending({ client_id: client_id });
-        console.log("req: " + JSON.stringify(req));
+        // console.log("req: " + JSON.stringify(req));
 
         setInprogressWOs(req.data.data?.inprogress_work_orders);
         setOpenWOs(req.data.data?.open_work_orders);
@@ -152,7 +258,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
           client_id: client_id
         });
         setClosedWOs(req.data?.data);
-        console.log("closedWOs: " + JSON.stringify(req.data?.data));
+        // console.log("closedWOs: " + JSON.stringify(req.data?.data));
 
       } catch (error) {
         console.log("getClosedWOs error: " + JSON.stringify(error.message));
@@ -161,38 +267,39 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   }
 
 
+  const fetchData = async () => {
+    try {
+      const user = await getUserData();
+      setUserData(user);
+
+      updateDateTime();
+      const interval = setInterval(updateDateTime, 60000);
+
+      const workOrdersData = await getWorkOrders(user.user.id);
+      // console.log("workOrdersData: "+JSON.stringify(workOrdersData));
+
+      const workOrdersArray = workOrdersData.success
+        ? workOrdersData.data.data
+        : [];
+
+      // console.log("workOrdersArray: " + JSON.stringify(workOrdersArray));
+
+      setWorkOrders(workOrdersArray);
+      setWorkOrdersLen(workOrdersData.data.total);
+      
+
+      await getPendingWOs(user?.user?.client_id);
+      await getClosedWOs(user?.user?.client_id);
+
+      return () => clearInterval(interval); // Cleanup interval
+    } catch (err) {
+      setError("Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const user = await getUserData();
-        setUserData(user);
-
-        updateDateTime();
-        const interval = setInterval(updateDateTime, 60000);
-
-        const workOrdersData = await getWorkOrders(user.user.id);
-        // console.log("workOrdersData: "+JSON.stringify(workOrdersData));
-
-        const workOrdersArray = workOrdersData.success
-          ? workOrdersData.data.data
-          : [];
-
-        // console.log("workOrdersArray: " + JSON.stringify(workOrdersArray));
-
-        setWorkOrders(workOrdersArray);
-
-        await getPendingWOs(user?.user?.client_id);
-        await getClosedWOs(user?.user?.client_id);
-
-        return () => clearInterval(interval); // Cleanup interval
-      } catch (err) {
-        setError("Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
 
@@ -269,6 +376,23 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     }]
   }
 
+  const handleSeeAllWOs = async () => {
+    try {
+      await fetchData();      
+
+      if (workOrders && workOrders !== undefined && workOrders?.length > 0) {
+
+        history.push({
+          pathname: '/workOrderlist',
+          state: { workOrders: workOrders, workOrdersLen: workOrdersLen }
+        })
+      }
+    }
+    catch (error) {
+      console.log("handleSeeAllWOs error:" + JSON.stringify(error.message));
+
+    }
+  }
 
   return (
     <IonApp>
@@ -298,7 +422,9 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
               </div>
             </IonCardContent>
           </IonCard> */}
-          {(openWOs > 0 || pendingWOs > 0 || inprogressWOs > 0) &&
+
+          {/* pending work orders */}
+          {/* {(openWOs > 0 || pendingWOs > 0 || inprogressWOs > 0) &&
             <IonCard
               className="minimal-work-order-card fade-in"
               style={{ backgroundColor: "var(--ion-color-secondary)" }}
@@ -312,74 +438,127 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 </div></center>
               </IonCardContent>
             </IonCard>
-          }
+          } */}
+
+          <IonGrid>
+            <IonRow className="ion-justify-content-center">
+              <IonCol className="ion-text-center" sizeMd="3">
+                {/* <IonCard
+                  className="minimal-work-order-card fade-in"
+                  style={{ backgroundColor: "var(--ion-color-secondary)" }}
+                >
+                  <IonCardHeader>
+                    <div>
+                      <IonIcon icon={hourglass} size="large" />
+                      <span className="card-title">Total In-Progress Work Orders</span>
+                    </div>
+                  </IonCardHeader>
+
+                  <div className="total-number-container">
+                    <IonChip className="total-chip">
+                      {inprogressWOs}
+                    </IonChip>
+                  </div>
+                </IonCard> */}
+                <IonCard className="dashboard-card task-card animate__animated animate__pulse">
+                  <IonCardContent className="ion-text-center">
+                    <IonIcon icon={hourglass} className="card-icon" />
+                    <p className="card-title">
+                      Total In-Progress Work Orders
+                    </p>
+                    <h2 className="card-count">
+                      {inprogressWOs}
+                    </h2>
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+              <IonCol sizeMd="3">
+
+                <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
+                  <IonCardContent className="ion-text-center">
+                    <IonIcon icon={lockOpen} className="card-icon" />
+                    <p className="card-title">Total Open Work Orders</p>
+                    <h2 className="card-count">{openWOs}</h2>
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+            </IonRow>
+          </IonGrid>
 
           {/* Work Orders List */}
           <div >
             <IonList>
-              <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
+              <div className="see-all-div">
+                <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
+                <IonLabel onClick={() => handleSeeAllWOs()}>
+                  <b>See All </b>
+                  <IonIcon icon={chevronForward} />
+                </IonLabel>
+              </div>
               {Array.isArray(workOrders) && workOrders.length === 0 ? (
                 <IonText className="no-work-orders ion-padding">
                   No work orders available
                 </IonText>
               ) : (
-                workOrders.map((order, index) => (
-                  <IonCard
-                    key={index}
-                    className="ion-padding task-card minimal-work-order-card bounce-in-left "
-                    onClick={() => history.push(`/work-orders/${order.id}`)}
-                    style={{ marginLeft: '4%' }}
-                  >
-                    <IonCardHeader>
-                      <IonCardTitle>
-                        <div className="work-order-header">
-                          {order.work_order_reference_number}
-                          <BadgeComponent status={order.status} />
-                        </div>
-                      </IonCardTitle>
-                    </IonCardHeader>
-                    <IonItem lines="none">
-                      <IonLabel><b>Description:</b></IonLabel>
-                      <IonText className="ion-text-end">{order.work_order_description}</IonText>
-                    </IonItem>
-                    <IonItem lines="none">
-                      <IonLabel><b>Schedule:</b></IonLabel>
-                      <IonText>
-                        {order.end_date === order.start_date
-                          ? order.start_date
-                          : ` ${order.start_date} - ${order.end_date}`}
-                      </IonText>
-                    </IonItem>
-                    <IonItem lines="none" >
-                      <IonLabel>
-                        <IonChip className="ion-text-uppercase" outline={true} color="warning">
+                workOrders
+                  .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+                  .map((order, index) => (
+                    <IonCard
+                      key={index}
+                      className="ion-padding task-card minimal-work-order-card bounce-in-left "
+                      onClick={() => history.push(`/work-orders/${order.id}`)}
+                      style={{ marginLeft: '4%' }}
+                    >
+                      <IonCardHeader>
+                        <IonCardTitle>
+                          <div className="work-order-header">
+                            {order.work_order_reference_number}
+                            <BadgeComponent status={order.status} />
+                          </div>
+                        </IonCardTitle>
+                      </IonCardHeader>
+                      <IonItem lines="none">
+                        <IonLabel><b>Description:</b></IonLabel>
+                        <IonText className="ion-text-end">{order.work_order_description}</IonText>
+                      </IonItem>
+                      <IonItem lines="none">
+                        <IonLabel><b>Schedule:</b></IonLabel>
+                        <IonText>
+                          {order.end_date === order.start_date
+                            ? order.start_date
+                            : ` ${order.start_date} - ${order.end_date}`}
+                        </IonText>
+                      </IonItem>
+                      <IonItem lines="none" >
+                        <IonLabel>
+                          <IonChip className="ion-text-uppercase" outline={true} color="warning">
 
-                          <IonIcon icon={calendarOutline} />
-                          <b>{order.day}</b>
-                        </IonChip>
-                      </IonLabel>
-                      <IonText className="ion-text-end">
-                        <b>{order.start_time} - {order.end_time}</b>
-                      </IonText>
-                    </IonItem>
-                    <IonItem>
-                      <IonLabel><b>Location: </b></IonLabel>
-                      <IonText className='ion-text-end'>
-                        {order?.group}
-                        <IonIcon icon={caretForwardOutline} />
-                        {order?.entity}
-                        <IonIcon icon={caretForwardOutline} />
-                        {order?.property}
-                        <IonIcon icon={caretForwardOutline} />
-                        {order?.zone}
-                        <IonIcon icon={caretForwardOutline} />
-                        {order?.level}
-                        {<IonIcon icon={caretForwardOutline} /> &&
-                          order?.room}
-                      </IonText>
-                    </IonItem>
-                  </IonCard>
-                ))
+                            <IonIcon icon={calendarOutline} />
+                            <b>{order.day}</b>
+                          </IonChip>
+                        </IonLabel>
+                        <IonText className="ion-text-end">
+                          <b>{order.start_time} - {order.end_time}</b>
+                        </IonText>
+                      </IonItem>
+                      <IonItem>
+                        <IonLabel><b>Location: </b></IonLabel>
+                        <IonText className='ion-text-end'>
+                          {order?.group}
+                          <IonIcon icon={caretForwardOutline} />
+                          {order?.entity}
+                          <IonIcon icon={caretForwardOutline} />
+                          {order?.property}
+                          <IonIcon icon={caretForwardOutline} />
+                          {order?.zone}
+                          <IonIcon icon={caretForwardOutline} />
+                          {order?.level}
+                          {<IonIcon icon={caretForwardOutline} /> &&
+                            order?.room}
+                        </IonText>
+                      </IonItem>
+                    </IonCard>
+                  ))
               )}
             </IonList>
           </div>

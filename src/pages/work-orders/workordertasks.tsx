@@ -319,7 +319,7 @@ const WorkOrderTasks: React.FC = () => {
                     <IonButton onClick={() => addPost(formHistory)} >
                         Post <IonIcon icon={sendOutline} slot="end" ></IonIcon>
                     </IonButton>
-                    <IonButton onClick={fetchWorkOrderHistory}>
+                    <IonButton onClick={()=>fetchWorkOrderHistory()}>
                         View History <IonIcon icon={folderOpenOutline} slot="end"></IonIcon>
                     </IonButton>
                 </IonList>
