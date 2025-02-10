@@ -21,7 +21,7 @@ const InitializeEcho = (reverbKey: string, reverbHost: string, reverbPort: strin
             wsPort: reverbPort,
             forceTLS: false,
             disableStats: true,
-            enabledTransports: ['ws'],
+            enabledTransports: ['ws', 'wss'],
         });
     }
     return echo;
