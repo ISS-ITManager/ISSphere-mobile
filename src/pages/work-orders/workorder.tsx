@@ -364,7 +364,6 @@ const WorkOrder: React.FC = () => {
         return;
       }
 
-      // Extract the work_order_documents ID safely
       const workOrderDocumentId =
         workOrderData?.data?.work_order_documents?.[0]?.id;
 
