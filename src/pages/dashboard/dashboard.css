@@ -477,4 +477,5 @@ ion-item {
   align-items: center;
   width: 98%;
   padding-left: 10px;
+  color: var(--ion-color-primary);
 }

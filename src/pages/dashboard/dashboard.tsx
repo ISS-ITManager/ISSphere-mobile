@@ -52,10 +52,11 @@ import "./dashboard.css";
 import FloatingTabButtons from "../../components/FloatingButtons";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
-import { PushNotifications } from '@capacitor/push-notifications';
 import InitializeEcho from "../../utilities/EchoInstance";
+import { PushNotifications } from "@capacitor/push-notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import BadgeStatus from "../../utilities/BadgeStatus";
+import { getCurrentMonthDates } from "../../utilities/globalfns";
 
 // Registering chart.js components
 ChartJS.register(
@@ -236,27 +237,13 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
         console.log("getPendingWOs error: " + JSON.stringify(error.message));
       }
     }
-  };
-  function getCurrentMonthDates() {
-    const currentDate = new Date();
-
-    // Get the start date of the current month (set the day to 1)
-    const startOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1
-    );
-
-    // Return both the start of the month and the current date in "YYYY-MM-DD" format
-    return {
-      startOfMonth: startOfMonth.toISOString().split("T")[0], // "YYYY-MM-DD"
-      currentDate: currentDate.toISOString().split("T")[0], // "YYYY-MM-DD"
-    };
   }
+ 
+
   const getClosedWOs = async (client_id) => {
     if (client_id) {
       try {
-        const { startOfMonth, currentDate } = getCurrentMonthDates();
+        const { startOfMonth, currentDate } = getCurrentMonthDates(); //getCurrentMonthDates();
         const req = await reportApi.workOrderClosed({
           start_date: startOfMonth,
           end_date: currentDate,
@@ -273,7 +260,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
       }
     }
   };
-  }
 
 
   const fetchData = async () => {
@@ -295,7 +281,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
 
       setWorkOrders(workOrdersArray);
       setWorkOrdersLen(workOrdersData.data.total);
-      
+
 
       await getPendingWOs(user?.user?.client_id);
       await getClosedWOs(user?.user?.client_id);
@@ -402,7 +388,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
 
   const handleSeeAllWOs = async () => {
     try {
-      await fetchData();      
+      await fetchData();
 
       if (workOrders && workOrders !== undefined && workOrders?.length > 0) {
 
@@ -621,7 +607,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                     >
                       <IonCardHeader>
                         <IonCardTitle>
-                          <div className="work-order-header">
+                          <div className="work-order-header icon-title">
                             {order.work_order_reference_number}
                             <BadgeComponent status={order.status} />
                           </div>
