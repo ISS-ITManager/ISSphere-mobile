@@ -49,6 +49,7 @@ import FloatingTabButtons from "../../components/FloatingButtons";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import InitializeEcho from "../../utilities/EchoInstance";
+import { PushNotifications } from "@capacitor/push-notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import BadgeStatus from "../../utilities/BadgeStatus";
 import { getCurrentMonthDates } from "../../utilities/globalfns";
