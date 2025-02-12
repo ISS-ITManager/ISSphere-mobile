@@ -256,10 +256,8 @@
 
   border-radius: 100%;
 
-  position: absolute;
-
-  inset-inline-start: 12px;
-  top: 12px;
+  display: inline-block;
+  margin-right: 8px;
 }
 
 .ion-item {

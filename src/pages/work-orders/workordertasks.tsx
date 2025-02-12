@@ -152,8 +152,7 @@ const WorkOrderTasks: React.FC = () => {
             // console.log("localFormData: " + JSON.stringify(localFormData));
             const updatedTask = { ...workOrderTasks, ...localFormData };
             // console.log("updatedTask: " + JSON.stringify(updatedTask));
-
-            history.push(`/work-orders/${workOrderTasks.id}`, { updatedTask });
+            history.push(`/work-orders/${workOrderTasks?.work_order_id}`, { updatedTask });
             closeModal();
         };
 

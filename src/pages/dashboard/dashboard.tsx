@@ -43,6 +43,7 @@ import {
   pauseOutline,
   lockOpen,
   hourglass,
+  close,
 } from "ionicons/icons";
 
 import { getUserData, getWorkOrders, reportApi } from "../../api/api";
@@ -162,27 +163,18 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     PushNotifications.addListener('registration',
       (token: Token) => {
         // console.log('token: ', token.value);
-        localStorage.setItem('deviceToken', token.value);
+        localStorage.setItem('device_token', token.value);
 
       }
     );
-
-    LocalNotifications.addListener('registration',
-      (token: Token) => {
-        // console.log('token: ', token.value);
-        localStorage.setItem('deviceToken', token.value);
-
-      }
-    );
-
 
     PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-      alert("pushNotificationActionPerformed: " + JSON.stringify(notification?.data));
+      alert("pushNotificationActionPerformed: " + JSON.parse(notification));
 
     });
 
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      alert("Notification: " + JSON.stringify(notification?.data));
+      alert("pushNotificationReceived: " + JSON.parse(notification));
     });
 
     return () => {
@@ -443,29 +435,12 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
 
           <IonGrid>
             <IonRow className="ion-justify-content-center">
-              <IonCol className="ion-text-center" sizeMd="3">
-                {/* <IonCard
-                  className="minimal-work-order-card fade-in"
-                  style={{ backgroundColor: "var(--ion-color-secondary)" }}
-                >
-                  <IonCardHeader>
-                    <div>
-                      <IonIcon icon={hourglass} size="large" />
-                      <span className="card-title">Total In-Progress Work Orders</span>
-                    </div>
-                  </IonCardHeader>
-
-                  <div className="total-number-container">
-                    <IonChip className="total-chip">
-                      {inprogressWOs}
-                    </IonChip>
-                  </div>
-                </IonCard> */}
+              <IonCol className="ion-text-center" sizeMd="2">
                 <IonCard className="dashboard-card task-card animate__animated animate__pulse">
                   <IonCardContent className="ion-text-center">
                     <IonIcon icon={hourglass} className="card-icon" />
                     <p className="card-title">
-                      Total In-Progress Work Orders
+                      In-Progress 
                     </p>
                     <h2 className="card-count">
                       {inprogressWOs}
@@ -473,12 +448,20 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   </IonCardContent>
                 </IonCard>
               </IonCol>
-              <IonCol sizeMd="3">
-
+              <IonCol sizeMd="2">
                 <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
                   <IonCardContent className="ion-text-center">
                     <IonIcon icon={lockOpen} className="card-icon" />
-                    <p className="card-title">Total Open Work Orders</p>
+                    <p className="card-title"> Open</p>
+                    <h2 className="card-count">{openWOs}</h2>
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+              <IonCol sizeMd="2">
+                <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
+                  <IonCardContent className="ion-text-center">
+                    <IonIcon icon={close} className="card-icon" />
+                    <p className="card-title" color="danger"> About to Breach</p>
                     <h2 className="card-count">{openWOs}</h2>
                   </IonCardContent>
                 </IonCard>
@@ -501,7 +484,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 <IonText className="no-work-orders ion-padding">
                   No work orders available
                 </IonText>
-              ) : (
+              ) : (            
                 workOrders
                   .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
                   .map((order, index) => (
@@ -562,6 +545,14 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                     </IonCard>
                   ))
               )}
+
+              {workOrders && workOrders?.length >=10 &&
+                <IonButton
+                  className="ion-padding" 
+                  onClick={handleSeeAllWOs}
+                  expand="block"
+                  >See All</IonButton>
+              }
             </IonList>
           </div>
         </IonContent>
