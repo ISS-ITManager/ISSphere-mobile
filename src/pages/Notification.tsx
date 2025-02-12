@@ -25,11 +25,35 @@ const NotificationPage: React.FC = () => {
       }
     }
   }
+  const fetchNotification = async(id)=> {
+    if(id) {
+      try {
+        const req = await notificationApi.getById(id);
+        const info = JSON.parse(req?.data?.data?.data);
+        // const link = req?.data?.data?.subject.includes("work-order-request.")
+        // ? "/workOrderRequest/"+info?.work_order_request_id
+        // : "/work-orders/"+info.work_order_id;
+
+        if(req?.data?.data?.subject.includes("work-order-request."))
+        {
+          fetchRequestOrder(info?.work_order_request_id)
+        }
+        else{
+          history.push("/work-orders/"+info.work_order_id);
+        }
+
+        
+      } catch (error) {
+        console.log("fetchNotification error"+error?.message);
+        
+      }
+    }
+  }
 
 
-  const handleOpenWOR = (id) => {
+  const handleOpenWOR = async(id) => {
     if (id) {
-      fetchRequestOrder(id);
+      await fetchRequestOrder(id);
     }
   }
 
@@ -64,7 +88,10 @@ const NotificationPage: React.FC = () => {
             <IonCard key={index} className='task-card'>
               <IonCardHeader>
                 <IonLabel>
-                  {notification.is_read ? <IonIcon icon={checkmarkDone} /> : <div className="unread-indicator" style={{ marginTop: '13px', marginLeft: '-5px' }} />}
+                  {notification.is_read ? <IonIcon icon={checkmarkDone} /> : 
+                  <span className="unread-indicator"
+                   />
+                  }
                   {formatDate(notification.created_at)}
                 </IonLabel>
               </IonCardHeader>
@@ -74,8 +101,11 @@ const NotificationPage: React.FC = () => {
                 </IonItem>
                 <IonItem lines="none">
                   <IonLabel
-                    aria-disabled={!hasPermission("work-order-request.view")}
-                    onClick={() => handleOpenWOR(data.id)}
+                    aria-disabled={!hasPermission("work-order-request.view") || !hasPermission("work-order.view")}
+                    onClick={() => 
+                      fetchNotification(notification.id)
+                      // handleOpenWOR(data.id)
+                    }
                   >
                     <b>{data.reference_number}</b>
                   </IonLabel>

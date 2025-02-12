@@ -45,12 +45,20 @@ const FloatingTabButtons: React.FC = () => {
     );
 
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      console.log('Push notification received: ', notification);
+      // console.log('Push notification received: ', JSON.parse(notification));
       fetchNotifsCount();
     });
 
     PushNotifications.addListener('pushNotificationActionPerformed', notification => {
-      console.log('Push notification action performed', notification.actionId, notification.inputValue);
+      // console.log('Push notification action performed', notification.actionId, notification.inputValue);
+      console.log('Push notification action performed', JSON.stringify(notification.notification));
+      // alert("pushNotificationActionPerformed data: "+JSON.parse(notification?.notification?.data?.work_order));
+      const {id, reference_number} = JSON.parse(notification?.notification?.data?.work_order);
+      if(reference_number)
+      {
+        history.push('/work-orders/'+id)
+      }
+      
     });
 
     return () => {

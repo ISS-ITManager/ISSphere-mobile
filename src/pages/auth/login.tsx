@@ -25,17 +25,24 @@ const Login: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const history = useHistory();
 
-  useEffect(() => {
+  const pushNotifs = async() => {
     PushNotifications.requestPermissions();
     PushNotifications.register();
 
-    PushNotifications.addListener('registration', token => {
-      console.log('device_token: ', token.value);
+    try{
+      await PushNotifications.addListener('registration', token => {
+        console.log('device_token: ', token.value);  
+        localStorage.setItem("device_token", token.value);
+      });
+    }
+    catch(error) {
+      // alert("error:"+JSON.stringify(error?.message))
+      localStorage.setItem("device_token", "xx");
+    }
+  }
 
-      localStorage.setItem("device_token", token.value);
-    });
-
-
+  useEffect(() => {
+    pushNotifs();
   }, [])
 
   const handleLogin = async () => {
@@ -44,6 +51,10 @@ const Login: React.FC = () => {
 
       console.log("device_token: " + localStorage.getItem("device_token"));
       // alert("deviceToken: " + localStorage.getItem("device_token"));
+      if(localStorage.getItem("device_token") === null)
+      {
+        pushNotifs();
+      }
       const response = await loginUser(email, password, localStorage.getItem("device_token"), 'android');
       const permissions = await permissionApi.permission();
 
