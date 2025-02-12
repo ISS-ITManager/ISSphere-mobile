@@ -168,10 +168,10 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     PushNotifications.addListener(
       "pushNotificationActionPerformed",
       (notification) => {
-        //alert(
-          "pushNotificationActionPerformed: " +
-            JSON.stringify(notification?.data)
-        );
+        // alert(
+        //   "pushNotificationActionPerformed: " +
+        //     JSON.stringify(notification?.data)
+        // );
       }
     );
 
