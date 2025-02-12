@@ -285,7 +285,11 @@ const WorkOrder: React.FC = () => {
     }));
   };
 
+  const ids = workOrder?.work_order_request?.work_order_type?.id ?? 0;
+  console.log("IDs:", ids);
+
   const fetchWorkOrderTypeDetails = async (id: number) => {
+    if (!id) return; // Prevent API call if ID is invalid
     try {
       const response = await workOrderTypeApi.show(id);
       setWorkOrderData(response.data);
@@ -295,8 +299,10 @@ const WorkOrder: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchWorkOrderTypeDetails(id); // Pass the specific ID
-  }, []);
+    if (ids && typeof ids === "number") {
+      fetchWorkOrderTypeDetails(ids);
+    }
+  }, [ids]);
 
   const handleUpdateWorkOrder = async () => {
     setUpdateWorkOrder(true);
