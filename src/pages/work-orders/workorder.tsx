@@ -93,6 +93,7 @@ import {
   getWorkOrderAssets,
   deleteWorkOrderAsset,
   uploadWorkOrderDocuments,
+  workOrderTypeApi,
 } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Timeline from "../../utilities/workordertimelinecomponent";
@@ -233,6 +234,7 @@ const WorkOrder: React.FC = () => {
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [workOrderData, setWorkOrderData] = useState<any>(null);
 
   const handleApplyFilter = async () => {
     try {
@@ -282,6 +284,19 @@ const WorkOrder: React.FC = () => {
       [name]: value,
     }));
   };
+
+  const fetchWorkOrderTypeDetails = async (id: number) => {
+    try {
+      const response = await workOrderTypeApi.show(id);
+      setWorkOrderData(response.data);
+    } catch (error) {
+      console.error("Error fetching work order details:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkOrderTypeDetails(id); // Pass the specific ID
+  }, []);
 
   const handleUpdateWorkOrder = async () => {
     setUpdateWorkOrder(true);
@@ -349,11 +364,15 @@ const WorkOrder: React.FC = () => {
         return;
       }
 
+      // Extract the work_order_documents ID safely
+      const workOrderDocumentId =
+        workOrderData?.data?.work_order_documents?.[0]?.id;
+
       try {
         const response = await uploadWorkOrderDocuments(
           uploadedFiles,
           id,
-          workOrder?.work_order_request?.work_order_type?.id
+          workOrderDocumentId
         );
         setToastMessage("File uploaded successfully!");
         setUploadedFiles([]);
