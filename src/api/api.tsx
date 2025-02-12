@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_DEV_APP_API_URL;//VITE_PROD_APP_API_URL; //VITE_APP_API_URL;
+const API_URL = import.meta.env.VITE_DEV_APP_API_URL; //VITE_PROD_APP_API_URL; //VITE_APP_API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -49,8 +49,18 @@ export const permissionApi = {
   },
 };
 
-export const loginUser = async (email: string, password: string, device_token:string, platform:string) => {
-  const response = await api.post("/login", { email, password , device_token, platform});
+export const loginUser = async (
+  email: string,
+  password: string,
+  device_token: string,
+  platform: string
+) => {
+  const response = await api.post("/login", {
+    email,
+    password,
+    device_token,
+    platform,
+  });
   localStorage.setItem("access_token", response.data.data.access_token);
   return response.data;
 };
@@ -117,14 +127,18 @@ export const getEntitiesByGroupId = async (groupId: number) => {
 };
 export const reportApi = {
   workOrderPending: async (data: any) => {
-    const response = await api.get(`/reports/work-order-pending?download=false&client_id=${data.client_id}`);
+    const response = await api.get(
+      `/reports/work-order-pending?download=false&client_id=${data.client_id}`
+    );
     return response;
   },
   workOrderClosed: async (data: any) => {
-    const response = await api.get(`/reports/work-order-closed?start_date=${data.start_date}&end_date=${data.end_date}&download=false&client_id=${data.client_id}`);
+    const response = await api.get(
+      `/reports/work-order-closed?start_date=${data.start_date}&end_date=${data.end_date}&download=false&client_id=${data.client_id}`
+    );
     return response;
   },
-}
+};
 
 export const getPropertiesByEntityId = async (entityId: number) => {
   try {
@@ -540,20 +554,21 @@ export const workOrderSupplyApi = {
 };
 
 export const workOrderExpenseApi = {
-
   store: async (data: any) => {
     const response = await api.post(`/work-order-expenses`, data);
     return response;
   },
   list: async (id: any) => {
-    const response = await api.get(`/work-order-expenses/list?work_order=${id}`);
+    const response = await api.get(
+      `/work-order-expenses/list?work_order=${id}`
+    );
     return response;
   },
   delete: async (id: any) => {
     const response = await api.delete(`/work-order-expenses/${id}`);
     return response;
   },
-}
+};
 
 export const workOrderCategoryApi = {
   get: async (data: any) => {
@@ -904,4 +919,43 @@ export const userApi = {
     const response = await api.get(`/users/${id}`);
     return response;
   },
+};
+
+export const uploadWorkOrderDocuments = async (
+  files: File[],
+  workOrderId: number,
+  workOrderDocumentId: number
+) => {
+  const formData = new FormData();
+
+  files.forEach((file, index) => {
+    formData.append(`files[${index}]`, file);
+  });
+
+  formData.append("work_order_id", workOrderId.toString());
+  formData.append("work_order_document_id", workOrderDocumentId.toString());
+
+  try {
+    console.log("Uploading Files:", files);
+    files.forEach((file, index) =>
+      console.log(`File ${index}:`, file.name, file.type, file.size)
+    );
+
+    const response = await api.post("/upload-work-order-documents", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    console.log("Upload Response:", response.data);
+
+    if (response.data.success) {
+      return response.data;
+    } else {
+      throw new Error(response.data.message || "File upload failed");
+    }
+  } catch (error: any) {
+    console.error("Upload error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Error uploading files");
+  }
 };
