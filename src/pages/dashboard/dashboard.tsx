@@ -51,8 +51,8 @@ import BadgeComponent from "../../utilities/badgecomponent";
 import Loading from "../../utilities/loadingpage";
 import "./dashboard.css";
 import FloatingTabButtons from "../../components/FloatingButtons";
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
+import Echo from "laravel-echo";
+import Pusher from "pusher-js";
 import InitializeEcho from "../../utilities/EchoInstance";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
@@ -86,15 +86,19 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
 
   const safeStringify = (obj, space = 2) => {
     const cache = new Set();
-    return JSON.stringify(obj, (key, value) => {
-      if (typeof value === 'object' && value !== null) {
-        if (cache.has(value)) {
-          return "[Circular]"; // Prevent circular references
+    return JSON.stringify(
+      obj,
+      (key, value) => {
+        if (typeof value === "object" && value !== null) {
+          if (cache.has(value)) {
+            return "[Circular]"; // Prevent circular references
+          }
+          cache.add(value);
         }
-        cache.add(value);
-      }
-      return value;
-    }, space);
+        return value;
+      },
+      space
+    );
   };
 
   window.Pusher = Pusher;
@@ -102,55 +106,49 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     const userData = JSON.parse(localStorage.getItem("userData"));
     if (userData?.user?.client_id) {
       try {
-
         try {
-
           // const echo = InitializeEcho(import.meta.env.VITE_API_REVERB_KEY, import.meta.env.VITE_API_REVERB_HOST,import.meta.env.VITE_API_REVERB_PORT);
-          const echo = InitializeEcho(import.meta.env.VITE_PROD_API_REVERB_KEY, import.meta.env.VITE_PROD_API_REVERB_HOST, import.meta.env.VITE_PROD_API_REVERB_PORT);
+          const echo = InitializeEcho(
+            import.meta.env.VITE_PROD_API_REVERB_KEY,
+            import.meta.env.VITE_PROD_API_REVERB_HOST,
+            import.meta.env.VITE_PROD_API_REVERB_PORT
+          );
 
           // alert("echo: " + (echo));
 
           const channel = `view.work.order.status.update.${userData?.user?.client_id}`;
 
-          echo.channel(channel)
-            .listen('UpdateWorkOrderStatus', (data) => {
+          echo.channel(channel).listen("UpdateWorkOrderStatus", (data) => {
+            try {
+              // Ensure that the event is properly serialized to avoid circular references
+              const serializedEvent = JSON.parse(JSON.stringify(data));
 
-              try {
-                // Ensure that the event is properly serialized to avoid circular references
-                const serializedEvent = JSON.parse(JSON.stringify(data));
+              // alert('Received notification:' + serializedEvent);
+              // alert('UpdateWorkOrderStatus: ' + safeStringify(data));
 
-                // alert('Received notification:' + serializedEvent);
-                // alert('UpdateWorkOrderStatus: ' + safeStringify(data));
+              LocalNotifications.schedule({
+                notifications: [
+                  {
+                    title: "ISSphere",
+                    body: serializedEvent,
+                    id: Math.ceil(Math.random() * 100), // any random int
+                    schedule: {
+                      at: new Date(Date.now() + 5000),
+                      allowWhileIdle: true,
+                    },
+                    ongoing: false,
+                  },
+                ],
+              });
 
-                LocalNotifications.schedule({
-                  notifications: [
-                    {
-
-                      title: "ISSphere",
-                      body: serializedEvent,
-                      id: Math.ceil(Math.random() * 100), // any random int
-                      schedule: {
-                        at: new Date(Date.now() + 5000),
-                        allowWhileIdle: true
-                      },
-                      ongoing: false,
-                    }
-                  ]
-                })
-
-
-
-                // Handle push notification
-              } catch (error) {
-                console.error('Error processing the event:', error);
-              }
-            });
+              // Handle push notification
+            } catch (error) {
+              console.error("Error processing the event:", error);
+            }
+          });
+        } catch (error) {
+          alert("error under new Echo: " + safeStringify(error));
         }
-        catch (error) {
-          alert("error under new Echo: " + safeStringify(error))
-        }
-
-
       } catch (error) {
         alert("Error initializing Echo: " + error.message);
       }
@@ -164,22 +162,24 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
       (token: Token) => {
         // console.log('token: ', token.value);
         localStorage.setItem('device_token', token.value);
+    });
 
+
+    PushNotifications.addListener(
+      "pushNotificationActionPerformed",
+      (notification) => {
+        //alert(
+          "pushNotificationActionPerformed: " +
+            JSON.stringify(notification?.data)
+        );
       }
     );
 
-    PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-      alert("pushNotificationActionPerformed: " + JSON.parse(notification));
 
-    });
-
-    PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      alert("pushNotificationReceived: " + JSON.parse(notification));
-    });
 
     return () => {
       PushNotifications.removeAllListeners();
-    }
+    };
   }, []);
 
   // Update the date and time
@@ -229,8 +229,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
         console.log("getPendingWOs error: " + JSON.stringify(error.message));
       }
     }
-  }
- 
+  };
 
   const getClosedWOs = async (client_id) => {
     if (client_id) {
@@ -246,13 +245,11 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
         console.log("closedWOs: " + JSON.stringify(req.data?.data));
 
         // console.log("closedWOs: " + JSON.stringify(req.data?.data));
-
       } catch (error) {
         console.log("getClosedWOs error: " + JSON.stringify(error.message));
       }
     }
   };
-
 
   const fetchData = async () => {
     try {
@@ -273,7 +270,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
 
       setWorkOrders(workOrdersArray);
       setWorkOrdersLen(workOrdersData.data.total);
-
 
       await getPendingWOs(user?.user?.client_id);
       await getClosedWOs(user?.user?.client_id);
@@ -351,35 +347,34 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
       "Open",
       "In-Progress",
     ],
-    datasets: [{
-      label: 'Open Work Orders',
-      data: [openWOs, inprogressWOs],
-      backgroundColor: [
-        // 'rgb(55,145,220)',
-        'rgb(9,8,154)',
-        'rgb(254,145,31)'
-      ],
-      hoverOffset: 4
-    }]
-  }
+    datasets: [
+      {
+        label: "Open Work Orders",
+        data: [openWOs, inprogressWOs],
+        backgroundColor: [
+          // 'rgb(55,145,220)',
+          "rgb(9,8,154)",
+          "rgb(254,145,31)",
+        ],
+        hoverOffset: 4,
+      },
+    ],
+  };
 
   const handleSeeAllWOs = async () => {
     try {
       await fetchData();
 
       if (workOrders && workOrders !== undefined && workOrders?.length > 0) {
-
         history.push({
-          pathname: '/workOrderlist',
-          state: { workOrders: workOrders, workOrdersLen: workOrdersLen }
-        })
+          pathname: "/workOrderlist",
+          state: { workOrders: workOrders, workOrdersLen: workOrdersLen },
+        });
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.log("handleSeeAllWOs error:" + JSON.stringify(error.message));
-
     }
-  }
+  };
 
   return (
     <IonApp>
@@ -409,7 +404,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
               </div>
             </IonCardContent>
           </IonCard> */}
-
 
           {/* pending work orders */}
           {/* {(openWOs > 0 || pendingWOs > 0 || inprogressWOs > 0) &&
@@ -449,6 +443,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 </IonCard>
               </IonCol>
               <IonCol sizeMd="2">
+
                 <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
                   <IonCardContent className="ion-text-center">
                     <IonIcon icon={lockOpen} className="card-icon" />
@@ -473,7 +468,11 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
           <div>
             <IonList>
               <div className="see-all-div">
-                <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
+                <h2 className="section-title">
+                  {" "}
+                  {!userData?.user.is_assignee ? "" : "My "} Work Orders{" "}
+                  {`(${workOrders.length})`}
+                </h2>
                 <IonLabel onClick={() => handleSeeAllWOs()}>
                   <b>See All </b>
                   <IonIcon icon={chevronForward} />
@@ -486,13 +485,15 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 </IonText>
               ) : (            
                 workOrders
-                  .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+                  .sort(
+                    (a, b) => new Date(a.start_date) - new Date(b.start_date)
+                  )
                   .map((order, index) => (
                     <IonCard
                       key={index}
                       className="ion-padding task-card minimal-work-order-card bounce-in-left "
                       onClick={() => history.push(`/work-orders/${order.id}`)}
-                      style={{ marginLeft: '4%' }}
+                      style={{ marginLeft: "4%" }}
                     >
                       <IonCardHeader>
                         <IonCardTitle>
@@ -503,32 +504,45 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                         </IonCardTitle>
                       </IonCardHeader>
                       <IonItem lines="none">
-                        <IonLabel><b>Description:</b></IonLabel>
-                        <IonText className="ion-text-end">{order.work_order_description}</IonText>
+                        <IonLabel>
+                          <b>Description:</b>
+                        </IonLabel>
+                        <IonText className="ion-text-end">
+                          {order.work_order_description}
+                        </IonText>
                       </IonItem>
                       <IonItem lines="none">
-                        <IonLabel><b>Schedule:</b></IonLabel>
+                        <IonLabel>
+                          <b>Schedule:</b>
+                        </IonLabel>
                         <IonText>
                           {order.end_date === order.start_date
                             ? order.start_date
                             : ` ${order.start_date} - ${order.end_date}`}
                         </IonText>
                       </IonItem>
-                      <IonItem lines="none" >
+                      <IonItem lines="none">
                         <IonLabel>
-                          <IonChip className="ion-text-uppercase" outline={true} color="warning">
-
+                          <IonChip
+                            className="ion-text-uppercase"
+                            outline={true}
+                            color="warning"
+                          >
                             <IonIcon icon={calendarOutline} />
                             <b>{order.day}</b>
                           </IonChip>
                         </IonLabel>
                         <IonText className="ion-text-end">
-                          <b>{order.start_time} - {order.end_time}</b>
+                          <b>
+                            {order.start_time} - {order.end_time}
+                          </b>
                         </IonText>
                       </IonItem>
                       <IonItem>
-                        <IonLabel><b>Location: </b></IonLabel>
-                        <IonText className='ion-text-end'>
+                        <IonLabel>
+                          <b>Location: </b>
+                        </IonLabel>
+                        <IonText className="ion-text-end">
                           {order?.group}
                           <IonIcon icon={caretForwardOutline} />
                           {order?.entity}
