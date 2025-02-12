@@ -44,3 +44,12 @@ export const hasPermission = (permission) => {
     const permissions = localStorage.getItem("userPermissions");
     return permissions?.includes(permission);
 }
+
+export const getCurrentMonthDates = () => {
+    const currentDate = new Date();
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    return {
+        startOfMonth: startOfMonth.toISOString().split('T')[0],  // "YYYY-MM-DD"
+        currentDate: currentDate.toISOString().split('T')[0],    // "YYYY-MM-DD"
+    };
+}

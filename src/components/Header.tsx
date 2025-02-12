@@ -10,6 +10,7 @@ import {
 import { notificationsOutline, personCircleOutline } from "ionicons/icons";
 import BackButton from "./BackButton";
 import { notificationApi } from "../api/api";
+import { PushNotifications } from '@capacitor/push-notifications';
 
 interface HeaderProps {
   title: string;
@@ -18,19 +19,44 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ title }) => {
   const history = useHistory();
   const [notifsCount, setNotifsCount] = useState(0);
-  useEffect(() => {
-    const fetchNotifsCount = async () => {
-      try {
-        const req = await notificationApi.all();
-        // console.log("req: " + JSON.stringify(req.data?.data?.unread));
-        setNotifsCount(req.data?.data?.unread);
-      } catch (error) {
-        console.log("error: " + error);
 
-      }
+  const fetchNotifsCount = async () => {
+    try {
+      const req = await notificationApi.all();
+      // console.log("req: " + JSON.stringify(req.data?.data?.unread));
+      setNotifsCount(req.data?.data?.unread);
+    } catch (error) {
+      console.log("error: " + error);
+
     }
+  }
+  useEffect(() => {
     fetchNotifsCount();
   }, [])
+
+  useEffect(() => {
+    PushNotifications.addListener('registration',
+      (token: Token) => {
+        // console.log('token: ', token.value);
+        localStorage.setItem('device_token', token.value);
+      }
+    );
+
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      console.log('Push notification received: ', notification);
+      fetchNotifsCount();
+    });
+
+    PushNotifications.addListener('pushNotificationActionPerformed', notification => {
+      console.log('Push notification action performed', notification.actionId, notification.inputValue);
+    });
+
+    return () => {
+      PushNotifications.removeAllListeners();
+    }
+
+  }, []);
+
   return (
     <IonHeader collapse="fade" >
       <IonToolbar>
@@ -49,9 +75,10 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             <IonIcon
               icon={notificationsOutline}
               className="ion-text-muted"
-              style={{ fontSize: "35px", 
-              // color: "#333"
-             }}
+              style={{
+                fontSize: "35px",
+                // color: "#333"
+              }}
             />
             {notifsCount > 0 && (
               <div
@@ -84,9 +111,10 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             <IonIcon
               icon={personCircleOutline}
               className="ion-text-muted"
-              style={{ fontSize: "35px", 
-              // color: "#333" 
-            }}
+              style={{
+                fontSize: "35px",
+                // color: "#333" 
+              }}
             />
           </IonButton>
         </div>

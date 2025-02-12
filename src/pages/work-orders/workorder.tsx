@@ -102,6 +102,7 @@ import WorkOrderExpenses from "./workorder-components/expense";
 import { hasPermission } from "../../utilities/globalfns";
 import MasterComponent from "../../components/MasterComponent";
 import DeletePopup from "../../utilities/DeletePopup";
+import useErrorAlert from "../../utilities/ErrorAlert";
 
 // Define the WorkOrder type
 interface WorkOrder {
@@ -222,6 +223,7 @@ const WorkOrder: React.FC = () => {
   const [workOrderExpenseList, setWorkOrderExpenseList] = useState([]);
   const [openExpense, setOpenExpense] = useState(false);
   const [presentAlert] = useIonAlert();
+  const showError = useErrorAlert();
 
   const handleApplyFilter = async () => {
     try {
@@ -288,9 +290,8 @@ const WorkOrder: React.FC = () => {
         const req = await workOrderApi.workOrderStatus(data);
         console.log("handleSaveWorkOrder req: " + JSON.stringify(req.data));
       } catch (error) {
-        console.log(
-          "handleSaveWorkOrder error: " + JSON.stringify(error.message)
-        );
+        console.log("handleSaveWorkOrder error: " + JSON.stringify(error.message));
+        showError( error.response?.data?.message || 'Something went wrong');
       }
       await fetchWorkOrderDetails();
     }
@@ -461,6 +462,7 @@ const WorkOrder: React.FC = () => {
     try {
       const response = await getWorkOrderAssets(id); // Assuming workOrderId is passed correctly
       setAssets(response.data); // Update state with the fetched assets
+      fetchWorkOrderDetails();
     } catch (error) {
       console.error("Error fetching assets:", error);
     } finally {

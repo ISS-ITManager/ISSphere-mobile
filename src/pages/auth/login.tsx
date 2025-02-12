@@ -26,18 +26,25 @@ const Login: React.FC = () => {
   const history = useHistory();
 
   useEffect(() => {
-    // PushNotifications.requestPermissions();
-    // PushNotifications.register();
-    // PushNotifications.addListener('registration', token => {
-    //   localStorage.setItem("deviceToken", token.value)
-    // });
+    PushNotifications.requestPermissions();
+    PushNotifications.register();
+
+    PushNotifications.addListener('registration', token => {
+      console.log('device_token: ', token.value);
+
+      localStorage.setItem("device_token", token.value);
+    });
+
 
   }, [])
 
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const response = await loginUser(email, password);
+
+      console.log("device_token: " + localStorage.getItem("device_token"));
+      // alert("deviceToken: " + localStorage.getItem("device_token"));
+      const response = await loginUser(email, password, localStorage.getItem("device_token"), 'android');
       const permissions = await permissionApi.permission();
 
 

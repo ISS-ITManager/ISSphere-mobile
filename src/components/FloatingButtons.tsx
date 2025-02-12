@@ -11,6 +11,7 @@ import {
 import "./FloatingButtons.css"; // Add custom styles
 import { getNotificationCount, hasPermission } from "../utilities/globalfns";
 import { notificationApi } from "../api/api";
+import { PushNotifications } from '@capacitor/push-notifications';
 
 const FloatingTabButtons: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -23,21 +24,39 @@ const FloatingTabButtons: React.FC = () => {
     setIsExpanded(!isExpanded);
   };
 
-  useEffect(() => {
-    const fetchNotifsCount = async () => {
-      try {
-        const req = await notificationApi.all();
-        // console.log("req: " + JSON.stringify(req.data?.data?.unread));
-        setNotifsCount(req.data?.data?.unread);
-      } catch (error) {
-        console.log("error: " + error);
-
-      }
+  const fetchNotifsCount = async () => {
+    try {
+      const req = await notificationApi.all();
+      // console.log("req: " + JSON.stringify(req.data?.data?.unread));
+      setNotifsCount(req.data?.data?.unread);
+    } catch (error) {
+      console.log("fetchNotifsCount error: " + JSON.stringify(error.message));
     }
+  }
+  useEffect(() => {
     fetchNotifsCount();
-
-
   }, [])
+  useEffect(() => {
+    PushNotifications.addListener('registration',
+      (token: Token) => {
+        console.log('token: ', token.value);
+        localStorage.setItem('device_token', token.value);
+      }
+    );
+
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      console.log('Push notification received: ', notification);
+      fetchNotifsCount();
+    });
+
+    PushNotifications.addListener('pushNotificationActionPerformed', notification => {
+      console.log('Push notification action performed', notification.actionId, notification.inputValue);
+    });
+
+    return () => {
+      PushNotifications.removeAllListeners();
+    }
+  }, []);
 
   const createWorkOrderRequest = hasPermission("work-order-request.create");
 

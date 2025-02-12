@@ -49,8 +49,8 @@ export const permissionApi = {
   },
 };
 
-export const loginUser = async (email: string, password: string) => {
-  const response = await api.post("/login", { email, password });
+export const loginUser = async (email: string, password: string, device_token:string, platform:string) => {
+  const response = await api.post("/login", { email, password , device_token, platform});
   localStorage.setItem("access_token", response.data.data.access_token);
   return response.data;
 };
