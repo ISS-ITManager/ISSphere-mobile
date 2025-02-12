@@ -41,6 +41,8 @@ import {
   IonAlert,
   IonChip,
   useIonAlert,
+  IonActionSheet,
+  IonToast,
 } from "@ionic/react";
 import {
   addOutline,
@@ -59,6 +61,8 @@ import {
   trashOutline,
   cashOutline,
   receiptOutline,
+  cameraOutline,
+  imageOutline,
 } from "ionicons/icons";
 import "./workorder.css";
 import Header from "../../components/Header";
@@ -88,6 +92,7 @@ import {
   getRoomByLevelId,
   getWorkOrderAssets,
   deleteWorkOrderAsset,
+  uploadWorkOrderDocuments,
 } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Timeline from "../../utilities/workordertimelinecomponent";
@@ -224,6 +229,10 @@ const WorkOrder: React.FC = () => {
   const [openExpense, setOpenExpense] = useState(false);
   const [presentAlert] = useIonAlert();
   const showError = useErrorAlert();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   const handleApplyFilter = async () => {
     try {
@@ -292,8 +301,10 @@ const WorkOrder: React.FC = () => {
         console.log("handleSaveWorkOrder req: " + JSON.stringify(req.data));
         setTimelineKey((prevKey) => prevKey + 1); //this is to fetch the timeline after updating status
       } catch (error) {
-        console.log("handleSaveWorkOrder error: " + JSON.stringify(error.message));
-        showError( error.response?.data?.message || 'Something went wrong');
+        console.log(
+          "handleSaveWorkOrder error: " + JSON.stringify(error.message)
+        );
+        showError(error.response?.data?.message || "Something went wrong");
       }
       await fetchWorkOrderDetails();
     }
@@ -302,6 +313,61 @@ const WorkOrder: React.FC = () => {
 
   const getContentModalUpdateWO = (workOrder) => {
     // console.log("WORKOrder: " + JSON.stringify(workOrder));
+
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (event.target.files && event.target.files.length > 0) {
+        setUploadedFiles([...uploadedFiles, ...Array.from(event.target.files)]);
+      }
+    };
+
+    const handleCameraCapture = async (source: CameraSource) => {
+      try {
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.Uri,
+          source: source,
+        });
+
+        const response = await fetch(image.webPath!);
+        const blob = await response.blob();
+        const file = new File([blob], "captured_image.jpg", {
+          type: "image/jpeg",
+        });
+
+        setUploadedFiles([...uploadedFiles, file]);
+        setSelectedFile(file);
+      } catch (error) {
+        console.error("Camera error:", error);
+      }
+    };
+
+    const uploadFile = async () => {
+      if (uploadedFiles.length === 0) {
+        setToastMessage("Please select a file to upload.");
+        setShowToast(true);
+        return;
+      }
+
+      try {
+        const response = await uploadWorkOrderDocuments(
+          uploadedFiles,
+          id,
+          workOrder?.work_order_request?.work_order_type?.id
+        );
+        setToastMessage("File uploaded successfully!");
+        setUploadedFiles([]);
+      } catch (error) {
+        setToastMessage(error.message);
+      } finally {
+        setShowToast(true);
+      }
+    };
+
+    const removeFile = (index: number) => {
+      const updatedFiles = uploadedFiles.filter((_, i) => i !== index);
+      setUploadedFiles(updatedFiles);
+    };
 
     return (
       <>
@@ -372,9 +438,8 @@ const WorkOrder: React.FC = () => {
               />
             </IonItem>
 
-
             {/* Attachments Section */}
-            {workOrderStatus === "completed" &&
+            {workOrderStatus === "completed" && (
               <div className="attachments-section">
                 <div className="section-header">
                   <IonItem>
@@ -385,25 +450,26 @@ const WorkOrder: React.FC = () => {
                     <label>Attach Documents</label>
                   </IonItem>
                 </div>
+
                 <IonItem lines="none" className="upload-container">
                   <IonLabel>Upload Files</IonLabel>
                   <input
                     type="file"
                     multiple
+                    accept="image/*"
                     onChange={handleFileUpload}
                     style={{ display: "none" }}
                     id="fileUpload"
                   />
                   <IonButton
                     slot="end"
-                    onClick={() =>
-                      document.getElementById("fileUpload")?.click()
-                    }
+                    onClick={() => setShowActionSheet(true)}
                     className="upload-btn"
                   >
                     <IonIcon icon={cloudUploadOutline} /> Upload
                   </IonButton>
                 </IonItem>
+
                 <IonList className="file-list">
                   {uploadedFiles.map((file, index) => (
                     <IonItem key={index} className="file-item">
@@ -419,9 +485,53 @@ const WorkOrder: React.FC = () => {
                     </IonItem>
                   ))}
                 </IonList>
+
+                <IonButton expand="block" color="primary" onClick={uploadFile}>
+                  Upload Selected Files
+                </IonButton>
+
+                <IonActionSheet
+                  isOpen={showActionSheet}
+                  onDidDismiss={() => setShowActionSheet(false)}
+                  buttons={[
+                    {
+                      text: "Take a Photo",
+                      icon: cameraOutline,
+                      handler: () => handleCameraCapture(CameraSource.Camera),
+                    },
+                    {
+                      text: "Choose from Gallery",
+                      icon: imageOutline,
+                      handler: () => handleCameraCapture(CameraSource.Photos),
+                    },
+                    {
+                      text: "Select File",
+                      icon: cloudUploadOutline,
+                      handler: () =>
+                        document.getElementById("fileUpload")?.click(),
+                    },
+                    {
+                      text: "Cancel",
+                      role: "cancel",
+                    },
+                  ]}
+                />
+
+                <IonToast
+                  isOpen={showToast}
+                  message={toastMessage}
+                  duration={3000}
+                  onDidDismiss={() => setShowToast(false)}
+                />
               </div>
-            }
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem' }}>
+            )}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "1rem",
+              }}
+            >
               <IonButton
                 fill="outline"
                 onClick={() => setUpdateWorkOrder(false)}
@@ -1649,8 +1759,6 @@ const WorkOrder: React.FC = () => {
                         </IonText>
                       </IonItem>
                     </IonGrid>
-
-
 
                     <div className="assets-section">
                       <div className="assets-header">
