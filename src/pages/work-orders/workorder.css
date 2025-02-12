@@ -318,6 +318,7 @@
 .new-status {
   color: #007bff;
   font-weight: bold;
+  text-transform: uppercase;
 }
 
 .delete-icon {
