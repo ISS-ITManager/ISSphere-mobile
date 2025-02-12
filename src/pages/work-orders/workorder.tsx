@@ -372,14 +372,6 @@ const WorkOrder: React.FC = () => {
               />
             </IonItem>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                padding: "1rem",
-              }}
-            >
-
 
             {/* Attachments Section */}
             {workOrderStatus === "completed" &&
@@ -430,7 +422,6 @@ const WorkOrder: React.FC = () => {
               </div>
             }
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem' }}>
-              <IonButton fill="outline" onClick={() => setUpdateWorkOrder(false)}>Cancel</IonButton>
               <IonButton
                 fill="outline"
                 onClick={() => setUpdateWorkOrder(false)}

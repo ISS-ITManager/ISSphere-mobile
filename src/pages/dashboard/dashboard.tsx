@@ -359,21 +359,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
       "Open",
       "In-Progress",
     ],
-    
-    datasets: [
-      {
-        label: "Open Work Orders",
-        data: [openWOs, inprogressWOs],
-        backgroundColor: [
-          // 'rgb(55,145,220)',
-          "rgb(9,8,154)",
-          "rgb(254,145,31)",
-        ],
-        hoverOffset: 4,
-      },
-    ],
-  };
-
     datasets: [{
       label: 'Open Work Orders',
       data: [openWOs, inprogressWOs],
@@ -432,7 +417,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
               </div>
             </IonCardContent>
           </IonCard> */}
-          {(openWOs > 0 || pendingWOs > 0 || inprogressWOs > 0) && (
 
 
           {/* pending work orders */}
@@ -505,13 +489,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
           {/* Work Orders List */}
           <div>
             <IonList>
-
-              <h2 className="section-title">
-                {" "}
-                {!userData?.user.is_assignee ? "" : "My "} Work Orders{" "}
-                {`(${workOrders.length})`}
-              </h2>
-
               <div className="see-all-div">
                 <h2 className="section-title"> {!userData?.user.is_assignee ? "" : "My "} Work Orders {`(${workOrders.length})`}</h2>
                 <IonLabel onClick={() => handleSeeAllWOs()}>
@@ -525,77 +502,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   No work orders available
                 </IonText>
               ) : (
-
-                workOrders.map((order, index) => (
-                  <IonCard
-                    key={index}
-                    className="ion-padding task-card minimal-work-order-card bounce-in-left "
-                    onClick={() => history.push(`/work-orders/${order.id}`)}
-                    style={{ marginLeft: "4%" }}
-                  >
-                    <IonCardHeader>
-                      <IonCardTitle>
-                        <div className="work-order-header">
-                          {order.work_order_reference_number}
-                          <BadgeComponent status={order.status} />
-                        </div>
-                      </IonCardTitle>
-                    </IonCardHeader>
-                    <IonItem lines="none">
-                      <IonLabel>
-                        <b>Description:</b>
-                      </IonLabel>
-                      <IonText className="ion-text-end">
-                        {order.work_order_description}
-                      </IonText>
-                    </IonItem>
-                    <IonItem lines="none">
-                      <IonLabel>
-                        <b>Schedule:</b>
-                      </IonLabel>
-                      <IonText>
-                        {order.end_date === order.start_date
-                          ? order.start_date
-                          : ` ${order.start_date} - ${order.end_date}`}
-                      </IonText>
-                    </IonItem>
-                    <IonItem lines="none">
-                      <IonLabel>
-                        <IonChip
-                          className="ion-text-uppercase"
-                          outline={true}
-                          color="warning"
-                        >
-                          <IonIcon icon={calendarOutline} />
-                          <b>{order.day}</b>
-                        </IonChip>
-                      </IonLabel>
-                      <IonText className="ion-text-end">
-                        <b>
-                          {order.start_time} - {order.end_time}
-                        </b>
-                      </IonText>
-                    </IonItem>
-                    <IonItem>
-                      <IonLabel>
-                        <b>Location: </b>
-                      </IonLabel>
-                      <IonText className="ion-text-end">
-                        {order?.group}
-                        <IonIcon icon={caretForwardOutline} />
-                        {order?.entity}
-                        <IonIcon icon={caretForwardOutline} />
-                        {order?.property}
-                        <IonIcon icon={caretForwardOutline} />
-                        {order?.zone}
-                        <IonIcon icon={caretForwardOutline} />
-                        {order?.level}
-                        {<IonIcon icon={caretForwardOutline} /> && order?.room}
-                      </IonText>
-                    </IonItem>
-                  </IonCard>
-                ))
-
                 workOrders
                   .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
                   .map((order, index) => (
