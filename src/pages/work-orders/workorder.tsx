@@ -589,6 +589,11 @@ const WorkOrder: React.FC = () => {
       setLoading(true);
       const data = await getWorkOrderDetails(id);
       setWorkOrder(data.data);
+      console.log(
+        "Work Order Status:",
+        data.data?.active_status?.status || "Unknown"
+      );
+
       // console.log("getWorkOrderDetails: " + JSON.stringify(data.data));
     } catch (err) {
       const errorMessage =
@@ -1813,15 +1818,18 @@ const WorkOrder: React.FC = () => {
                                     <IonText>{asset.description}</IonText>
                                   </IonCol>
                                   <IonCol size="1" className="text-right">
-                                    <IonIcon
-                                      icon={trashOutline}
-                                      className="delete-icon"
-                                      onClick={() => handleDelete(asset.id)} // Call delete function
-                                      style={{
-                                        cursor: "pointer",
-                                        color: "red",
-                                      }} // Make it clickable
-                                    />
+                                    {workOrder?.active_status?.status !==
+                                      "closed" && (
+                                      <IonIcon
+                                        icon={trashOutline}
+                                        className="delete-icon"
+                                        onClick={() => handleDelete(asset.id)}
+                                        style={{
+                                          cursor: "pointer",
+                                          color: "red",
+                                        }}
+                                      />
+                                    )}
                                   </IonCol>
                                 </IonRow>
                               </IonGrid>
