@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import LoadingPage from "../utilities/loadingpage";
 import HeaderComponent from "./HeaderComponent";
 import Header from "./Header";
+import NotificationListener from "../utilities/NotifsListener";
 
 const MasterComponent = ({ children, title }) => {
     const [loading, setLoading] = useState(true);
@@ -17,6 +18,7 @@ const MasterComponent = ({ children, title }) => {
 
     return (
         <IonPage>
+            <NotificationListener/>
             {/* <Header title={title} /> */}
             <HeaderComponent title={title}/>
             <IonContent className="ion-padding">

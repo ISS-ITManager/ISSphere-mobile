@@ -10,7 +10,7 @@ import {
 import { notificationsOutline, personCircleOutline } from "ionicons/icons";
 import BackButton from "./BackButton";
 import { notificationApi } from "../api/api";
-import { PushNotifications } from '@capacitor/push-notifications';
+import NotificationListener from "../utilities/NotifsListener";
 
 interface HeaderProps {
   title: string;
@@ -34,31 +34,10 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
     fetchNotifsCount();
   }, [])
 
-  useEffect(() => {
-    PushNotifications.addListener('registration',
-      (token: Token) => {
-        // console.log('token: ', token.value);
-        localStorage.setItem('device_token', token.value);
-      }
-    );
-
-    PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      console.log('Push notification received: ', notification);
-      fetchNotifsCount();
-    });
-
-    PushNotifications.addListener('pushNotificationActionPerformed', notification => {
-      console.log('Push notification action performed', notification.actionId, notification.inputValue);
-    });
-
-    return () => {
-      PushNotifications.removeAllListeners();
-    }
-
-  }, []);
 
   return (
     <IonHeader collapse="fade" >
+      <NotificationListener />
       <IonToolbar>
         <BackButton />
         <IonTitle className="ion-text-center" style={{ flex: 1 }}>

@@ -12,6 +12,7 @@ import "./FloatingButtons.css"; // Add custom styles
 import { getNotificationCount, hasPermission } from "../utilities/globalfns";
 import { notificationApi } from "../api/api";
 import { PushNotifications } from '@capacitor/push-notifications';
+import NotificationListener from "../utilities/NotifsListener";
 
 const FloatingTabButtons: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -36,40 +37,12 @@ const FloatingTabButtons: React.FC = () => {
   useEffect(() => {
     fetchNotifsCount();
   }, [])
-  useEffect(() => {
-    PushNotifications.addListener('registration',
-      (token: Token) => {
-        console.log('token: ', token.value);
-        localStorage.setItem('device_token', token.value);
-      }
-    );
-
-    PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      // console.log('Push notification received: ', JSON.parse(notification));
-      fetchNotifsCount();
-    });
-
-    PushNotifications.addListener('pushNotificationActionPerformed', notification => {
-      // console.log('Push notification action performed', notification.actionId, notification.inputValue);
-      console.log('Push notification action performed', JSON.stringify(notification.notification));
-      // alert("pushNotificationActionPerformed data: "+JSON.parse(notification?.notification?.data?.work_order));
-      const {id, reference_number} = JSON.parse(notification?.notification?.data?.work_order);
-      if(reference_number)
-      {
-        history.push('/work-orders/'+id)
-      }
-      
-    });
-
-    return () => {
-      PushNotifications.removeAllListeners();
-    }
-  }, []);
 
   const createWorkOrderRequest = hasPermission("work-order-request.create");
 
   return (
     <div className="floating-buttons-container">
+    <NotificationListener />
       {/* Backdrop when expanded */}
       {isExpanded && <div className="backdrop" onClick={handleToggle}></div>}
 
