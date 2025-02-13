@@ -53,6 +53,7 @@ import { EchoStart } from "./utilities/EchoHandler";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import WorkOrderList from "./pages/work-orders/workorderlist";
+import NotificationListener from "./utilities/NotifsListener";
 
 setupIonicReact();
 
@@ -60,6 +61,7 @@ const App: React.FC = () => {
   const [selectedTheme, setSelectedTheme] = useState(
     localStorage.getItem("theme") || "default"
   );
+
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme && savedTheme !== "default") {
@@ -67,10 +69,24 @@ const App: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    PushNotifications.addListener('registration',
+      (token: Token) => {
+        console.log('token: ', token.value);
+        localStorage.setItem('device_token', token.value);
+      }
+    );
+
+    return () => {
+      PushNotifications.removeAllListeners();
+    }
+  }, [])
+
 
 
   return (
     <IonApp>
+      <NotificationListener />
       <IonReactRouter>
         <IonRouterOutlet>
           {/* Make Login the first page */}
