@@ -93,6 +93,7 @@ import {
   getWorkOrderAssets,
   deleteWorkOrderAsset,
   uploadWorkOrderDocuments,
+  workOrderTypeApi,
 } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Timeline from "../../utilities/workordertimelinecomponent";
@@ -233,6 +234,7 @@ const WorkOrder: React.FC = () => {
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [workOrderData, setWorkOrderData] = useState<any>(null);
 
   const handleApplyFilter = async () => {
     try {
@@ -282,6 +284,25 @@ const WorkOrder: React.FC = () => {
       [name]: value,
     }));
   };
+
+  const ids = workOrder?.work_order_request?.work_order_type?.id ?? 0;
+  console.log("IDs:", ids);
+
+  const fetchWorkOrderTypeDetails = async (id: number) => {
+    if (!id) return; // Prevent API call if ID is invalid
+    try {
+      const response = await workOrderTypeApi.show(id);
+      setWorkOrderData(response.data);
+    } catch (error) {
+      console.error("Error fetching work order details:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (ids && typeof ids === "number") {
+      fetchWorkOrderTypeDetails(ids);
+    }
+  }, [ids]);
 
   const handleUpdateWorkOrder = async () => {
     setUpdateWorkOrder(true);
@@ -349,11 +370,14 @@ const WorkOrder: React.FC = () => {
         return;
       }
 
+      const workOrderDocumentId =
+        workOrderData?.data?.work_order_documents?.[0]?.id;
+
       try {
         const response = await uploadWorkOrderDocuments(
           uploadedFiles,
           id,
-          workOrder?.work_order_request?.work_order_type?.id
+          workOrderDocumentId
         );
         setToastMessage("File uploaded successfully!");
         setUploadedFiles([]);
@@ -565,6 +589,11 @@ const WorkOrder: React.FC = () => {
       setLoading(true);
       const data = await getWorkOrderDetails(id);
       setWorkOrder(data.data);
+      console.log(
+        "Work Order Status:",
+        data.data?.active_status?.status || "Unknown"
+      );
+
       // console.log("getWorkOrderDetails: " + JSON.stringify(data.data));
     } catch (err) {
       const errorMessage =
@@ -1789,15 +1818,18 @@ const WorkOrder: React.FC = () => {
                                     <IonText>{asset.description}</IonText>
                                   </IonCol>
                                   <IonCol size="1" className="text-right">
-                                    <IonIcon
-                                      icon={trashOutline}
-                                      className="delete-icon"
-                                      onClick={() => handleDelete(asset.id)} // Call delete function
-                                      style={{
-                                        cursor: "pointer",
-                                        color: "red",
-                                      }} // Make it clickable
-                                    />
+                                    {workOrder?.active_status?.status !==
+                                      "closed" && (
+                                      <IonIcon
+                                        icon={trashOutline}
+                                        className="delete-icon"
+                                        onClick={() => handleDelete(asset.id)}
+                                        style={{
+                                          cursor: "pointer",
+                                          color: "red",
+                                        }}
+                                      />
+                                    )}
                                   </IonCol>
                                 </IonRow>
                               </IonGrid>
