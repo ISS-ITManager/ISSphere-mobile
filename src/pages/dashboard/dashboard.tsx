@@ -20,6 +20,7 @@ import {
   IonButton,
   IonGrid,
   IonBadge,
+  IonInput,
 } from "@ionic/react";
 import { Bar, Doughnut, Pie } from "react-chartjs-2";
 import {
@@ -277,6 +278,9 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
       return () => clearInterval(interval); // Cleanup interval
     } catch (err) {
       setError("Failed to fetch data");
+      localStorage.clear();
+      history.push("/login");
+
     } finally {
       setLoading(false);
     }
@@ -472,6 +476,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   {" "}
                   {!userData?.user.is_assignee ? "" : "My "} Work Orders{" "}
                   {`(${workOrders.length})`}
+                  
                 </h2>
                 <IonLabel onClick={() => handleSeeAllWOs()}>
                   <b>See All </b>
