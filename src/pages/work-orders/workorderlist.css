@@ -1,8 +1,24 @@
 .filter-button {
-    margin-top: 10px;
+  --border-radius: 5px; /* Adjust button roundness */
+  --padding-start: 5px;
+  --padding-end: 5px;
+  --padding-top: 3px;
+  --padding-bottom: 3px;
+  font-size: 12px; /* Adjust icon size */
+  width: 40px; /* Ensure the button takes a fixed width */
+  height: 30px; /* Ensure the button takes a fixed height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 11px;
 }
+
 .div-overflow {
-    max-height: 85vh !important;
-    overflow-y: auto !important;
-    margin-top: -15px !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  margin-top: -15px !important;
+}
+
+.card-border {
+  border: 2px solid var(--ion-color-primary);
 }

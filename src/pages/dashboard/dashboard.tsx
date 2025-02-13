@@ -159,12 +159,10 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   useEffect(() => {
     // handlePusher();
 
-    PushNotifications.addListener('registration',
-      (token: Token) => {
-        // console.log('token: ', token.value);
-        localStorage.setItem('device_token', token.value);
+    PushNotifications.addListener("registration", (token: Token) => {
+      // console.log('token: ', token.value);
+      localStorage.setItem("device_token", token.value);
     });
-
 
     PushNotifications.addListener(
       "pushNotificationActionPerformed",
@@ -175,8 +173,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
         // );
       }
     );
-
-
 
     return () => {
       PushNotifications.removeAllListeners();
@@ -280,7 +276,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
       setError("Failed to fetch data");
       localStorage.clear();
       history.push("/login");
-
     } finally {
       setLoading(false);
     }
@@ -437,17 +432,12 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 <IonCard className="dashboard-card task-card animate__animated animate__pulse">
                   <IonCardContent className="ion-text-center">
                     <IonIcon icon={hourglass} className="card-icon" />
-                    <p className="card-title">
-                      In-Progress 
-                    </p>
-                    <h2 className="card-count">
-                      {inprogressWOs}
-                    </h2>
+                    <p className="card-title">In-Progress</p>
+                    <h2 className="card-count">{inprogressWOs}</h2>
                   </IonCardContent>
                 </IonCard>
               </IonCol>
               <IonCol sizeMd="2">
-
                 <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
                   <IonCardContent className="ion-text-center">
                     <IonIcon icon={lockOpen} className="card-icon" />
@@ -460,7 +450,10 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
                   <IonCardContent className="ion-text-center">
                     <IonIcon icon={close} className="card-icon" />
-                    <p className="card-title" color="danger"> About to Breach</p>
+                    <p className="card-title" color="danger">
+                      {" "}
+                      About to Breach
+                    </p>
                     <h2 className="card-count">{openWOs}</h2>
                   </IonCardContent>
                 </IonCard>
@@ -476,7 +469,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   {" "}
                   {!userData?.user.is_assignee ? "" : "My "} Work Orders{" "}
                   {`(${workOrders.length})`}
-                  
                 </h2>
                 <IonLabel onClick={() => handleSeeAllWOs()}>
                   <b>See All </b>
@@ -488,7 +480,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                 <IonText className="no-work-orders ion-padding">
                   No work orders available
                 </IonText>
-              ) : (            
+              ) : (
                 workOrders
                   .sort(
                     (a, b) => new Date(a.start_date) - new Date(b.start_date)
@@ -565,13 +557,15 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   ))
               )}
 
-              {workOrders && workOrders?.length >=10 &&
+              {workOrders && workOrders?.length >= 10 && (
                 <IonButton
-                  className="ion-padding" 
+                  className="ion-padding"
                   onClick={handleSeeAllWOs}
                   expand="block"
-                  >See All</IonButton>
-              }
+                >
+                  See All
+                </IonButton>
+              )}
             </IonList>
           </div>
         </IonContent>
