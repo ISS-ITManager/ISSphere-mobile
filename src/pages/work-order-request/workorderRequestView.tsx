@@ -4,7 +4,7 @@ import MasterComponent from '../../components/MasterComponent';
 import { chevronForwardOutline, calendarOutline, checkmarkCircleOutline, closeCircleOutline, arrowBackOutline, arrowForwardOutline, caretForwardOutline } from 'ionicons/icons';
 
 import { assigneeApi, workOrderRequestApi, teamApi, serviceProviderServiceApi, serviceApi, workOrderApi } from '../../api/api';
-import { formatDate } from '../../utilities/globalfns';
+import { formatDate, formatDateOnly } from '../../utilities/globalfns';
 import { IonCard, IonChip, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle, IonButton, IonIcon, IonItem, IonLabel, IonText, IonBadge, IonAccordionGroup, IonAccordion } from '@ionic/react';
 
 const WorkOrderRequestView: React.FC = () => {
@@ -77,7 +77,9 @@ const WorkOrderRequestView: React.FC = () => {
     return (
         <MasterComponent title={"View Work Order Request"}>
             {selectedRequest && <>
-                <IonCard className="ion-padding task-card animate__animated  animate__pulse" style={{ marginTop: '-10px' }}>
+                <IonCard className="ion-padding task-card animate__animated  animate__pulse" 
+                // style={{ marginTop: '-10px' }}
+                >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '10px' }}>
                         <div>{getIsAcceptedColor(selectedRequest?.work_order_request?.is_accepted)}</div>
                         <div>{getPriority(selectedRequest.work_order_request?.priority)}</div>
@@ -124,7 +126,7 @@ const WorkOrderRequestView: React.FC = () => {
                 </IonCard>
 
                 {workOrderList && workOrderList?.length > 0 &&
-                    <IonCard className="task-card animate__animated  animate__pulse" style={{ marginLeft: '5px', marginTop: '-10px' }}>
+                    <IonCard className="task-card animate__animated  animate__pulse" style={{ marginLeft: '4%', marginTop: '-10px' }}>
                         <IonCardHeader><b>Work Orders</b></IonCardHeader>
                         <IonAccordionGroup>
                             {workOrderList
@@ -138,7 +140,7 @@ const WorkOrderRequestView: React.FC = () => {
                                         <center>
                                         <IonText>
                                             {item.end_date === item.start_date
-                                                ? item.start_date
+                                                ? formatDateOnly(item.start_date)
                                                 : `From ${item.start_date} To ${item.end_date}`}
                                         </IonText>
                                         <IonLabel>

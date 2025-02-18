@@ -11,6 +11,7 @@ import { formatDate, hasPermission, presentToast } from '../../utilities/globalf
 import "./workorder.css";
 import ModalComponent1 from '../../components/ModalComponent1';
 import BadgeComponent from '../../utilities/badgecomponent';
+import useErrorAlert from '../../utilities/ErrorAlert';
 
 const WorkOrderTasks: React.FC = () => {
 
@@ -23,6 +24,7 @@ const WorkOrderTasks: React.FC = () => {
     const [isClicked, setIsClicked] = useState(false);
     const unclick = () => setIsClicked(false);
     const [assignees, setAssignees] = useState([]);
+    const showError = useErrorAlert();
 
     const { workOrderTasks } = location.state ? location.state : { workOrderTasks: [] };
     // console.log("workOrderTasks: " + JSON.stringify(workOrderTasks));
@@ -124,16 +126,20 @@ const WorkOrderTasks: React.FC = () => {
         }));
     };
 
-    const saveModifiedData = (updatedData: any) => {
+    const saveModifiedData = async (updatedData: any) => {
         setFormData(updatedData);
         console.log("updatedData: " + JSON.stringify(updatedData));
 
-        try {
-            let req = workOrderTaskApi.update(formData.work_order_id, updatedData);
-            console.log("req:" + JSON.stringify(req));
+        if (updatedData) {
+            try {
+                let req = await workOrderTaskApi.update(formData.work_order_id, updatedData);
+                console.log("req:" + JSON.stringify(req));
+                return true;
 
-        } catch (error) {
-            presentToast("Error: " + error)
+            } catch (error) {
+                showError(error?.response?.data?.message || error?.message);
+                return false;
+            }
         }
     }
 
@@ -148,11 +154,15 @@ const WorkOrderTasks: React.FC = () => {
         };
 
         const handleSave = () => {
-            saveModifiedData(localFormData);
+            const ret = saveModifiedData(localFormData);
             // console.log("localFormData: " + JSON.stringify(localFormData));
             const updatedTask = { ...workOrderTasks, ...localFormData };
             // console.log("updatedTask: " + JSON.stringify(updatedTask));
-            history.push(`/work-orders/${workOrderTasks?.work_order_id}`, { updatedTask });
+            // history.push(`/work-orders/${workOrderTasks?.work_order_id}`, {updatedTask });
+            history.push({
+                pathname: `/work-orders/${workOrderTasks?.work_order_id}`,
+                state: {workOrderTasks:(ret ? updatedTask : null)}
+            });
             closeModal();
         };
 
@@ -318,7 +328,7 @@ const WorkOrderTasks: React.FC = () => {
                     <IonButton onClick={() => addPost(formHistory)} >
                         Post <IonIcon icon={sendOutline} slot="end" ></IonIcon>
                     </IonButton>
-                    <IonButton onClick={()=>fetchWorkOrderHistory()}>
+                    <IonButton onClick={() => fetchWorkOrderHistory()}>
                         View History <IonIcon icon={folderOpenOutline} slot="end"></IonIcon>
                     </IonButton>
                 </IonList>

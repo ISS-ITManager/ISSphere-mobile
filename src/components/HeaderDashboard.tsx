@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { IonText } from "@ionic/react";
+import { IonHeader, IonText, IonToolbar, IonTitle, IonImg } from "@ionic/react";
 import "./HeaderDashboard.css";
 import coverImage from "../assets/images/abstract.png";
+import logo from "../assets/images/sphere.png";
+import { PartyPopper } from 'lucide-react';
 
 interface HeaderProps {
   userName: string;
@@ -10,6 +12,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ userName }) => {
   const [dateTime, setDateTime] = useState(new Date());
   const userData = JSON.parse(localStorage.getItem("userData"));
+  const logoPath = userData?.user?.client?.logo_path;
   // console.log("userData: "+JSON.stringify(userData?.user?.client?.client));
 
 
@@ -29,27 +32,19 @@ const Header: React.FC<HeaderProps> = ({ userName }) => {
   });
 
   return (
-    <div
-      className="header-container"
-      style={{
-        backgroundImage: `url(${coverImage})`,
-        backgroundSize: "150px",
-        backgroundPosition: "right -5px top 50px",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-
-      <div className="header-content">
-        <div className="greeting-section">
-          <IonText>
-            <h2 className="greeting"> <b>{userName}</b></h2>
-            <p className="date-time">{formattedDate}</p>
-            {/* <p className="date-time">{userData?.user?.client?.client}</p> */}
-          </IonText>
-        </div>
+    <div className="header-container">
+      <div>
+        <img src={logoPath || logo} className="logo-100" />
       </div>
-      <p className="date-time" style={{ marginTop: '50px' }}><b>{userData?.user?.client?.client}</b></p>
+      <div className="dashboard-container">
+        <h3 className="greeting">
+          <b>{userName}</b>
+        </h3>
+        <p className="org-name"> {userData?.user?.client?.client}</p>
+        <p className="date-time">{formattedDate}</p>
+      </div>
     </div>
+
   );
 };
 

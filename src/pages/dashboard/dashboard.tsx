@@ -41,13 +41,13 @@ import {
   chevronDown,
   hourglassOutline,
   folderOpenOutline,
-  pauseOutline,
+  briefcaseOutline,
   lockOpen,
   hourglass,
   close,
 } from "ionicons/icons";
 
-import { getUserData, getWorkOrders, reportApi } from "../../api/api";
+import { dashboardApi, getUserData, getWorkOrders, reportApi } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Loading from "../../utilities/loadingpage";
 import "./dashboard.css";
@@ -57,8 +57,9 @@ import Pusher from "pusher-js";
 import InitializeEcho from "../../utilities/EchoInstance";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
-import BadgeStatus from "../../utilities/BadgeStatus";
-import { getCurrentMonthDates } from "../../utilities/globalfns";
+import { formatDate, formatDateOnly, getCurrentMonthDates } from "../../utilities/globalfns";
+import { Briefcase, CalendarHeart, PartyPopper } from "lucide-react";
+import ScheduleCard from "../../components/ScheduleCard";
 
 // Registering chart.js components
 ChartJS.register(
@@ -84,6 +85,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   const [openWOs, setOpenWOs] = useState(0);
   const [closedWOs, setClosedWOs] = useState(0);
   const [workOrdersLen, setWorkOrdersLen] = useState(10);
+  const [todayWOs, setTodayWOs] = useState();
 
   const safeStringify = (obj, space = 2) => {
     const cache = new Set();
@@ -281,8 +283,17 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     }
   };
 
+  const fetchTodayWOs = async () => {
+    try {
+      const res = await dashboardApi.getTodayWO();
+      setTodayWOs(res.data?.data?.today_work_orders);
+    } catch (error) {
+      setTodayWOs([]);
+    }
+  }
   useEffect(() => {
     fetchData();
+    fetchTodayWOs();
   }, []);
 
   if (loading) {
@@ -376,203 +387,142 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   };
 
   return (
-    <IonApp>
-      <IonPage>
-        <Header title="Dashboard" userName={userName} />
+    // <IonApp>
+    <IonPage>
+      <Header title="Dashboard" userName={userName} />
 
-        {/* Overlapping Container Above the Header */}
-        <div
-          className="overlapping-container"
-          style={{ borderTop: "5px solid var(--ion-color-primary)" }}
-        >
-          {/* This container overlaps the bottom of the header */}
-        </div>
+      {/* Overlapping Container Above the Header */}
+      <div
+        className="overlapping-container"
+        style={{ borderTop: "5px solid var(--ion-color-primary)" }}
+      >
+      </div>
+      <IonContent className="dashboard-content">
+        <IonGrid>
+          <IonRow className="ion-justify-content-center">
+            <IonCol className="ion-text-center" sizeMd="2">
+              <IonCard className="dashboard-card task-card animate__animated animate__pulse">
+                <IonCardContent className="ion-text-center">
+                  <IonIcon icon={hourglass} className="card-icon" />
+                  <p className="card-title">In-Progress</p>
+                  <h2 className="card-count">{inprogressWOs}</h2>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
+            <IonCol sizeMd="2">
+              <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
+                <IonCardContent className="ion-text-center">
+                  <IonIcon icon={lockOpen} className="card-icon" />
+                  <p className="card-title2">Open</p>
+                  <h2 className="card-count">{openWOs}</h2>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
+            <IonCol sizeMd="2">
+              <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
+                <IonCardContent className="ion-text-center">
+                  <IonIcon icon={close} className="card-icon" />
+                  <p className="card-title" color="danger">
+                    {" "}
+                    About to Breach
+                  </p>
+                  <h2 className="card-count">{openWOs}</h2>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
+          </IonRow>
+        </IonGrid>
 
-        {/* IonContent (Content of the Page) */}
-        <IonContent className="dashboard-content">
-          {/* Work Orders Chart */}
-          {/* <h2 className="section-title">Work Orders Completed</h2>
-          <IonCard
-            className="minimal-work-order-card fade-in"
-            style={{ backgroundColor: "var(--ion-color-secondary)" }}
-          >
-            <IonCardContent>
-              <p className="chart-description">Weekly progress</p>
-              <div className="chart-container">
-                <Bar data={chartData} options={chartOptions} />
-              </div>
-            </IonCardContent>
-          </IonCard> */}
+        {/* Work Orders List */}
+        {userData?.user?.is_assignee ?
+          <IonList>
+            <div className="see-all-div">
+              <h2 className="section-title">
+                My Work Orders
+              </h2>
+              <IonLabel onClick={() => handleSeeAllWOs()}>
+                <b>See All </b>
+                <IonIcon icon={chevronForward} />
+              </IonLabel>
+            </div>
 
-          {/* pending work orders */}
-          {/* {(openWOs > 0 || pendingWOs > 0 || inprogressWOs > 0) &&
+            {Array.isArray(workOrders) && workOrders.length === 0 ? (
+              <IonText className="no-work-orders ion-padding">
+                No work orders available
+              </IonText>
+            ) : (
+              workOrders
+                .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+                .map((order) => (
+                  <ScheduleCard
+                    startTime={order?.start_time}
+                    endTime={order?.end_time}
+                    startDate={order?.start_date}
+                    endDate={order?.end_date}
+                    refNumber={order?.work_order_reference_number}
+                    description={order?.work_order_description}
+                    status={order?.status}
+                    group={order?.group}
+                    entity={order?.entity}
+                    property={order?.property}
+                    zone={order?.zone}
+                    level={order?.level}
+                    room={order?.room}
+                    onClickCard={() => history.push(`/work-orders/${order.id}`)}
+                  />
+                ))
+            )}
+            {workOrders && workOrders?.length >= 10 && (
+              <IonButton
+                className="ion-padding"
+                onClick={handleSeeAllWOs}
+                expand="block"
+              >
+                See All
+              </IonButton>
+            )}
+          </IonList>
+          :
+          <IonList>
+            <div className="see-all-div">
+              <h2 className="section-title">
+                Work Orders Today
+              </h2>
+              <IonLabel onClick={() => handleSeeAllWOs()}>
+                <b>See All </b>
+                <IonIcon icon={chevronForward} />
+              </IonLabel>
+            </div>
+            {todayWOs && todayWOs?.length > 0 ?
+              todayWOs?.map((item) => (
+                <ScheduleCard
+                  onClickCard={() => history.push(`/work-orders/${item.id}`)}
+                  startDate={item.start_date}
+                  endDate={item.end_date}
+                  refNumber={item.reference_number}
+                  status={item.status}
+                />
+              ))
+              :
+              <IonCard className="minimal-work-order-card">
+                <IonCardHeader className="ion-text-center">
+                  <IonCardTitle>
+                    <CalendarHeart /> <small>No work orders scheduled today!</small>
+                  </IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                  <IonItem lines="none">Click "See All" to track a Work Order.</IonItem>
+                </IonCardContent>
+              </IonCard>
+            }
+          </IonList>
+        }
 
-            <IonCard
-              className="minimal-work-order-card fade-in"
-              style={{ backgroundColor: "var(--ion-color-secondary)" }}
-            >
-              <IonCardContent>
-                <p className="chart-description">
-                  <b>Total Pending Work Orders</b>
-                </p>
-                <center>
-                  <div className="chart-container">
-                    <Pie data={openWOsData} />
-                  </div>
-                </center>
-              </IonCardContent>
-            </IonCard>
-
-          )}
-          } */}
-
-          <IonGrid>
-            <IonRow className="ion-justify-content-center">
-              <IonCol className="ion-text-center" sizeMd="2">
-                <IonCard className="dashboard-card task-card animate__animated animate__pulse">
-                  <IonCardContent className="ion-text-center">
-                    <IonIcon icon={hourglass} className="card-icon" />
-                    <p className="card-title">In-Progress</p>
-                    <h2 className="card-count">{inprogressWOs}</h2>
-                  </IonCardContent>
-                </IonCard>
-              </IonCol>
-              <IonCol sizeMd="2">
-                <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
-                  <IonCardContent className="ion-text-center">
-                    <IonIcon icon={lockOpen} className="card-icon" />
-                    <p className="card-title"> Open</p>
-                    <h2 className="card-count">{openWOs}</h2>
-                  </IonCardContent>
-                </IonCard>
-              </IonCol>
-              <IonCol sizeMd="2">
-                <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
-                  <IonCardContent className="ion-text-center">
-                    <IonIcon icon={close} className="card-icon" />
-                    <p className="card-title" color="danger">
-                      {" "}
-                      About to Breach
-                    </p>
-                    <h2 className="card-count">{openWOs}</h2>
-                  </IonCardContent>
-                </IonCard>
-              </IonCol>
-            </IonRow>
-          </IonGrid>
-
-          {/* Work Orders List */}
-          <div>
-            <IonList>
-              <div className="see-all-div">
-                <h2 className="section-title">
-                  {" "}
-                  {!userData?.user.is_assignee ? "" : "My "} Work Orders{" "}
-                  {`(${workOrders.length})`}
-                </h2>
-                <IonLabel onClick={() => handleSeeAllWOs()}>
-                  <b>See All </b>
-                  <IonIcon icon={chevronForward} />
-                </IonLabel>
-              </div>
-
-              {Array.isArray(workOrders) && workOrders.length === 0 ? (
-                <IonText className="no-work-orders ion-padding">
-                  No work orders available
-                </IonText>
-              ) : (
-                workOrders
-                  .sort(
-                    (a, b) => new Date(a.start_date) - new Date(b.start_date)
-                  )
-                  .map((order, index) => (
-                    <IonCard
-                      key={index}
-                      className="ion-padding task-card minimal-work-order-card bounce-in-left "
-                      onClick={() => history.push(`/work-orders/${order.id}`)}
-                      style={{ marginLeft: "4%" }}
-                    >
-                      <IonCardHeader>
-                        <IonCardTitle>
-                          <div className="work-order-header icon-title">
-                            {order.work_order_reference_number}
-                            <BadgeComponent status={order.status} />
-                          </div>
-                        </IonCardTitle>
-                      </IonCardHeader>
-                      <IonItem lines="none">
-                        <IonLabel>
-                          <b>Description:</b>
-                        </IonLabel>
-                        <IonText className="ion-text-end">
-                          {order.work_order_description}
-                        </IonText>
-                      </IonItem>
-                      <IonItem lines="none">
-                        <IonLabel>
-                          <b>Schedule:</b>
-                        </IonLabel>
-                        <IonText>
-                          {order.end_date === order.start_date
-                            ? order.start_date
-                            : ` ${order.start_date} - ${order.end_date}`}
-                        </IonText>
-                      </IonItem>
-                      <IonItem lines="none">
-                        <IonLabel>
-                          <IonChip
-                            className="ion-text-uppercase"
-                            outline={true}
-                            color="warning"
-                          >
-                            <IonIcon icon={calendarOutline} />
-                            <b>{order.day}</b>
-                          </IonChip>
-                        </IonLabel>
-                        <IonText className="ion-text-end">
-                          <b>
-                            {order.start_time} - {order.end_time}
-                          </b>
-                        </IonText>
-                      </IonItem>
-                      <IonItem>
-                        <IonLabel>
-                          <b>Location: </b>
-                        </IonLabel>
-                        <IonText className="ion-text-end">
-                          {order?.group}
-                          <IonIcon icon={caretForwardOutline} />
-                          {order?.entity}
-                          <IonIcon icon={caretForwardOutline} />
-                          {order?.property}
-                          <IonIcon icon={caretForwardOutline} />
-                          {order?.zone}
-                          <IonIcon icon={caretForwardOutline} />
-                          {order?.level}
-                          {<IonIcon icon={caretForwardOutline} /> &&
-                            order?.room}
-                        </IonText>
-                      </IonItem>
-                    </IonCard>
-                  ))
-              )}
-
-              {workOrders && workOrders?.length >= 10 && (
-                <IonButton
-                  className="ion-padding"
-                  onClick={handleSeeAllWOs}
-                  expand="block"
-                >
-                  See All
-                </IonButton>
-              )}
-            </IonList>
-          </div>
-        </IonContent>
-        {/* Floating Tab Buttons */}
-        <FloatingTabButtons />
-      </IonPage>
-    </IonApp>
+      </IonContent>
+      {/* Floating Tab Buttons */}
+      <FloatingTabButtons />
+    </IonPage>
+    // </IonApp>
   );
 };
 

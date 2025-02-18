@@ -8,10 +8,26 @@
 }
 
 .theme-dark {
-  --ion-color-primary: #222;
+  /* --ion-color-primary: rgb(129, 114, 114);
   --ion-color-secondary: #ff5722;
-  --ion-background-color: #121212; /* Dark background for dark theme */
+  --ion-background-color: #121212;  */
+  /* Dark background for dark theme */
+
+  --ion-color-primary: #3791dc;            /* Primary color */
+  /*--ion-color-secondary: #3f51b5;*/         /* Secondary color */
+  --ion-background-color: #121212;   
+  --ion-text-color: #e1e1e1;   
+  --ion-text-color-dark: #121212; 
+  --ion-toolbar-background: #1f1f1f;       /* Dark toolbar background */
+  --ion-toolbar-text-color: #ffffff;       /* Light toolbar text color */
+  --ion-chip-background: #1e1e1e;                   /* Dark item background */
+  --ion-chip-text-color: #e1e1e1;                        /* Light item text color */
 }
+.theme-dark ion-alert  ion-select{
+  --background: var(--ion-background-color) !important;
+  --color: var( --ion-text-color) !important;
+}
+
 
 .theme-green {
   --ion-color-primary: #4caf50;
@@ -25,20 +41,13 @@
   --ion-background-color: #ffffff; /* Light blue background for blue theme */
 }
 
-/* Ensuring the IonPage background is correctly applied */
 ion-page {
-  background-color: var(
-    --ion-background-color
-  )!important; /* Dynamically uses the theme's background color */
-}
-ion-item {
-  background-color: var(--ion-background-color) !important; /* Dynamically uses the theme's background color */
-}
-ion-list {
-  background-color: var(--ion-background-color) !important; /* Dynamically uses the theme's background color */
+  background-color: var(--ion-background-color)!important; 
 }
 
-
+p {
+  color: var(--ion-color-text) !important;
+}
 
 
 /* Optional: For smooth transition when switching themes */

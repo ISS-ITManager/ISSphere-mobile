@@ -40,6 +40,7 @@ const WorkOrderExpenses = ({ workOrder, closeModal, onSave }) => {
             <IonItem>
                 <IonLabel><b>Expense</b></IonLabel>
                 <IonInput
+                    className="ion-text-end"
                     value={currentAmount}
                     onIonInput={(e) => setCurrentAmount(e.target.value)}
                     type="number"
@@ -48,6 +49,7 @@ const WorkOrderExpenses = ({ workOrder, closeModal, onSave }) => {
             <IonItem>
                 <IonLabel><b>Remarks</b></IonLabel>
                 <IonTextarea
+                    className="ion-text-end"
                     value={currentRemarks}
                     onIonInput={(e) => setCurrentRemarks(e.target.value)}
                     placeholder="Enter Remarks" />

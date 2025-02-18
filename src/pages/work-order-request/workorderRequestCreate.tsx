@@ -450,7 +450,7 @@ const WorkOrderRequestCreate: React.FC = () => {
 
     const viewContent = (selectedRequest) => {
         return (
-            <IonCard className="task-card animate__animated  animate__pulse" style={{ marginTop: '-10px' }}>
+            <IonCard className="task-card animate__animated  animate__slideInUp" style={{ marginTop: '-10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '10px' }}>
                     <div>{getIsAcceptedColor(selectedRequest.work_order_request.is_accepted)}</div>
                     <div>{getPriority(selectedRequest.work_order_request.priority)}</div>
@@ -636,7 +636,7 @@ const WorkOrderRequestCreate: React.FC = () => {
                 <IonList>
                     <div>
                         {filteredWOR.map((task, index) => (
-                            <IonCard key={index} className="task-card bounce-in-right"
+                            <IonCard key={index} className="task-card minimal-work-order-card animate__animated animate__slideInUp"
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '8px' }}>

@@ -19,14 +19,18 @@ export const formatDate = (apiDateString) => {
 
 }
 
-export const presentToast = (message) => {
-    const [present] = useIonToast();
-    present({
-        message: message,
-        duration: 1500,
-        position: 'top'
-    })
+export const formatDateOnly = (dateString)=> {
+    const date = new Date(dateString);
+    const options = {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+    };
+    return date
+        .toLocaleString('en-US', options)
+        .replace(/,/, ','); // Replace only the first comma after the day
 }
+
 
 export const getNotificationCount = async () => {
     try {

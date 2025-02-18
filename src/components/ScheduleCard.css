@@ -1,0 +1,64 @@
+.schedule-card {
+    display: flex;
+    width: 93%;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.541);
+    padding: 10px;
+  }
+  
+  .card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1px;
+    width: 95%;
+  }
+  
+  .schedule-info {
+    width: 40%;
+    text-align: center;
+    padding-right: 15px;
+  }
+  
+  .schedule-time {
+    font-size: 15px;
+    font-weight: bold;
+    /* color: #333; */
+    display: block;
+  }
+  
+  .schedule-date {
+    font-size: 13.7px;
+    margin-top: 5px;
+  }
+  
+  .details {
+    width: 60%;
+    padding-left: 15px;
+    border-left: 2px solid #e0e0e0;
+  }
+  
+  .ref-number, .description, .location {
+    display: block;
+    margin-bottom: 3px;
+  }
+  
+  .ref-number {
+    font-size: 17px;
+    color: var(--ion-color-primary);
+  }
+  
+  .description {
+    font-size: 14.5px;
+  }
+  
+  .location {
+    font-size: 13.7px;
+    color: #888;
+  }
+  
+  .status-badge{
+    margin-top: 10px;
+  }
+ 
+  
