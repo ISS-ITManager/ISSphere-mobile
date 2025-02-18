@@ -63,6 +63,7 @@ import {
   receiptOutline,
   cameraOutline,
   imageOutline,
+  folderOpenOutline,
 } from "ionicons/icons";
 import "./workorder.css";
 import Header from "../../components/Header";
@@ -99,7 +100,7 @@ import BadgeComponent from "../../utilities/badgecomponent";
 import Timeline from "../../utilities/workordertimelinecomponent";
 import Details from "./workorder-components/details";
 import Assets from "./workorder-components/assets";
-import { formatDate, presentToast } from "../../utilities/globalfns";
+import { formatDate, formatDateOnly, presentToast } from "../../utilities/globalfns";
 import WorkOrderSupplies from "./workorder-components/supplies";
 import ModalComponent1 from "../../components/ModalComponent1";
 import BadgePriority from "../../utilities/badgePriority";
@@ -264,9 +265,9 @@ const WorkOrder: React.FC = () => {
   const tabs = [
     { name: "details", icon: informationCircleOutline },
     { name: "assets", icon: listOutline },
-    { name: "task", icon: fileTrayFullOutline },
     { name: "supplies", icon: cubeOutline },
     { name: "expenses", icon: receiptOutline },
+    { name: "task", icon: fileTrayFullOutline },
     { name: "activity", icon: timeOutline },
   ];
 
@@ -1234,7 +1235,7 @@ const WorkOrder: React.FC = () => {
                     <IonItem>
                       <IonLabel>{formatDate(item.created_at)}</IonLabel>
                     </IonItem>
-                    <IonItem>
+                    <IonItem className="ion-text-wrap">
                       <IonText>{item.activity}</IonText>
                     </IonItem>
                     <IonItem>
@@ -1750,7 +1751,7 @@ const WorkOrder: React.FC = () => {
                             }{" "}
                             <br />
                             <h3>
-                              Starts on {workOrder?.start_date} ,{" "}
+                              Starts on {formatDateOnly(workOrder?.start_date)} at{" "}
                               {
                                 workOrder?.work_order_request?.schedule
                                   ?.start_time
@@ -1782,7 +1783,7 @@ const WorkOrder: React.FC = () => {
                       <IonItem lines="none">
                         <IonLabel>Total Cost: </IonLabel>
                         <IonText>
-                          <IonChip>
+                          <IonChip color="warning">
                             <b>{workOrder?.total_cost}</b>
                           </IonChip>
                         </IonText>
@@ -1803,7 +1804,7 @@ const WorkOrder: React.FC = () => {
                                   <IonCol size="2">
                                     <div className="serial-number">
                                       <IonIcon
-                                        icon={cubeOutline}
+                                        icon={folderOpenOutline}
                                         className="cube-icon"
                                       />
                                       <IonText>{asset.serialNumber}</IonText>

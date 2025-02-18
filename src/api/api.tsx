@@ -17,6 +17,13 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
+
+export const dashboardApi = {
+  getTodayWO: async()=> {
+    const response = await api.get('/reports/dashboard');
+    return response;
+  }
+}
 export const permissionApi = {
   get: async (data: any) => {
     const response = await api.get(

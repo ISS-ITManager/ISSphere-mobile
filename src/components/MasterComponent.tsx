@@ -21,7 +21,7 @@ const MasterComponent = ({ children, title }) => {
             <NotificationListener/>
             {/* <Header title={title} /> */}
             <HeaderComponent title={title}/>
-            <IonContent className="ion-padding">
+            <IonContent>
                 <div className="row">
                     <div className="col-md-2 col-12"></div>
                     <div className="col-md-8 col-12">

@@ -7,6 +7,7 @@ import {
   notificationsOutline,
   menuOutline,
   colorWandOutline,
+  settingsOutline,
 } from "ionicons/icons";
 import "./FloatingButtons.css"; // Add custom styles
 import { getNotificationCount, hasPermission } from "../utilities/globalfns";
@@ -80,7 +81,7 @@ const FloatingTabButtons: React.FC = () => {
             style={{ animationDelay: "0.2s" }}
             onClick={() => history.push("/settings")}
           >
-            <IonIcon icon={informationCircleOutline} />
+            <IonIcon icon={settingsOutline} />
           </IonButton>
 
           {/* <IonButton
