@@ -47,7 +47,12 @@ import {
   close,
 } from "ionicons/icons";
 
-import { dashboardApi, getUserData, getWorkOrders, reportApi } from "../../api/api";
+import {
+  dashboardApi,
+  getUserData,
+  getWorkOrders,
+  reportApi,
+} from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Loading from "../../utilities/loadingpage";
 import "./dashboard.css";
@@ -57,7 +62,11 @@ import Pusher from "pusher-js";
 import InitializeEcho from "../../utilities/EchoInstance";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
-import { formatDate, formatDateOnly, getCurrentMonthDates } from "../../utilities/globalfns";
+import {
+  formatDate,
+  formatDateOnly,
+  getCurrentMonthDates,
+} from "../../utilities/globalfns";
 import { Briefcase, CalendarHeart, PartyPopper } from "lucide-react";
 import ScheduleCard from "../../components/ScheduleCard";
 
@@ -290,7 +299,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     } catch (error) {
       setTodayWOs([]);
     }
-  }
+  };
   useEffect(() => {
     fetchData();
     fetchTodayWOs();
@@ -394,9 +403,11 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
       {/* Overlapping Container Above the Header */}
       <div
         className="overlapping-container"
-        style={{ borderTop: "5px solid var(--ion-color-primary)" }}
-      >
-      </div>
+        style={{
+          borderTop: "5px solid var(--ion-color-primary)",
+          borderRadius: "20px",
+        }}
+      ></div>
       <IonContent className="dashboard-content">
         <IonGrid>
           <IonRow className="ion-justify-content-center">
@@ -434,12 +445,10 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
         </IonGrid>
 
         {/* Work Orders List */}
-        {userData?.user?.is_assignee ?
+        {userData?.user?.is_assignee ? (
           <IonList>
             <div className="see-all-div">
-              <h2 className="section-title">
-                My Work Orders
-              </h2>
+              <h2 className="section-title">My Work Orders</h2>
               <IonLabel onClick={() => handleSeeAllWOs()}>
                 <b>See All </b>
                 <IonIcon icon={chevronForward} />
@@ -482,18 +491,16 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
               </IonButton>
             )}
           </IonList>
-          :
+        ) : (
           <IonList>
             <div className="see-all-div">
-              <h2 className="section-title">
-                Work Orders Today
-              </h2>
+              <h2 className="section-title">Work Orders Today</h2>
               <IonLabel onClick={() => handleSeeAllWOs()}>
                 <b>See All </b>
                 <IonIcon icon={chevronForward} />
               </IonLabel>
             </div>
-            {todayWOs && todayWOs?.length > 0 ?
+            {todayWOs && todayWOs?.length > 0 ? (
               todayWOs?.map((item) => (
                 <ScheduleCard
                   onClickCard={() => history.push(`/work-orders/${item.id}`)}
@@ -503,21 +510,23 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   status={item.status}
                 />
               ))
-              :
+            ) : (
               <IonCard className="minimal-work-order-card">
                 <IonCardHeader className="ion-text-center">
                   <IonCardTitle>
-                    <CalendarHeart /> <small>No work orders scheduled today!</small>
+                    <CalendarHeart />{" "}
+                    <small>No work orders scheduled today!</small>
                   </IonCardTitle>
                 </IonCardHeader>
                 <IonCardContent>
-                  <IonItem lines="none">Click "See All" to track a Work Order.</IonItem>
+                  <IonItem lines="none">
+                    Click "See All" to track a Work Order.
+                  </IonItem>
                 </IonCardContent>
               </IonCard>
-            }
+            )}
           </IonList>
-        }
-
+        )}
       </IonContent>
       {/* Floating Tab Buttons */}
       <FloatingTabButtons />

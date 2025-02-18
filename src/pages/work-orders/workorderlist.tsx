@@ -201,10 +201,10 @@ const WorkOrderList: React.FC = ({ title }) => {
   }, []);
 
   return (
-    <MasterComponent title={"Work Order"} >
-     {/* <IonPage>
-       <HeaderComponent title={"Work Order list"} /> 
-      <IonContent forceOverscroll={false} scrollY={false}>*/}
+    // <MasterComponent title={"Work Order"} >
+    <IonPage>
+      <HeaderComponent title={"Work Order list"} />
+      <IonContent forceOverscroll={false} scrollY={false}>
         <div forceOverscroll={false} scrollY={false}>
           <IonRow>
             <IonCol size="10">
@@ -311,7 +311,7 @@ const WorkOrderList: React.FC = ({ title }) => {
                 room={item.room}
                 status={item.status}
                 onClickCard={() => history.push(`/work-orders/${item.id}`)}
-                />
+              />
             ))}
         </div>
         <ModalComponent1
@@ -320,9 +320,9 @@ const WorkOrderList: React.FC = ({ title }) => {
           onClose={() => setOpenFilter(false)}
           getContentModal={modalContent}
         />
-      {/* </IonContent>
-     </IonPage> */}
-     </MasterComponent>
+      </IonContent>
+    </IonPage>
+    //  </MasterComponent>
   );
 };
 export default WorkOrderList;
