@@ -404,7 +404,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
       <div
         className="overlapping-container"
         style={{
-          borderTop: "5px solid var(--ion-color-primary)",
+          // borderTop: "5px solid var(--ion-color-primary)",
           borderRadius: "20px",
         }}
       ></div>
