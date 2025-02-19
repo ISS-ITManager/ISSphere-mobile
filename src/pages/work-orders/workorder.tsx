@@ -100,7 +100,11 @@ import BadgeComponent from "../../utilities/badgecomponent";
 import Timeline from "../../utilities/workordertimelinecomponent";
 import Details from "./workorder-components/details";
 import Assets from "./workorder-components/assets";
-import { formatDate, formatDateOnly, presentToast } from "../../utilities/globalfns";
+import {
+  formatDate,
+  formatDateOnly,
+  presentToast,
+} from "../../utilities/globalfns";
 import WorkOrderSupplies from "./workorder-components/supplies";
 import ModalComponent1 from "../../components/ModalComponent1";
 import BadgePriority from "../../utilities/badgePriority";
@@ -110,6 +114,7 @@ import { hasPermission } from "../../utilities/globalfns";
 import MasterComponent from "../../components/MasterComponent";
 import DeletePopup from "../../utilities/DeletePopup";
 import useErrorAlert from "../../utilities/ErrorAlert";
+import AssetList from "./workorderassetslist";
 
 // Define the WorkOrder type
 interface WorkOrder {
@@ -1751,7 +1756,8 @@ const WorkOrder: React.FC = () => {
                             }{" "}
                             <br />
                             <h3>
-                              Starts on {formatDateOnly(workOrder?.start_date)} at{" "}
+                              Starts on {formatDateOnly(workOrder?.start_date)}{" "}
+                              at{" "}
                               {
                                 workOrder?.work_order_request?.schedule
                                   ?.start_time
@@ -1790,57 +1796,13 @@ const WorkOrder: React.FC = () => {
                       </IonItem>
                     </IonGrid>
 
-                    <div className="assets-section">
-                      <div className="assets-header">
-                        <IonLabel>Asset List</IonLabel>
-                        <p>List of assets used in this work order.</p>
-                      </div>
-                      {assets.length > 0 ? (
-                        <IonList className="assets-list">
-                          {assets.map((asset, index) => (
-                            <IonItem key={index} className="asset-item">
-                              <IonGrid>
-                                <IonRow className="align-items-center">
-                                  <IonCol size="2">
-                                    <div className="serial-number">
-                                      <IonIcon
-                                        icon={folderOpenOutline}
-                                        className="cube-icon"
-                                      />
-                                      <IonText>{asset.serialNumber}</IonText>
-                                    </div>
-                                  </IonCol>
-                                  <IonCol size="4">
-                                    <IonText className="new-status">
-                                      {asset.action}
-                                    </IonText>
-                                  </IonCol>
-                                  <IonCol size="5">
-                                    <IonText>{asset.description}</IonText>
-                                  </IonCol>
-                                  <IonCol size="1" className="text-right">
-                                    {workOrder?.active_status?.status !==
-                                      "closed" && (
-                                      <IonIcon
-                                        icon={trashOutline}
-                                        className="delete-icon"
-                                        onClick={() => handleDelete(asset.id)}
-                                        style={{
-                                          cursor: "pointer",
-                                          color: "red",
-                                        }}
-                                      />
-                                    )}
-                                  </IonCol>
-                                </IonRow>
-                              </IonGrid>
-                            </IonItem>
-                          ))}
-                        </IonList>
-                      ) : (
-                        <p>No assets found</p>
-                      )}
-                      <DeletePopup ref={deletePopupRef} />
+                    <div>
+                      <AssetList
+                        assets={assets}
+                        workOrder={workOrder}
+                        handleDelete={handleDelete}
+                        ref={deletePopupRef}
+                      />
                     </div>
                     {/* Render Tasks */}
                     {renderTasks()}
