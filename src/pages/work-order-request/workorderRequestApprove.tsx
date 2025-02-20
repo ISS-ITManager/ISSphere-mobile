@@ -492,7 +492,7 @@ const WorkOrderRequestApprove: React.FC = () => {
         <MasterComponent title={"Accept Request"}>
             {selectedRequest &&
                 <>
-                    <IonCard className="task-card bounce-in-right task-card" style={{  marginTop: '-10px' }}>
+                    <IonCard className="task-card bounce-in-right task-card" >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '10px' }}>
                             <div>{getIsAcceptedColor(selectedRequest?.work_order_request?.is_accepted)}</div>
                             <div>{getPriority(selectedRequest?.work_order_request?.priority)}</div>

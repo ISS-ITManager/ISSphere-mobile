@@ -1,13 +1,13 @@
-import { IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonCardSubtitle, IonGrid, IonIcon, IonContent, IonItem, IonLabel, IonList, IonPage, IonModal, IonToolbar, IonTitle, IonHeader, IonButtons, IonTextarea, IonDatetimeButton, IonDatetime, useIonToast, IonSelect, IonSelectOption, IonCol, IonRow, IonInput, IonText, IonNote, IonCheckbox, IonSearchbar } from '@ionic/react';
+import { IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonCardSubtitle, IonGrid, IonIcon, IonContent, IonItem, IonLabel, IonList, IonPage, IonModal, IonRadio, IonRadioGroup, IonHeader, IonButtons, IonTextarea, IonDatetimeButton, IonDatetime, useIonToast, IonSelect, IonSelectOption, IonCol, IonRow, IonInput, IonText, IonNote, IonCheckbox, IonSearchbar, IonChip } from '@ionic/react';
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router';
 // import MasterComponent '../../components/MasterComponent';
 import MasterComponent from '../../components/MasterComponent';
-import { addOutline, saveOutline, checkmarkCircleOutline, closeCircleOutline, checkmarkOutline, closeOutline, navigateOutline, chevronForwardOutline, arrowBackOutline, arrowForwardOutline, fileTrayStackedOutline } from 'ionicons/icons';
+import { addOutline, saveOutline, checkmarkCircleOutline, closeCircleOutline, checkmarkOutline, closeOutline, navigateOutline, chevronForwardOutline, arrowBackOutline, arrowForwardOutline, fileTrayStackedOutline, funnel, filter } from 'ionicons/icons';
 
 import { workOrderCategoryApi, workOrderTypeApi, entityApi, workOrderTaskHistoryApi, assigneeApi, groupApi, propertyApi, zoneApi, levelApi, roomApi, workOrderRequestApi } from '../../api/api';
 import ModalComponent from '../../components/Modal';
-import { formatDate, hasPermission, presentToast } from '../../utilities/globalfns';
+import { formatDate, hasPermission } from '../../utilities/globalfns';
 import ModalComponent1 from '../../components/ModalComponent1';
 
 
@@ -41,11 +41,17 @@ const WorkOrderRequestCreate: React.FC = () => {
     const [openDecline, setOpenDecline] = useState(false);
     const [declineRemarks, setDeclineRemarks] = useState();
     const [searchTerm, setSearchTerm] = useState();
+    const [filteredCount, setFilteredCount] = useState(0);
+    const [totalWOR, setTotalWOR] = useState(100);
+    const [openSort, setOpenSort] = useState(false);
+    const [openFilter, setOpenFilter] = useState(false);
+    const [searchStartDate, setSearchStartDate] = useState();
+    const [searchEndDate, setSearchEndDate] = useState();
+    const [searchStatus, setSearchStatus] = useState(); //accepted, new, declined
+    const [searchPriority, setSearchPriority] = useState(); //low, med, high
 
 
     const [present] = useIonToast();
-
-
 
     const fetchWOCategory = async () => {
         try {
@@ -190,15 +196,23 @@ const WorkOrderRequestCreate: React.FC = () => {
     }
 
     const handleSaveWOReq = async () => {
-        if (currentDescrp && selectedType && selectedZone) {
+        if (currentDescrp && selectedType && (selectedZone || selectedGroup || selectedProperty || selectedEntity || selectedRoom)) {
             try {
-                const req = await workOrderRequestApi.store({ work_order_description: currentDescrp, work_order_type: selectedType, zone: selectedZone });
+                let dataList = {
+                    work_order_description: currentDescrp,
+                    work_order_type: selectedType
+                };
+                if (selectedGroup) dataList.group = selectedGroup;
+                if (selectedEntity) dataList.entity = selectedEntity;
+                if (selectedZone) dataList.zone = selectedZone;
+                if (selectedProperty) dataList.property = selectedProperty;
+                if (selectedRoom) dataList.room = selectedRoom;
+
+                console.log("dataList: " + JSON.stringify(dataList));
+
+                const req = await workOrderRequestApi.store(dataList);
                 console.log("workOrderRequestApi: " + JSON.stringify(req));
-                present({
-                    message: req.data.message,
-                    duration: 1500,
-                    position: 'top',
-                });
+
                 clearFields();
             } catch (error) {
 
@@ -233,15 +247,33 @@ const WorkOrderRequestCreate: React.FC = () => {
     }
 
     const fetchWOR = async () => {
-        const req = await workOrderRequestApi.list();
-        // console.log("req: " + JSON.stringify(req.data.data));
+        const req = await workOrderRequestApi.get(totalWOR); //.list();
+        // console.log("req fetchWOR total: " + (req.data?.data?.total));
+        setTotalWOR(req.data?.data?.total);
         setWorkOrderRequests(req.data.data.data);
         setFilteredWOR(req.data.data.data);
+        setFilteredCount(req?.data?.data?.data?.length);
         return req.data.data.data;
     }
 
-    const getIsAcceptedColor = (is_accepted) => {
+    // const fetchWORAll = async () => {
+    //     if (totalWOR) {
+    //         try {
+    //             const req = await workOrderRequestApi.get(totalWOR);
+    //             setTotalWOR(req.data?.data?.total);
+    //             setWorkOrderRequests(req.data.data.data);
+    //             setFilteredWOR(req.data.data.data);
+    //             setFilteredCount(req?.data?.data?.data?.length);
+    //             return req.data.data.data;
+    //         } catch (error) {
+    //             console.log("fetchWORAll error: " + JSON.stringify(error.message));
 
+    //         }
+    //     }
+
+    // }
+
+    const getIsAcceptedColor = (is_accepted) => {
         switch (is_accepted) {
             case "1":
                 return <IonBadge color="success" >
@@ -303,11 +335,11 @@ const WorkOrderRequestCreate: React.FC = () => {
     const createContent = () => {
         return (
             <>
+                <IonLabel>
+                    <h2><b>Work Order Details</b></h2>
+                </IonLabel>
                 <IonCard className='task-card'>
                     <IonList>
-                        <IonItem lines='none'>
-                            <IonLabel><h2><b>Work Order Details</b></h2></IonLabel>
-                        </IonItem>
                         <IonItem>
                             <IonLabel position="stacked">Work Order Category</IonLabel>
                             <IonSelect
@@ -347,14 +379,13 @@ const WorkOrderRequestCreate: React.FC = () => {
                     </IonList>
                 </IonCard>
 
+                <IonLabel><h2><b>Location Details</b></h2></IonLabel>
                 <IonCard className='task-card'>
                     <IonList>
-                        <IonItem lines='none'>
-                            <IonLabel><h2><b>Location Details</b></h2></IonLabel>
-                        </IonItem>
                         <IonItem>
                             <IonLabel position="stacked">Group</IonLabel>
                             <IonSelect
+                                className='ion-text-end'
                                 name="group"
                                 value={selectedGroup}
                                 onIonChange={handleGroup}
@@ -575,12 +606,20 @@ const WorkOrderRequestCreate: React.FC = () => {
     //     }
     //   }, [selectedRequest, taskId, history]); 
 
+    const handleReset = () => {
+        setFilteredWOR(workOrderRequests);
+        setFilteredCount(workOrderRequests?.length);
+        setOpenFilter(false);
+        setSearchStatus(undefined);
+        setSearchPriority(undefined);
+    }
     const handleSearch = async (e) => {
         const val = (e.target as HTMLInputElement).value;
         setSearchTerm(val);
 
         if (val.trim() === '') {
             setFilteredWOR(workOrderRequests || []);
+            setFilteredCount(workOrderRequests?.length);
         } else {
             try {
                 // Filter through requests and check multiple properties
@@ -597,12 +636,208 @@ const WorkOrderRequestCreate: React.FC = () => {
 
                 // Set filtered results
                 setFilteredWOR(filteredResults);
+                setFilteredCount(filteredResults?.length);
             } catch (error) {
                 console.error("Error during search: ", error);
             }
         }
     };
 
+    const handleSort = async (criteria) => {
+        let filteredResults = workOrderRequests;
+        if(criteria)
+        {
+            if(criteria.key === 'requested_date')
+            {
+                if(criteria.type === 'desc')
+                {
+                    filteredResults = await workOrderRequests?.sort((a, b)=> new Date(b.requested_date) - new Date(a.requested_date))
+                }
+                else {
+                    filteredResults = await workOrderRequests?.sort((a, b)=> new Date(a.requested_date) - new Date(b.requested_date))
+                }
+            }
+            else{
+                if(criteria.key === 'reference_number')
+                {
+                    filteredResults = await workOrderRequests?.sort((a,b) => String(a.reference_number || "").localeCompare(b.reference_number ))
+                }
+                if(criteria.key === 'work_order_description')
+                {
+                    filteredResults = await workOrderRequests?.sort((a,b) => String(a.work_order_description || "").localeCompare(b.work_order_description ));
+                }
+            }
+        }
+    }
+
+
+    const handleSearchFilter = () => {
+        let filteredResults = workOrderRequests;
+
+        console.log("searchStatus: " + searchStatus + " | searchPriority:" + searchPriority + " |dateFrom: " + searchStartDate + " |dateTo: " + searchEndDate);
+
+
+
+
+        if (searchStatus || searchPriority || searchStartDate || searchEndDate) {
+            filteredResults = workOrderRequests?.filter((item) => 
+            (
+                // searchStatus && searchStatus!== undefined && 
+                // String(item.is_accepted).localeCompare(searchStatus.toString())
+                parseInt(item.is_accepted) === parseInt(searchStatus)
+            )
+
+            // {
+
+
+            //     const matchesStatus =
+            //         (searchStatus && searchStatus !== undefined)
+            //             ? parseInt(item.is_accepted) === parseInt(searchStatus)
+            //             : true;
+
+            //     const matchesPriority =
+            //         (searchPriority && searchPriority !== undefined)
+            //             ? item?.priority?.includes(searchPriority)
+            //             : true;
+
+            //     const matchesDate = (searchStartDate && searchEndDate && searchStartDate !== undefined && searchEndDate !== undefined) ?
+            //         (searchStartDate && searchStartDate ? (new Date(item?.requested_date) >= new Date(searchStartDate) &&
+            //             new Date(item?.requested_date) <= new Date(searchEndDate)) : true) : true
+
+            //     return matchesStatus && matchesPriority && matchesDate;
+            // }
+
+            );
+        }
+        else {
+            filteredResults = workOrderRequests;
+        }
+
+        setFilteredWOR(filteredResults);
+        setFilteredCount(filteredResults?.length);
+    };
+
+    const modalContent = () => {
+        return (
+            <IonContent>
+                <IonItem>
+                    <IonLabel>Status</IonLabel>
+                    <IonSelect
+                        label="Select Status"
+                        value={searchStatus}
+                        onIonChange={(e) => setSearchStatus(e.target.value)}
+                    >
+                        <IonSelectOption value={0}>New</IonSelectOption>
+                        <IonSelectOption value={1}>Accepted</IonSelectOption>
+                        <IonSelectOption value={2}>Declined</IonSelectOption>
+                    </IonSelect>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>Priority</IonLabel>
+                    <IonSelect
+                        label="Select Priority"
+                        value={searchPriority}
+                        onIonChange={(e) => setSearchPriority(e.target.value)}
+                    >
+                        <IonSelectOption value={"low"}>Low</IonSelectOption>
+                        <IonSelectOption value={"medium"}>Medium</IonSelectOption>
+                        <IonSelectOption value={"high"}>High</IonSelectOption>
+                    </IonSelect>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>Date From</IonLabel>
+                    <IonDatetimeButton datetime="start-datetime" />
+                    <IonModal keepContentsMounted={true}>
+                        <IonDatetime
+                            presentation="date"
+                            id="start-datetime"
+                            value={searchStartDate}
+                            onIonChange={(e) => {
+                                const selectedDate = e.detail.value?.split("T")[0];
+                                setSearchStartDate(selectedDate);
+                            }}
+                        />
+                    </IonModal>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>Date To</IonLabel>
+                    <IonDatetimeButton datetime="end-datetime" />
+                    <IonModal keepContentsMounted={true}>
+                        <IonDatetime
+                            presentation="date"
+                            id="end-datetime"
+                            value={searchEndDate}
+                            onIonChange={(e) => {
+                                const selectedDate = e.detail.value?.split("T")[0];
+                                setSearchEndDate(selectedDate);
+                            }}
+                        />
+                    </IonModal>
+                </IonItem>
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "1rem",
+                    }}
+                >
+                    <IonButton fill="outline" onClick={() => handleReset()}>
+                        Reset
+                    </IonButton>
+                    <IonButton
+                        onClick={() => {
+                            handleSearchFilter();
+                            setOpenFilter(false);
+                        }}
+                    >
+                        Apply
+                    </IonButton>
+                </div>
+            </IonContent>
+        );
+    };
+
+    const modalContentSort = () => {
+        const items =
+            [{
+                key: 'requested_date',
+                name: 'Requested Date (ascending)',
+                type: 'asc'
+            },
+            {
+                key: 'requested_date',
+                name: 'Requested Date (descending)',
+                type: 'desc'
+            },
+            {
+                key: 'reference_number',
+                name: 'Work Order Request #',
+            },
+            {
+                key: 'work_order_description',
+                name: 'Description',
+            },
+            ]
+        return (
+            <IonContent>
+                <IonList>
+                    <IonRadioGroup
+                        onIonChange={(e) => {
+                            setOpenSort(false);
+                            handleSort(e.detail.value)
+                            // console.log('Current value:', JSON.stringify(e.detail.value))
+                        }}
+                    >
+                        {items.map((itm, index) => (
+                            <IonItem key={index}>
+                                <IonRadio key={index} value={itm}>{itm.name}</IonRadio>
+                            </IonItem>
+                        ))}
+                    </IonRadioGroup>
+                </IonList>
+            </IonContent>
+        )
+    }
 
     useEffect(() => {
         fetchWOR();
@@ -615,26 +850,36 @@ const WorkOrderRequestCreate: React.FC = () => {
 
     return (
         <MasterComponent title={"Work Order Request"}>
-            <IonItem>
-                {/* <IonLabel><h2><b>Work Order Requests List</b></h2></IonLabel> */}
-                <IonSearchbar
-                    placeholder='Search here'
-                    value={searchTerm}
-                    onIonInput={handleSearch}
-                />
-                <IonButton onClick={handleOpenCreate}
-                    size="default"
-                    slot="end"
-                >
-                    <IonIcon icon={addOutline} slot="start" />
-                    Add
+            <IonRow>
+                <IonCol size='8'>
+                    <IonSearchbar
+                        placeholder='Search'
+                        value={searchTerm}
+                        onIonInput={handleSearch}
+                    />
+                </IonCol>
+                <IonCol >
+                    <IonButton onClick={handleOpenCreate} size="default">
+                        <IonIcon icon={addOutline} slot="start" />
+                        Add
+                    </IonButton>
+                </IonCol>
+            </IonRow>
+            <IonRow className="row-container">
+                <IonButton fill="clear" size='small' onClick={() => setOpenSort(true)}>
+                    <IonIcon icon={funnel} slot="start" /> Sort
                 </IonButton>
-            </IonItem>
+                <IonButton fill="clear" size='small' onClick={() => setOpenFilter(true)}>
+                    <IonIcon icon={filter} slot="start" /> Filter
+                </IonButton>
+                <IonNote><small>{filteredCount} results </small></IonNote>
+                {/* <IonLabel onClick={fetchWORAll}>See All</IonLabel> */}
+            </IonRow>
 
             {/* Display Work Order Request details */}
             {!openCreate &&
                 <IonList>
-                    <div>
+                    <div className='div-overflow'>
                         {filteredWOR.map((task, index) => (
                             <IonCard key={index} className="task-card minimal-work-order-card animate__animated animate__slideInUp"
                                 style={{ animationDelay: `${index * 0.1}s` }}
@@ -667,6 +912,7 @@ const WorkOrderRequestCreate: React.FC = () => {
                                 </IonCardContent>
                             </IonCard>
                         ))}
+                        {/* <IonButton className='ion-padding' expand='block'>See All</IonButton> */}
                     </div>
                 </IonList>
             }
@@ -710,6 +956,20 @@ const WorkOrderRequestCreate: React.FC = () => {
                 />
             }
 
+
+            {/* sorting and filtering */}
+            <ModalComponent1
+                title={"Filter Work Order Request"}
+                isOpen={openFilter}
+                onClose={() => setOpenFilter(false)}
+                getContentModal={modalContent}
+            />
+            <ModalComponent1
+                title={"Sort Work Order Request by"}
+                isOpen={openSort}
+                onClose={() => setOpenSort(false)}
+                getContentModal={modalContentSort}
+            />
         </MasterComponent>
     )
 }
