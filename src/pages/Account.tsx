@@ -28,12 +28,13 @@ import { saveOutline } from "ionicons/icons";
 import { useHistory } from "react-router";
 import { logOutOutline } from "ionicons/icons";
 import { logout } from "../api/api";
-import { getRenderingRef } from "ionicons/dist/types/stencil-public-runtime";
+import logo from "../assets/images/sphere.png";
 
 const AccountPage: React.FC = () => {
   const history = useHistory();
   const [userDetails, setUserDetails] = useState();
   const userData = JSON.parse(localStorage.getItem("userData"));
+  const logoPath = userData?.user?.client?.logo_path;
   const handleLogout = async () => {
     try {
       const req = await logout();
@@ -87,9 +88,14 @@ const AccountPage: React.FC = () => {
         <>
           <IonCard className="task-card">
             <IonCardHeader>
-              <h3>
-                <b>Profile</b>
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <h3><b>Profile</b></h3>
+                </div>
+                <div style={{ display: "flex" }}>
+                  <img src={logoPath || logo} style={{ height: '50px', width: '50px' }} />
+                </div>
+              </div>
             </IonCardHeader>
             <IonList className="ion-justify-content-evenly">
               <IonItem>

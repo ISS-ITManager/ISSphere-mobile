@@ -91,6 +91,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   const [barColor, setBarColor] = useState("");
   const [pendingWOs, setPendingWOs] = useState(0);
   const [inprogressWOs, setInprogressWOs] = useState(0);
+  const [aboutToBreachWOs, setAboutToBreachWOs] = useState(0);
   const [openWOs, setOpenWOs] = useState(0);
   const [closedWOs, setClosedWOs] = useState(0);
   const [workOrdersLen, setWorkOrdersLen] = useState(10);
@@ -239,6 +240,21 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
     }
   };
 
+  const getAboutToBreach = async (client_id) => {
+    if (client_id) {
+      try {
+        const req = await reportApi.workOrderAboutToBreach({ client_id: client_id });
+        // console.log("req: " + JSON.stringify(req));
+
+        setAboutToBreachWOs(req.data.data);
+        // setPendingWOs(parseInt(req.data.data?.open_work_orders) + parseInt(req.data.data?.inprogress_work_orders));
+      } catch (error) {
+        console.log("getPendingWOs error: " + JSON.stringify(error.message));
+      }
+    }
+  };
+
+
   const getClosedWOs = async (client_id) => {
     if (client_id) {
       try {
@@ -281,6 +297,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
 
       await getPendingWOs(user?.user?.client_id);
       await getClosedWOs(user?.user?.client_id);
+      await getAboutToBreach(user?.user?.client_id);
 
       return () => clearInterval(interval); // Cleanup interval
     } catch (err) {
@@ -419,6 +436,12 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   <h2 className="card-count">{inprogressWOs}</h2>
                 </IonCardContent>
               </IonCard>
+              {/* <IonCard style={{ borderRadius: '50px', height: '70px', width:'70px', alignItems:'center' }}>
+                <IonCardContent>
+                 <h1><b>{inprogressWOs}</b></h1>
+                </IonCardContent>
+              </IonCard>
+              <IonLabel>In-Progress</IonLabel> */}
             </IonCol>
             <IonCol sizeMd="2">
               <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
@@ -428,6 +451,12 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   <h2 className="card-count">{openWOs}</h2>
                 </IonCardContent>
               </IonCard>
+               {/* <IonCard style={{ borderRadius: '50px', height: '70px', width:'70px', alignItems:'center' }}>
+                <IonCardContent>
+                 <h1><b>{openWOs}</b></h1>
+                </IonCardContent>
+              </IonCard>
+              <IonLabel>Open</IonLabel> */}
             </IonCol>
             <IonCol sizeMd="2">
               <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
@@ -437,9 +466,15 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                     {" "}
                     About to Breach
                   </p>
-                  <h2 className="card-count">{openWOs}</h2>
+                  <h2 className="card-count">{aboutToBreachWOs}</h2>
                 </IonCardContent>
               </IonCard>
+               {/* <IonCard style={{ borderRadius: '50px', height: '70px', width:'70px', alignItems:'center' }}>
+                <IonCardContent>
+                 <h1><b>{aboutToBreachWOs}</b></h1>
+                </IonCardContent>
+              </IonCard>
+              <IonLabel>About to breach</IonLabel> */}
             </IonCol>
           </IonRow>
         </IonGrid>

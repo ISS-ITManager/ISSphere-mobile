@@ -64,6 +64,11 @@ import {
   cameraOutline,
   imageOutline,
   folderOpenOutline,
+  play,
+  refresh,
+  chevronForward,
+  createOutline,
+  location,
 } from "ionicons/icons";
 import "./workorder.css";
 import Header from "../../components/Header";
@@ -241,6 +246,7 @@ const WorkOrder: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [workOrderData, setWorkOrderData] = useState<any>(null);
+  const [showFull, setShowFull] = useState(false);
 
   const handleApplyFilter = async () => {
     try {
@@ -310,9 +316,9 @@ const WorkOrder: React.FC = () => {
     }
   }, [ids]);
 
-  const handleUpdateWorkOrder = async () => {
-    setUpdateWorkOrder(true);
-  };
+  // const handleUpdateWorkOrder = async () => {
+  //   setUpdateWorkOrder(true);
+  // };
   const handleSaveWorkOrder = async (workOrder) => {
     // console.log("handleSaveWorkOrder: "  +  JSON.stringify(workOrder));
     if (workOrder && workOrderStatus) {
@@ -403,10 +409,15 @@ const WorkOrder: React.FC = () => {
       <>
         {workOrder && (
           <IonList className="ion-padding">
-            <IonLabel>
-              {" "}
-              Current Status: {workOrder?.active_status?.status}
-            </IonLabel>
+            <IonRow>
+              <IonCol>
+                Current Status is
+              </IonCol>
+              <IonCol className="ion-float-right">
+                <BadgeComponent status={workOrder?.active_status?.status} />
+              </IonCol>
+            </IonRow>
+
             <IonItem>
               <IonLabel>
                 <b>Status</b>
@@ -584,6 +595,27 @@ const WorkOrder: React.FC = () => {
     );
   };
 
+  const buttonUpdateStatus = (currentStatus) => {
+    return (
+      <>
+        {currentStatus === "open" &&
+          <IonButton
+            disabled={!hasPermission("work-order-status.edit")}
+            onClick={() => setUpdateWorkOrder(true)}>
+            <IonIcon icon={play} slot="start" /> Start Working</IonButton>}
+        {currentStatus !== "open" && currentStatus !== "closed" &&
+          <>
+            <IonButton
+              disabled={!hasPermission("work-order-status.edit")}
+              onClick={() => setUpdateWorkOrder(true)}>
+              <IonIcon icon={createOutline} slot="start" />
+              Update Status
+            </IonButton>
+          </>}
+      </>
+    )
+  }
+
   const fetchWorkOrderDetails = async () => {
     if (!id) {
       setError("Work order ID is missing.");
@@ -609,6 +641,19 @@ const WorkOrder: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const getFullLocation = () => {
+    return (
+      <IonLabel>
+        {workOrder?.location?.group}
+        {workOrder?.location?.entity && <IonIcon icon={chevronForward} />} {workOrder?.location?.entity}
+        {workOrder?.location?.property && <IonIcon icon={chevronForward} />} {workOrder?.location?.property}
+        {workOrder?.location?.zone && <IonIcon icon={chevronForward} />} {workOrder?.location?.zone}
+        {workOrder?.location?.level && <IonIcon icon={chevronForward} />} {workOrder?.location?.level}
+        {workOrder?.location?.room && <IonIcon icon={chevronForward} />} {workOrder?.location?.room}
+      </IonLabel>
+    )
+  }
 
   //fetch work order details
   useEffect(() => {
@@ -752,7 +797,7 @@ const WorkOrder: React.FC = () => {
         // console.log("supplierList: " + JSON.stringify(req.data.data));
 
         setSupplierList(req.data.data);
-      } catch (error) {}
+      } catch (error) { }
     };
 
     const fetchSupplyCategory = async () => {
@@ -761,7 +806,7 @@ const WorkOrder: React.FC = () => {
         // console.log("supplyCat: " + JSON.stringify(req.data.data));
 
         setSupplyCategory(req.data.data);
-      } catch (error) {}
+      } catch (error) { }
     };
 
     const fetchSupplies = async () => {
@@ -770,7 +815,7 @@ const WorkOrder: React.FC = () => {
         // console.log("supplies: " + JSON.stringify(req.data.data));
 
         setSupplyList(req.data.data);
-      } catch (error) {}
+      } catch (error) { }
     };
     fetchSupplyList();
     fetchSuppliers();
@@ -1672,9 +1717,9 @@ const WorkOrder: React.FC = () => {
   const handleSaveSupply = async (newSupply) => {
     console.log(
       "NewSupply: " +
-        JSON.stringify(newSupply) +
-        " | prevSupplies: " +
-        JSON.stringify(workOrderSupplyList)
+      JSON.stringify(newSupply) +
+      " | prevSupplies: " +
+      JSON.stringify(workOrderSupplyList)
     );
     await fetchSupplyList();
     await fetchWorkOrderDetails();

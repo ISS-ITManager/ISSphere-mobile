@@ -6,6 +6,8 @@ import { chevronForwardOutline, calendarOutline, checkmarkCircleOutline, closeCi
 import { assigneeApi, workOrderRequestApi, teamApi, serviceProviderServiceApi, serviceApi, workOrderApi } from '../../api/api';
 import { formatDate, formatDateOnly } from '../../utilities/globalfns';
 import { IonCard, IonChip, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle, IonButton, IonIcon, IonItem, IonLabel, IonText, IonBadge, IonAccordionGroup, IonAccordion } from '@ionic/react';
+import BadgeStatus from '../../utilities/BadgeStatus';
+import BadgeComponent from '../../utilities/badgecomponent';
 
 const WorkOrderRequestView: React.FC = () => {
     const history = useHistory();
@@ -128,11 +130,11 @@ const WorkOrderRequestView: React.FC = () => {
                 {workOrderList && workOrderList?.length > 0 &&
                     <IonCard className="task-card animate__animated  animate__pulse" style={{ marginLeft: '4%', marginTop: '-10px' }}>
                         <IonCardHeader><b>Work Orders</b></IonCardHeader>
-                        <IonAccordionGroup>
+                        <IonAccordionGroup multiple>
                             {workOrderList
                             .sort((a, b)=> new Date(a.start_date) - new Date(b.end_date))
                             .map((item, index) => (
-                                <IonAccordion value={item.reference_number} key={index}>
+                                <IonAccordion value={item.reference_number} key={index} >
                                     <IonItem slot="header">
                                         <IonLabel>{item.reference_number}</IonLabel>
                                     </IonItem>
@@ -149,6 +151,8 @@ const WorkOrderRequestView: React.FC = () => {
                                                 <b>{item.day}</b>
                                             </IonChip>
                                         </IonLabel>
+                                        {/* <BadgeStatus status={item.status}/> */}
+                                        <BadgeComponent status={item.status} />
                                         </center>
                                     </div>
                                 </IonAccordion>

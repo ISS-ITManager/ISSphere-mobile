@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   IonCard,
   IonIcon,
@@ -21,17 +21,21 @@ import {
   IonDatetime,
   IonModal,
   IonPage,
+  IonNote,
+  IonRadioGroup,
+  IonRadio,
 } from "@ionic/react";
 import { useHistory, useLocation } from "react-router";
 import MasterComponent from "../../components/MasterComponent";
-import { caretForwardOutline, calendarOutline, filter } from "ionicons/icons";
+import { caretForwardOutline, calendarOutline, filter, funnel } from "ionicons/icons";
 import BadgeComponent from "../../utilities/badgecomponent";
 import "./../dashboard/dashboard.css";
 import { getWorkOrdersPaginate } from "../../api/api";
 import "./workorderlist.css";
 import ModalComponent1 from "../../components/ModalComponent1";
-import HeaderComponent from "../../components/Header";
+import HeaderComponent from "../../components/HeaderComponent";
 import ScheduleCard from "../../components/ScheduleCard";
+
 
 const WorkOrderList: React.FC = ({ title }) => {
   const history = useHistory();
@@ -40,6 +44,9 @@ const WorkOrderList: React.FC = ({ title }) => {
     ? location.state
     : { workOrdersLen: 10 };
 
+
+  const modal = useRef<HTMLIonModalElement>(null);
+
   const [workOrders, setWorkOrders] = useState();
   const [filteredWO, setFilteredWO] = useState();
   const [searchTerm, setSearchTerm] = useState();
@@ -47,6 +54,8 @@ const WorkOrderList: React.FC = ({ title }) => {
   const [searchStartDate, setSearchStartDate] = useState();
   const [searchEndDate, setSearchEndDate] = useState();
   const [searchStatus, setSearchStatus] = useState("");
+  const [filteredCount, setFilteredCount] = useState(0);
+  const [openSort, setOpenSort] = useState(false);
 
   const handleSearch = async (e) => {
     const val = (e.target as HTMLInputElement).value;
@@ -54,43 +63,46 @@ const WorkOrderList: React.FC = ({ title }) => {
 
     if (val.trim() === "") {
       setFilteredWO(workOrders || []);
+      setFilteredCount(workOrders?.length);
     } else {
       try {
         // Filter through requests and check multiple properties
         const filteredResults =
           workOrders && workOrders.length > 0
             ? workOrders?.filter(
-                (item) =>
-                  item.work_order_reference_number
-                    ?.toLowerCase()
-                    .includes(val.toLowerCase()) ||
-                  item.work_order_description
-                    ?.toLowerCase()
-                    .includes(val.toLowerCase()) ||
-                  item.status?.toLowerCase().includes(val.toLowerCase()) ||
-                  item.property?.toLowerCase().includes(val.toLowerCase())
-              )
+              (item) =>
+                item.work_order_reference_number
+                  ?.toLowerCase()
+                  .includes(val.toLowerCase()) ||
+                item.work_order_description
+                  ?.toLowerCase()
+                  .includes(val.toLowerCase()) ||
+                item.status?.toLowerCase().includes(val.toLowerCase()) ||
+                item.property?.toLowerCase().includes(val.toLowerCase())
+            )
             : [];
 
-        console.log("Filtered Results: ", filteredResults);
+        // console.log("Filtered Results: ", filteredResults);
 
         // Set filtered results
         setFilteredWO(filteredResults);
+        setFilteredCount(filteredResults?.length);
       } catch (error) {
         console.error("Error during search: ", error);
       }
     }
   };
+
   const handleSearchFilter = () => {
     let filteredResults = workOrders;
     if (searchStartDate && searchEndDate) {
       console.log(
         "searchStartDate: " +
-          searchStartDate +
-          " | searchEndDate: " +
-          searchEndDate +
-          " | searchStatus: " +
-          searchStatus
+        searchStartDate +
+        " | searchEndDate: " +
+        searchEndDate +
+        " | searchStatus: " +
+        searchStatus
       );
 
       filteredResults = workOrders?.filter(
@@ -107,12 +119,50 @@ const WorkOrderList: React.FC = ({ title }) => {
     setFilteredWO(filteredResults);
   };
 
+  const handleSort = async (criteria) => {
+    console.log("criteria: " + JSON.stringify(criteria));
+
+    let filteredResults = workOrders;
+    if (criteria) {
+      if (criteria.key === 'start_date' || criteria.key === 'end_date') {
+        if (criteria.key === 'start_date') {
+          if (criteria.type === 'desc') {
+            filteredResults = await workOrders?.sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
+          }
+          else {
+            filteredResults = await workOrders?.sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+          }
+        }
+        else {
+          if (criteria.type === 'desc') {
+            filteredResults = await workOrders?.sort((a, b) => new Date(b.end_date) - new Date(a.end_date))
+          }
+          else {
+            filteredResults = await workOrders?.sort((a, b) => new Date(a.end_date) - new Date(b.end_date))
+          }
+        }
+      }
+      else {
+        if(criteria.key === 'work_order_description')
+        {
+          filteredResults = await workOrders?.sort((a,b) => String(a.work_order_description || "").localeCompare(b.work_order_description ))
+        }
+        if(criteria.key === 'work_order_reference_number')
+        {
+          filteredResults = await workOrders?.sort((a,b) => a.work_order_reference_number.localeCompare(b.work_order_reference_number))
+        }
+      }
+    }
+
+  }
+
   const fetchData = async () => {
     try {
       const req = await getWorkOrdersPaginate(workOrdersLen);
       // console.log("req: " + JSON.stringify(req.data.data));
       setWorkOrders(req.data.data);
       setFilteredWO(req.data.data);
+      setFilteredCount(req?.data?.data?.length);
     } catch (error) {
       console.log("error on fetchData: " + JSON.stringify(error.message));
     }
@@ -195,6 +245,58 @@ const WorkOrderList: React.FC = ({ title }) => {
       </IonContent>
     );
   };
+
+  const modalContentSort = () => {
+    const items =
+      [{
+        key: 'start_date',
+        name: 'Start Date (ascending)',
+        type: 'asc'
+      },
+      {
+        key: 'start_date',
+        name: 'Start Date (descending)',
+        type: 'desc'
+      },
+      {
+        key: 'end_date',
+        name: 'End Date (ascending)',
+        type: 'asc'
+      },
+      {
+        key: 'end_date',
+        name: 'End Date (descending)',
+        type: 'desc'
+      },
+      {
+        key: 'work_order_reference_number',
+        name: 'Work Order #',
+      },
+      {
+        key: 'work_order_description',
+        name: 'Description',
+      },
+    ]
+    return (
+      <IonContent>
+        <IonList>
+          <IonRadioGroup
+            onIonChange={(e) => {
+              setOpenSort(false);
+              handleSort(e.detail.value)
+              // console.log('Current value:', JSON.stringify(e.detail.value))
+            }}
+          >
+            {items.map((itm, index) => (
+              <IonItem key={index}>
+                <IonRadio key={index} value={itm}>{itm.name}</IonRadio>
+              </IonItem>
+            ))}
+          </IonRadioGroup>
+        </IonList>
+      </IonContent>
+    )
+  }
 
   useEffect(() => {
     fetchData();

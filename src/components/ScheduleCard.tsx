@@ -26,8 +26,10 @@ const ScheduleCard = ({ style, startTime, endTime, startDate, endDate, refNumber
 
                 {/* Right Pane - Details */}
                 <div className="details">
-                    <IonText className="ref-number"><b>{refNumber}</b></IonText>
-                    <IonText className="description">{description}</IonText>
+                    {/* <IonText className="ref-number"><b>{refNumber}</b></IonText>
+                    <IonText className="description">{description}</IonText> */}                    
+                    <IonText className="ref-number"><b>{description}</b></IonText>
+                    <IonText className="description">{refNumber}</IonText>
                     <IonText className="location">
                         {group && <IonIcon icon={location} />} {group}
                         {entity && <IonIcon icon={chevronForward} />} {entity}

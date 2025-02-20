@@ -16,9 +16,16 @@
 .div-overflow {
   max-height: 85vh !important;
   overflow-y: auto !important;
-  margin-top: -15px !important;
+  margin-top: -10px !important;
 }
 
 .card-border {
   border: 2px solid var(--ion-color-primary);
 }
+
+
+.row-container {
+  display: flex;
+  align-items: center;
+}
+
