@@ -1,0 +1,6 @@
+.custom-login-button {
+  --background: var(--ion-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
+  --background-hover: var(--ion-color-primary-tint);
+  /* color: white; */
+}

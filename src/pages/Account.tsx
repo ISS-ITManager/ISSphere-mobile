@@ -1,8 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonText, IonTitle, IonToolbar } from '@ionic/react';
-import ExploreContainer from '../components/ExploreContainer';
-import MasterComponent from '../components/MasterComponent';
-import './Home.css';
+import {
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonInput,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonPage,
+  IonSelect,
+  IonSelectOption,
+  IonText,
+  IonTitle,
+  IonToolbar,
+} from "@ionic/react";
+import ExploreContainer from "../components/ExploreContainer";
+import MasterComponent from "../components/MasterComponent";
+import "./Home.css";
 import { notificationApi, userApi } from "../api/api";
 import { formatDate } from "../utilities/globalfns";
 import { saveOutline } from "ionicons/icons";
@@ -20,15 +39,27 @@ const AccountPage: React.FC = () => {
     try {
       const req = await logout();
       console.log("req: " + JSON.stringify(req));
+
+      const keysToKeep = ["theme", "languagePreference"];
+      const savedData = {};
+
+      keysToKeep.forEach((key) => {
+        const value = localStorage.getItem(key);
+        if (value !== null) savedData[key] = value;
+      });
+
       localStorage.clear();
-      history.push("/");
+
+      Object.keys(savedData).forEach((key) => {
+        localStorage.setItem(key, savedData[key]);
+      });
+
+      history.replace("/login");
       window.location.reload();
-    }
-    catch (error) {
+    } catch (error) {
       console.log("error logout: " + JSON.stringify(error));
     }
-  }
-
+  };
 
   useEffect(() => {
     const retrieveNotifications = async () => {
@@ -36,30 +67,31 @@ const AccountPage: React.FC = () => {
 
       const req = await userApi.show(userData.user.id);
       console.log("req: " + JSON.stringify(req.data));
-      setUserDetails(req.data?.data)
-    }
+      setUserDetails(req.data?.data);
+    };
     retrieveNotifications();
-
   }, []);
-  const gender =
-    [{
+  const gender = [
+    {
       id: 1,
-      name: "Male"
-    }, {
+      name: "Male",
+    },
+    {
       id: 2,
-      name: "Female"
-    }
-    ];
-
+      name: "Female",
+    },
+  ];
 
   return (
     <MasterComponent title={"Account"}>
-      {userDetails &&
+      {userDetails && (
         <>
-          <IonCard className='task-card'>
+          <IonCard className="task-card">
             <IonCardHeader>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div><h3><b>Profile</b></h3></div>
+                <div>
+                  <h3><b>Profile</b></h3>
+                </div>
                 <div style={{ display: "flex" }}>
                   <img src={logoPath || logo} style={{ height: '50px', width: '50px' }} />
                 </div>
@@ -68,19 +100,31 @@ const AccountPage: React.FC = () => {
             <IonList className="ion-justify-content-evenly">
               <IonItem>
                 <IonLabel>First Name: </IonLabel>
-                <IonInput className="ion-text-end" value={userDetails?.profile?.first_name || ''}></IonInput>
+                <IonInput
+                  className="ion-text-end"
+                  value={userDetails?.profile?.first_name || ""}
+                ></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Middle Name: </IonLabel>
-                <IonInput className="ion-text-end" value={userDetails.profile.middle_name}></IonInput>
+                <IonInput
+                  className="ion-text-end"
+                  value={userDetails.profile.middle_name}
+                ></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Last Name: </IonLabel>
-                <IonInput className="ion-text-end" value={userDetails.profile.last_name}></IonInput>
+                <IonInput
+                  className="ion-text-end"
+                  value={userDetails.profile.last_name}
+                ></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Birthdate: </IonLabel>
-                <IonInput className="ion-text-end" value={userDetails.profile.birthdate}></IonInput>
+                <IonInput
+                  className="ion-text-end"
+                  value={userDetails.profile.birthdate}
+                ></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Sex: </IonLabel>
@@ -94,7 +138,9 @@ const AccountPage: React.FC = () => {
                   {gender.map((item) => (
                     <IonSelectOption
                       className="ion-text-end"
-                      key={item.id} value={item.id}>
+                      key={item.id}
+                      value={item.id}
+                    >
                       {item.name}
                     </IonSelectOption>
                   ))}
@@ -102,15 +148,23 @@ const AccountPage: React.FC = () => {
               </IonItem>
               <IonItem>
                 <IonLabel>Mobile: </IonLabel>
-                <IonInput className="ion-text-end" value={userDetails.profile.mobile_number}></IonInput>
+                <IonInput
+                  className="ion-text-end"
+                  value={userDetails.profile.mobile_number}
+                ></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Email: </IonLabel>
-                <IonInput className="ion-text-end" value={userDetails.email}></IonInput>
+                <IonInput
+                  className="ion-text-end"
+                  value={userDetails.email}
+                ></IonInput>
               </IonItem>
               <IonItem>
                 <IonLabel>Client Name: </IonLabel>
-                <IonText className="ion-text-end">{userData?.user?.client?.client}</IonText>
+                <IonText className="ion-text-end">
+                  {userData?.user?.client?.client}
+                </IonText>
               </IonItem>
             </IonList>
           </IonCard>
@@ -122,7 +176,7 @@ const AccountPage: React.FC = () => {
             <IonIcon icon={logOutOutline} slot="end" />
           </IonButton>
         </>
-      }
+      )}
     </MasterComponent>
   );
 };

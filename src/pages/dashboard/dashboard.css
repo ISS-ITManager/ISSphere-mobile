@@ -444,12 +444,12 @@ ion-item {
   height: 140px;
   display: flex;
   align-items: center;
-  justify-content:center;
+  justify-content: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-left: 3px;
   margin-top: -3px;
   margin-bottom: -3px;
-  border: 1px solid var(--ion-color-primary);
+  /* border: 1px solid var(--ion-color-primary); */
 }
 
 .card-icon {
