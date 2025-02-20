@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_DEV_APP_API_URL; //VITE_PROD_APP_API_URL; //VITE_APP_API_URL;
+const API_URL = import.meta.env.VITE_TEST_APP_API_URL; 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -142,6 +142,12 @@ export const reportApi = {
   workOrderClosed: async (data: any) => {
     const response = await api.get(
       `/reports/work-order-closed?start_date=${data.start_date}&end_date=${data.end_date}&download=false&client_id=${data.client_id}`
+    );
+    return response;
+  },
+  workOrderAboutToBreach: async (data: any) => {
+    const response = await api.get(
+      `/reports/work-orders/resolution-about-to-breach`
     );
     return response;
   },
@@ -784,9 +790,9 @@ export const roomApi = {
 };
 
 export const workOrderRequestApi = {
-  get: async (data: any) => {
+  get: async (len: any) => {
     const response = await api.get(
-      `/work-order-requests?paginate=${data.paginate}&page=${data.page}&keyword=${data.keyword}`
+      `/work-order-requests?paginate=${len}`
     );
     return response;
   },

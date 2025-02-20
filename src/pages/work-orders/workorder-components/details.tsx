@@ -204,8 +204,9 @@ const WorkOrderDetails = ({ workOrder }: { workOrder: any }) => {
             Location
           </h3>
           <p>
-            {workOrder.location.property} - {workOrder.location.zone} -{" "}
-            {workOrder.location.level} - {workOrder.location.room}
+            {workOrder?.location?.group} *
+            {workOrder.location.property} * {workOrder.location.zone} * {" "}
+            {workOrder.location.level} * {workOrder.location.room}
           </p>
         </IonLabel>
       </IonItem>
@@ -261,10 +262,16 @@ const WorkOrderDetails = ({ workOrder }: { workOrder: any }) => {
             Assignees
           </h3>
           <IonList>
-
-            {workOrder?.assignees.map((person, index) => (
+            {workOrder?.assignees && workOrder?.assignees?.length > 0 &&
+            workOrder?.assignees.map((person, index) => (
               <p key={index}>{person.first_name} {person.last_name}</p>
             ))}
+
+            {workOrder?.teams && workOrder?.teams?.length > 0 &&
+            workOrder?.teams.map((team, index) => (
+              <p key={index}>{team.team}</p>
+            ))
+            }
           </IonList>
         </IonLabel>
       </IonItem>
