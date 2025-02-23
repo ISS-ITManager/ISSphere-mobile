@@ -19,9 +19,8 @@ const MasterComponent = ({ children, title }) => {
     return (
         <IonPage>
             <NotificationListener/>
-            {/* <Header title={title} /> */}
             <HeaderComponent title={title}/>
-            <IonContent>
+            <IonContent forceOverscroll={false} scrollY={false}>
                 <div className="row">
                     <div className="col-md-2 col-12"></div>
                     <div className="col-md-8 col-12">
