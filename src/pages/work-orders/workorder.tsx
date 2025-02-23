@@ -1305,7 +1305,7 @@ const WorkOrder: React.FC = () => {
     }
   };
 
-  const getModalContentAddTask = ({}) => {
+  const getModalContentAddTask = ({ }) => {
     return (
       <IonContent className="ion-padding">
         <IonList>
@@ -1749,9 +1749,10 @@ const WorkOrder: React.FC = () => {
   };
 
   return (
-    <IonPage>
-      <Header title="Work Order" />
-      <IonContent className="ion-padding">
+    // <IonPage>
+    //   <Header title="Work Order" />
+    //   <IonContent className="ion-padding">
+    <MasterComponent title={"Work Order"}>
         <IonTabs>
           <IonTabBar
             slot="bottom"
@@ -1779,41 +1780,48 @@ const WorkOrder: React.FC = () => {
                     <IonGrid className="header-section">
                       <IonRow className="header-row">
                         <IonCol className="header-content ion-text-center">
+
+                          <Timeline key={timelineKey} workOrderId={id!} />{" "}
                           <h2
                             className="work-order-header"
-                            onClick={() => handleUpdateWorkOrder(workOrder)}
+                          // onClick={() => handleUpdateWorkOrder(workOrder)}
                           >
                             {workOrder.reference_number}
                             <BadgeComponent
                               status={workOrder.active_status.status}
                             />
                           </h2>
-                          <Timeline key={timelineKey} workOrderId={id!} />{" "}
-                          <IonLabel>
-                            {
-                              workOrder?.work_order_request
-                                ?.work_order_description
-                            }{" "}
-                            |{" "}
-                            {
-                              workOrder?.work_order_request?.work_order_type
-                                ?.work_order_type
-                            }{" "}
-                            <br />
-                            <h3>
-                              Starts on {formatDateOnly(workOrder?.start_date)}{" "}
-                              at{" "}
-                              {
-                                workOrder?.work_order_request?.schedule
-                                  ?.start_time
-                              }{" "}
-                              -{" "}
-                              {
-                                workOrder?.work_order_request?.schedule
-                                  ?.end_time
-                              }
-                            </h3>
-                          </IonLabel>
+                          <div style={{ display: 'flex' }}>
+
+                            <div className="schedule-info">
+                              {workOrder?.start_date &&
+                                <IonText className="schedule-time">
+                                  {workOrder?.work_order_request?.schedule?.start_time} - {workOrder?.work_order_request?.schedule?.end_time}
+                                </IonText>}
+                              {workOrder?.start_date &&
+                                <IonText className="schedule-date">
+                                  {workOrder?.start_date === workOrder?.end_date ? formatDateOnly(workOrder?.start_date)
+                                    : ` ${formatDateOnly(workOrder?.start_date)} - ${formatDateOnly(workOrder?.end_date)}`}
+                                </IonText>}
+                            </div>
+                            <div className="details">
+                              <IonText className="ref-number">
+                                <b>{workOrder?.work_order_request?.work_order_description}</b>
+                              </IonText>
+                              <div className="description" onClick={() => setShowFull(!showFull)}>
+                                <>
+                                  <IonIcon icon={location} />
+                                  <u> {showFull ?
+                                    getFullLocation()
+                                    :
+                                    workOrder?.location?.group}
+                                  </u>
+                                </>
+                              </div>
+                            </div>
+                          </div>
+                          {buttonUpdateStatus(workOrder?.active_status?.status)}
+
                         </IonCol>
                       </IonRow>
                     </IonGrid>
@@ -1868,8 +1876,9 @@ const WorkOrder: React.FC = () => {
           getModalContent={getModalContent}
           title={pageTitle}
         />
-      </IonContent>
-    </IonPage>
+       {/*</IonContent>
+     </IonPage> */}
+     </MasterComponent>
   );
 };
 
