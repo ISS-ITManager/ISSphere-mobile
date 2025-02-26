@@ -6,7 +6,7 @@ import { formatDateOnly } from "../utilities/globalfns";
 
 const ScheduleCard = ({ style, startTime, endTime, startDate, endDate, refNumber, description, status, group, entity, property, zone, level, room, onClickCard }) => {
     return (
-        <IonCard className="schedule-card  animate__animated animate__slideInUp" onClick={onClickCard} style={style}>
+        <IonCard className="schedule-card  animate__animated animate__fadeInDown" onClick={onClickCard} style={style}>
             <IonCardContent className="card-content">
                 {/* Left Pane - Schedule */}
                 <div className="schedule-info">

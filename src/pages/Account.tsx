@@ -166,6 +166,14 @@ const AccountPage: React.FC = () => {
                   {userData?.user?.client?.client}
                 </IonText>
               </IonItem>
+              <IonItem>
+                <IonLabel>User Group: </IonLabel>
+                {userData?.user?.user_groups?.map((item, index) => (
+                  <IonText className="ion-text-end" key={index}>
+                    {item.user_group}
+                  </IonText>
+                ))}
+              </IonItem>
             </IonList>
           </IonCard>
           <IonButton expand="block">

@@ -21,6 +21,7 @@ import {
   IonGrid,
   IonBadge,
   IonInput,
+  IonCardSubtitle
 } from "@ionic/react";
 import { Bar, Doughnut, Pie } from "react-chartjs-2";
 import {
@@ -36,12 +37,8 @@ import {
 import Header from "../../components/HeaderDashboard";
 import {
   chevronForward,
-  calendarOutline,
-  caretForwardOutline,
-  chevronDown,
-  hourglassOutline,
-  folderOpenOutline,
-  briefcaseOutline,
+  closeCircleOutline,
+  checkmarkCircleOutline,
   lockOpen,
   hourglass,
   close,
@@ -52,6 +49,7 @@ import {
   getUserData,
   getWorkOrders,
   reportApi,
+  workOrderRequestApi,
 } from "../../api/api";
 import BadgeComponent from "../../utilities/badgecomponent";
 import Loading from "../../utilities/loadingpage";
@@ -64,7 +62,7 @@ import { PushNotifications } from "@capacitor/push-notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import {
   formatDate,
-  formatDateOnly,
+  hasPermission,
   getCurrentMonthDates,
 } from "../../utilities/globalfns";
 import { Briefcase, CalendarHeart, PartyPopper } from "lucide-react";
@@ -96,6 +94,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   const [closedWOs, setClosedWOs] = useState(0);
   const [workOrdersLen, setWorkOrdersLen] = useState(10);
   const [todayWOs, setTodayWOs] = useState();
+  const [workOrderRequests, setWorkOrderRequests] = useState([]);
 
   const safeStringify = (obj, space = 2) => {
     const cache = new Set();
@@ -266,7 +265,7 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
           client_id: client_id,
         });
         setClosedWOs(req.data?.data);
-        console.log("closedWOs: " + JSON.stringify(req.data?.data));
+        // console.log("closedWOs: " + JSON.stringify(req.data?.data));
 
         // console.log("closedWOs: " + JSON.stringify(req.data?.data));
       } catch (error) {
@@ -317,9 +316,79 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
       setTodayWOs([]);
     }
   };
+
+  const fetchUserData = async () => {
+    try {
+      const user = await getUserData();
+      setUserData(user);
+      // console.log("user: " + JSON.stringify(user));
+      return user;
+    } catch (error) {
+
+    }
+    finally {
+      setLoading(false);
+    }
+  }
+
+  const fetchWOR = async () => {
+    try {
+      const req = await workOrderRequestApi.list();
+      setWorkOrderRequests(req?.data?.data?.data);
+    } catch (error) {
+    }
+  }
+  const getIsAcceptedColor = (is_accepted) => {
+    switch (is_accepted) {
+      case "1":
+        return <IonBadge color="success" >
+          <IonIcon icon={checkmarkCircleOutline} />
+          Accepted
+        </IonBadge>; //Accepted
+      case "2":
+        return <IonBadge color="dark" >
+          <IonIcon icon={closeCircleOutline} />
+          Declined
+        </IonBadge>; //Declined
+      default:
+        return <IonBadge color="tertiary" >
+          New
+        </IonBadge>; //New
+    }
+  };
+
+  const getPriority = (priority) => {
+    switch (priority) {
+      case 'medium':
+        return <IonBadge color="warning" >
+          Medium Priority
+        </IonBadge>;
+      case 'low':
+        return <IonBadge color="success" >
+          Low Priority
+        </IonBadge>;
+      case "high":
+        return <IonBadge color="danger" >
+          High Priority
+        </IonBadge>;
+      default:
+        return <IonBadge color="light" >
+          {priority}
+        </IonBadge>;
+    }
+  }
+
+
   useEffect(() => {
-    fetchData();
-    fetchTodayWOs();
+    const data = JSON.parse(localStorage.getItem("userData"));
+    fetchUserData();
+    if (data?.user?.is_requestor) {
+      fetchWOR();
+    }
+    else {
+      fetchData();
+      fetchTodayWOs();
+    }
   }, []);
 
   if (loading) {
@@ -413,7 +482,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
   };
 
   return (
-    // <IonApp>
     <IonPage>
       <Header title="Dashboard" userName={userName} />
 
@@ -421,11 +489,11 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
       <div
         className="overlapping-container"
         style={{
-          // borderTop: "5px solid var(--ion-color-primary)",
           borderRadius: "20px",
         }}
       ></div>
       <IonContent className="dashboard-content">
+        <h3 className="section-title">Total Work Orders</h3>
         <IonGrid>
           <IonRow className="ion-justify-content-center">
             <IonCol className="ion-text-center" sizeMd="2">
@@ -436,12 +504,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   <h2 className="card-count">{inprogressWOs}</h2>
                 </IonCardContent>
               </IonCard>
-              {/* <IonCard style={{ borderRadius: '50px', height: '70px', width:'70px', alignItems:'center' }}>
-                <IonCardContent>
-                 <h1><b>{inprogressWOs}</b></h1>
-                </IonCardContent>
-              </IonCard>
-              <IonLabel>In-Progress</IonLabel> */}
             </IonCol>
             <IonCol sizeMd="2">
               <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
@@ -451,12 +513,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   <h2 className="card-count">{openWOs}</h2>
                 </IonCardContent>
               </IonCard>
-               {/* <IonCard style={{ borderRadius: '50px', height: '70px', width:'70px', alignItems:'center' }}>
-                <IonCardContent>
-                 <h1><b>{openWOs}</b></h1>
-                </IonCardContent>
-              </IonCard>
-              <IonLabel>Open</IonLabel> */}
             </IonCol>
             <IonCol sizeMd="2">
               <IonCard className="dashboard-card task-card  animate__animated animate__pulse">
@@ -469,12 +525,6 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
                   <h2 className="card-count">{aboutToBreachWOs}</h2>
                 </IonCardContent>
               </IonCard>
-               {/* <IonCard style={{ borderRadius: '50px', height: '70px', width:'70px', alignItems:'center' }}>
-                <IonCardContent>
-                 <h1><b>{aboutToBreachWOs}</b></h1>
-                </IonCardContent>
-              </IonCard>
-              <IonLabel>About to breach</IonLabel> */}
             </IonCol>
           </IonRow>
         </IonGrid>
@@ -526,47 +576,85 @@ const Dashboard: React.FC<{ selectedTheme: string }> = ({ selectedTheme }) => {
               </IonButton>
             )}
           </IonList>
-        ) : (
-          <IonList>
-            <div className="see-all-div">
-              <h2 className="section-title">Work Orders Today</h2>
-              <IonLabel onClick={() => handleSeeAllWOs()}>
-                <b>See All </b>
-                <IonIcon icon={chevronForward} />
-              </IonLabel>
-            </div>
-            {todayWOs && todayWOs?.length > 0 ? (
-              todayWOs?.map((item) => (
-                <ScheduleCard
-                  onClickCard={() => history.push(`/work-orders/${item.id}`)}
-                  startDate={item.start_date}
-                  endDate={item.end_date}
-                  refNumber={item.reference_number}
-                  status={item.status}
-                />
-              ))
-            ) : (
-              <IonCard className="minimal-work-order-card">
-                <IonCardHeader className="ion-text-center">
-                  <IonCardTitle>
-                    <CalendarHeart />{" "}
-                    <small>No work orders scheduled today!</small>
-                  </IonCardTitle>
-                </IonCardHeader>
-                <IonCardContent>
-                  <IonItem lines="none">
-                    Click "See All" to track a Work Order.
-                  </IonItem>
-                </IonCardContent>
-              </IonCard>
-            )}
-          </IonList>
-        )}
+        ) :
+          userData?.user?.is_requestor ?
+            <IonList>
+              <div className="see-all-div">
+                <h3 className="section-title">Work Order Requests</h3>
+                <IonLabel
+                  onClick={() => history.push("/createWOR")}
+                >
+                  <b>See All </b>
+                  <IonIcon icon={chevronForward} />
+                </IonLabel>
+
+              </div>
+              {workOrderRequests?.map((task, index) => (
+                <IonCard key={index} className="task-card animate__animated animate__slideInUp"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                  onClick={() => history.push(`workOrderRequest/${task.id}`)}
+                >
+
+                  <div className="space-between">
+                    <div>{getIsAcceptedColor(task.is_accepted)}</div>
+                    <div>{getPriority(task.priority)}</div>
+                  </div>
+                  <IonLabel className="section-title">
+                    <h2>
+                      {task.reference_number}
+                    </h2>
+                  </IonLabel>
+                  <IonGrid className="ion-padding-start">
+                    <IonText className="ref-number"> {task.work_order_description} </IonText>
+                    <IonText >{task.work_order_category} | {task.work_order_type}</IonText>
+                  </IonGrid>
+                </IonCard>
+              ))}
+            </IonList>
+            :
+            (
+              <div>
+                <div className="see-all-div">
+                  <h2 className="section-title">Work Orders Today</h2>
+                  <IonLabel onClick={() => handleSeeAllWOs()}>
+                    <b>See All </b>
+                    <IonIcon icon={chevronForward} />
+                  </IonLabel>
+                </div>
+                {todayWOs && todayWOs?.length > 0 ? (
+                  todayWOs?.map((item) => (
+                    <ScheduleCard
+                      onClickCard={() => history.push(`/work-orders/${item.id}`)}
+                      startDate={item.start_date}
+                      endDate={item.end_date}
+                      refNumber={item.reference_number}
+                      status={item.status}
+                    />
+                  ))
+                ) : (
+                  <IonCard className="minimal-work-order-card">
+                    <IonCardHeader className="ion-text-center">
+                      <IonCardTitle>
+                        <CalendarHeart />{" "}
+                        <small>No work orders scheduled today!</small>
+                      </IonCardTitle>
+                    </IonCardHeader>
+                    <IonCardContent>
+                      <IonItem lines="none">
+                        Click "See All" to track a Work Order.
+                      </IonItem>
+                    </IonCardContent>
+                  </IonCard>
+                )}
+              </div>
+            )
+
+
+        }
       </IonContent>
       {/* Floating Tab Buttons */}
       <FloatingTabButtons />
     </IonPage>
-    // </IonApp>
   );
 };
 

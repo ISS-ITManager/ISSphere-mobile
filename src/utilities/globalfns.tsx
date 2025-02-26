@@ -45,8 +45,10 @@ export const getNotificationCount = async () => {
 }
 
 export const hasPermission = (permission) => {
-    const permissions = localStorage.getItem("userPermissions");
-    return permissions?.includes(permission);
+    // const permissions = localStorage.getItem("userPermissions");
+    // return permissions?.includes(permission);
+    const permissions = JSON.parse(localStorage.getItem("userPermissions") || "[]"); // Parse the stored JSON to get the array
+    return permissions.some((perm) => perm === permission);
 }
 
 export const getCurrentMonthDates = () => {

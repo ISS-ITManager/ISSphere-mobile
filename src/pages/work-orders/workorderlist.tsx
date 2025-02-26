@@ -303,10 +303,7 @@ const WorkOrderList: React.FC = ({ title }) => {
   }, []);
 
   return (
-    // <MasterComponent title={"Work Order"} >
-    <IonPage>
-      <HeaderComponent title={"Work Order list"} />
-      <IonContent forceOverscroll={false} scrollY={false}>
+    <MasterComponent title={"Work Order"} >
         <div forceOverscroll={false} scrollY={false}>
           <IonRow>
             <IonCol size="10">
@@ -325,78 +322,15 @@ const WorkOrderList: React.FC = ({ title }) => {
               </IonButton>
             </IonCol>
           </IonRow>
+          <IonRow className="row-container">
+          <IonButton fill="clear" size="small" onClick={() => setOpenSort(true)}><IonIcon icon={funnel} /></IonButton>
+          <IonNote ><small>{filteredCount} results</small></IonNote>
+        </IonRow>
         </div>
         <div className="div-overflow">
           {filteredWO &&
             filteredWO?.length > 0 &&
             filteredWO?.map((item, index) => (
-              // <IonCard
-              //   key={index}
-              //   className="task-card bounce-in-right card-margin-top card-border"
-              //   onClick={() => history.push(`/work-orders/${item.id}`)}
-              //   style={{ animationDelay: `${index * 0.1}s` }}
-              // >
-              //   <IonCardHeader>
-              //     <IonCardTitle>
-              //       <div className="work-order-header icon-title">
-              //         <IonLabel>{item.work_order_reference_number}</IonLabel>
-              //         <BadgeComponent status={item.status} />
-              //       </div>
-              //     </IonCardTitle>
-              //   </IonCardHeader>
-              //   <IonItem>
-              //     <IonLabel>
-              //       <b>Description</b>{" "}
-              //     </IonLabel>
-              //     <IonText className="ion-text-end">
-              //       {item.work_order_description}
-              //     </IonText>
-              //   </IonItem>
-              //   <IonItem lines="none">
-              //     <IonLabel>
-              //       <b>Schedule:</b>
-              //     </IonLabel>
-              //     <IonText>
-              //       {item.end_date === item.start_date
-              //         ? item.start_date
-              //         : ` ${item.start_date} - ${item.end_date}`}
-              //     </IonText>
-              //   </IonItem>
-              //   <IonItem>
-              //     <IonLabel>
-              //       <IonChip
-              //         className="ion-text-uppercase"
-              //         outline={true}
-              //         color="warning"
-              //       >
-              //         <IonIcon icon={calendarOutline} />
-              //         <b>{item.day}</b>
-              //       </IonChip>
-              //     </IonLabel>
-              //     <IonText className="ion-text-end">
-              //       <b>
-              //         {item.start_time} - {item.end_time}
-              //       </b>
-              //     </IonText>
-              //   </IonItem>
-              //   <IonItem>
-              //     <IonLabel>
-              //       <b>Location: </b>
-              //     </IonLabel>
-              //     <IonText className="ion-text-end">
-              //       {item?.group}
-              //       <IonIcon icon={caretForwardOutline} />
-              //       {item?.entity}
-              //       <IonIcon icon={caretForwardOutline} />
-              //       {item?.property}
-              //       <IonIcon icon={caretForwardOutline} />
-              //       {item?.zone}
-              //       <IonIcon icon={caretForwardOutline} />
-              //       {item?.level}
-              //       {<IonIcon icon={caretForwardOutline} /> && item?.room}
-              //     </IonText>
-              //   </IonItem>
-              // </IonCard>
               <ScheduleCard
                 style={{ animationDelay: `${index * 0.1}s` }}
                 startTime={item.start_time}
@@ -422,9 +356,13 @@ const WorkOrderList: React.FC = ({ title }) => {
           onClose={() => setOpenFilter(false)}
           getContentModal={modalContent}
         />
-      </IonContent>
-    </IonPage>
-    //  </MasterComponent>
+        <ModalComponent1
+        title={"Sort Work Order by"}
+        isOpen={openSort}
+        onClose={() => setOpenSort(false)}
+        getContentModal={modalContentSort}
+      />
+     </MasterComponent>
   );
 };
 export default WorkOrderList;

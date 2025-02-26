@@ -458,8 +458,8 @@ const WorkOrder: React.FC = () => {
                 )}
                 {workOrder?.active_status?.status === "completed" && (
                   <>
-                    <IonSelectOption value="completed">
-                      Completed
+                    <IonSelectOption value="cancelled">
+                      Cancelled
                     </IonSelectOption>
                     <IonSelectOption value="closed">Closed</IonSelectOption>
                   </>
@@ -600,12 +600,15 @@ const WorkOrder: React.FC = () => {
       <>
         {currentStatus === "open" &&
           <IonButton
+            shape="round"
             disabled={!hasPermission("work-order-status.edit")}
-            onClick={() => setUpdateWorkOrder(true)}>
+            onClick={() => setUpdateWorkOrder(true)}
+          >
             <IonIcon icon={play} slot="start" /> Start Working</IonButton>}
         {currentStatus !== "open" && currentStatus !== "closed" &&
           <>
             <IonButton
+              shape="round"
               disabled={!hasPermission("work-order-status.edit")}
               onClick={() => setUpdateWorkOrder(true)}>
               <IonIcon icon={createOutline} slot="start" />
@@ -1305,7 +1308,7 @@ const WorkOrder: React.FC = () => {
     }
   };
 
-  const getModalContentAddTask = ({}) => {
+  const getModalContentAddTask = ({ }) => {
     return (
       <IonContent className="ion-padding">
         <IonList>
@@ -1749,127 +1752,136 @@ const WorkOrder: React.FC = () => {
   };
 
   return (
-    <IonPage>
-      <Header title="Work Order" />
-      <IonContent className="ion-padding">
-        <IonTabs>
-          <IonTabBar
-            slot="bottom"
-            className="custom-tab-bar"
-            style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-          >
-            {tabs.map((tab) => (
-              <IonTabButton
-                key={tab.name}
-                tab={tab.name}
-                onClick={() => handleTabChange(tab.name)}
-                className="custom-tab-button"
-              >
-                <IonIcon icon={tab.icon} className="custom-tab-icon" />
-              </IonTabButton>
-            ))}
-          </IonTabBar>
-
+    // <IonPage>
+    //   <Header title="Work Order" />
+    //   <IonContent className="ion-padding">
+    <MasterComponent title={"Work Order"}>
+      <IonTabs>
+        <IonTabBar
+          slot="bottom"
+          className="custom-tab-bar"
+          style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+        >
           {tabs.map((tab) => (
-            <IonTab key={tab.name} tab={tab.name}>
-              <IonContent className="ion-padding">
-                {workOrder ? (
-                  <>
-                    {/* Header Section */}
-                    <IonGrid className="header-section">
-                      <IonRow className="header-row">
-                        <IonCol className="header-content ion-text-center">
-                          <h2
-                            className="work-order-header"
-                            onClick={() => handleUpdateWorkOrder(workOrder)}
-                          >
-                            {workOrder.reference_number}
-                            <BadgeComponent
-                              status={workOrder.active_status.status}
-                            />
-                          </h2>
-                          <Timeline key={timelineKey} workOrderId={id!} />{" "}
-                          <IonLabel>
-                            {
-                              workOrder?.work_order_request
-                                ?.work_order_description
-                            }{" "}
-                            |{" "}
-                            {
-                              workOrder?.work_order_request?.work_order_type
-                                ?.work_order_type
-                            }{" "}
-                            <br />
-                            <h3>
-                              Starts on {formatDateOnly(workOrder?.start_date)}{" "}
-                              at{" "}
-                              {
-                                workOrder?.work_order_request?.schedule
-                                  ?.start_time
-                              }{" "}
-                              -{" "}
-                              {
-                                workOrder?.work_order_request?.schedule
-                                  ?.end_time
-                              }
-                            </h3>
-                          </IonLabel>
-                        </IonCol>
-                      </IonRow>
-                    </IonGrid>
-
-                    {/* Update work order status */}
-                    {updateWorkOrder && (
-                      <ModalComponent1
-                        title={"Update Work Order"}
-                        isOpen={updateWorkOrder}
-                        onClose={() => setUpdateWorkOrder(false)}
-                        getContentModal={() =>
-                          getContentModalUpdateWO(workOrder)
-                        }
-                      />
-                    )}
-
-                    <IonGrid className="header-section">
-                      <IonItem lines="none">
-                        <IonLabel>Total Cost: </IonLabel>
-                        <IonText>
-                          <IonChip color="warning">
-                            <b>{workOrder?.total_cost}</b>
-                          </IonChip>
-                        </IonText>
-                      </IonItem>
-                    </IonGrid>
-
-                    <div>
-                      <AssetList
-                        assets={assets}
-                        workOrder={workOrder}
-                        handleDelete={handleDelete}
-                        ref={deletePopupRef}
-                      />
-                    </div>
-                    {/* Render Tasks */}
-                    {renderTasks()}
-
-                    {/* Render SLAs */}
-                    {renderSLA()}
-                  </>
-                ) : (
-                  <Loading />
-                )}
-              </IonContent>
-            </IonTab>
+            <IonTabButton
+              key={tab.name}
+              tab={tab.name}
+              onClick={() => handleTabChange(tab.name)}
+              className="custom-tab-button"
+            >
+              <IonIcon icon={tab.icon} className="custom-tab-icon" />
+            </IonTabButton>
           ))}
-        </IonTabs>
-        {/* Modal Content */}
-        <ModalComponent
-          ref={modal}
-          getModalContent={getModalContent}
-          title={pageTitle}
-        />
-      </IonContent>
-    </IonPage>
+        </IonTabBar>
+
+        {tabs.map((tab) => (
+          <IonTab key={tab.name} tab={tab.name}>
+            <IonContent className="ion-padding">
+              {workOrder ? (
+                <>
+                  {/* Header Section */}
+                  <IonGrid className="header-section">
+                    <IonRow className="header-row">
+                      <IonCol className="header-content ion-text-center">
+
+                        <Timeline key={timelineKey} workOrderId={id!} />{" "}
+                        <h2
+                          className="work-order-header"
+                        // onClick={() => handleUpdateWorkOrder(workOrder)}
+                        >
+                          {workOrder.reference_number}
+                          <BadgeComponent
+                            status={workOrder.active_status.status}
+                          />
+                        </h2>
+                        <div style={{ display: 'flex' }}>
+
+                          <div className="schedule-info">
+                            {workOrder?.start_date &&
+                              <IonText className="schedule-time">
+                                {workOrder?.work_order_request?.schedule?.start_time} - {workOrder?.work_order_request?.schedule?.end_time}
+                              </IonText>}
+                            {workOrder?.start_date &&
+                              <IonText className="schedule-date">
+                                {workOrder?.start_date === workOrder?.end_date ? formatDateOnly(workOrder?.start_date)
+                                  : ` ${formatDateOnly(workOrder?.start_date)} - ${formatDateOnly(workOrder?.end_date)}`}
+                              </IonText>}
+                          </div>
+                          <div className="details">
+                            <IonText className="ref-number">
+                              <b>{workOrder?.work_order_request?.work_order_description}</b>
+                            </IonText>
+                            <div className="description" onClick={() => setShowFull(!showFull)}>
+                              <>
+                                <IonIcon icon={location} />
+                                <u> {showFull ?
+                                  getFullLocation()
+                                  :
+                                  workOrder?.location?.group}
+                                </u>
+                              </>
+                            </div>
+                          </div>
+                        </div>
+                        {buttonUpdateStatus(workOrder?.active_status?.status)}
+
+                      </IonCol>
+                    </IonRow>
+                  </IonGrid>
+
+                  {/* Update work order status */}
+                  {updateWorkOrder && (
+                    <ModalComponent1
+                      title={"Update Work Order"}
+                      isOpen={updateWorkOrder}
+                      onClose={() => setUpdateWorkOrder(false)}
+                      getContentModal={() =>
+                        getContentModalUpdateWO(workOrder)
+                      }
+                    />
+                  )}
+
+                  <IonGrid className="header-section">
+                    <IonItem lines="none">
+                      <IonLabel>Total Cost: </IonLabel>
+                      <IonText>
+                        <IonChip color="warning">
+                          <b>{workOrder?.total_cost}</b>
+                        </IonChip>
+                      </IonText>
+                    </IonItem>
+                  </IonGrid>
+
+                  <div>
+                    <AssetList
+                      assets={assets}
+                      workOrder={workOrder}
+                      handleDelete={handleDelete}
+                      ref={deletePopupRef}
+                    />
+                  </div>
+                  {/* Render Tasks */}
+                  {renderTasks()}
+
+                  {/* Render SLAs */}
+                  {renderSLA()}
+                </>
+              ) : (
+                <Loading />
+              )}
+            </IonContent>
+          </IonTab>
+        ))}
+      </IonTabs>
+      {/* Modal Content */}
+      <ModalComponent
+        ref={modal}
+        getModalContent={getModalContent}
+        title={pageTitle}
+      />
+      {/*</IonContent>
+     </IonPage> */}
+    </MasterComponent>
   );
 };
 
