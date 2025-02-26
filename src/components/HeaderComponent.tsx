@@ -25,7 +25,8 @@ const HeaderComponent = ({ title }) => {
     }, [])
 
     return (
-        <IonHeader translucent>
+        <IonHeader 
+        >
             <IonToolbar>
                 <BackButton />
                 <IonTitle>{title}</IonTitle>

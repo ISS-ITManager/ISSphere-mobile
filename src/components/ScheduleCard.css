@@ -13,9 +13,10 @@
   }
   
   .schedule-info {
-    width: 40%;
+    /* width: 40%; */
+    /* flex: auto; */
     text-align: center;
-    padding-right: 15px;
+    padding-right: 10px;
   }
   
   .schedule-time {
@@ -33,12 +34,14 @@
   .details {
     width: 60%;
     padding-left: 15px;
+    padding-right: 5px;
     border-left: 2px solid #e0e0e0;
   }
   
   .ref-number, .description, .location {
     display: block;
     margin-bottom: 3px;
+    padding-right: 5px;
   }
   
   .ref-number {

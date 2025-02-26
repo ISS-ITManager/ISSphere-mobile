@@ -8,13 +8,9 @@
 }
 
 .theme-dark {
-  /* --ion-color-primary: rgb(129, 114, 114);
-  --ion-color-secondary: #ff5722;
-  --ion-background-color: #121212;  */
-  /* Dark background for dark theme */
 
   --ion-color-primary: #3791dc;            /* Primary color */
-  /*--ion-color-secondary: #3f51b5;*/         /* Secondary color */
+  /* --ion-color-secondary: #3f51b5;         Secondary color */
   --ion-background-color: #121212;   
   --ion-text-color: #e1e1e1;   
   --ion-text-color-dark: #121212; 
@@ -47,6 +43,17 @@ ion-page {
 
 p {
   color: var(--ion-color-text) !important;
+}
+
+ion-toolbar {
+  --background: var(--ion-color-primary) ; 
+  --color: var(--ion-background-color);
+}
+
+ion-toolbar ion-buttons ion-button {
+  --background: transparent; /* Reset background for buttons */
+  --color: var(--ion-text-color); /* Use the default text color for buttons */
+  --border-radius: 4px; /* Optional: Adjust the button shape */
 }
 
 

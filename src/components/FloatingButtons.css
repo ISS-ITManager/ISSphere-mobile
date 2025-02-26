@@ -81,7 +81,7 @@
   transform: translateY(20px);
   animation: buttonFadeIn 0.3s forwards;
   position: relative;
-  z-index: 1003; /* Ensure expanded buttons are above everything */
+  z-index: 5; 
 }
 
 .expanded-button:hover {
@@ -104,6 +104,7 @@
 .notification-button-wrapper {
   position: relative;
   display: inline-block;
+  z-index: 1; 
 }
 
 .notification-badge {
@@ -113,8 +114,8 @@
   background-color: red;
   color: white;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;

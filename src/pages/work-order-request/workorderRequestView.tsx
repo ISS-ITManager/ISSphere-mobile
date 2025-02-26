@@ -1,27 +1,30 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react'
-import { useHistory, useLocation } from 'react-router';
+import { useHistory, useLocation, useParams } from 'react-router';
 import MasterComponent from '../../components/MasterComponent';
 import { chevronForwardOutline, calendarOutline, checkmarkCircleOutline, closeCircleOutline, arrowBackOutline, arrowForwardOutline, caretForwardOutline } from 'ionicons/icons';
 
 import { assigneeApi, workOrderRequestApi, teamApi, serviceProviderServiceApi, serviceApi, workOrderApi } from '../../api/api';
-import { formatDate, formatDateOnly } from '../../utilities/globalfns';
+import { formatDate, formatDateOnly, hasPermission } from '../../utilities/globalfns';
 import { IonCard, IonChip, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle, IonButton, IonIcon, IonItem, IonLabel, IonText, IonBadge, IonAccordionGroup, IonAccordion } from '@ionic/react';
-import BadgeStatus from '../../utilities/BadgeStatus';
 import BadgeComponent from '../../utilities/badgecomponent';
 
-const WorkOrderRequestView: React.FC = () => {
+const WorkOrderRequestView: React.FC = (prop) => {
     const history = useHistory();
     const location = useLocation();
-    const { selectedRequest } = location.state ? location.state : { selectedRequest: {} };
+    const { id } = useParams<{ id: string }>();
+
+    // const { selectedRequest } = location.state ? location.state : { selectedRequest: {} }; 
+    // const [selectedWOR, setSelectedWOR] = useState(selectedRequest);
+    const [selectedWOR, setSelectedWOR] = useState();
     const [workOrderList, setWorkOrderList] = useState([]);
-    console.log("selectedREquest: "+JSON.stringify(selectedRequest));
+    // console.log("selectedREquest: " + JSON.stringify(selectedRequest));
 
     const retrieveRelatedWO = async (id) => {
         if (id) {
             try {
                 const req = await workOrderApi.list(id);
                 setWorkOrderList(req.data.data);
-                console.log("req: " + JSON.stringify(req.data.data));
+                // console.log("req: " + JSON.stringify(req.data.data));
 
             } catch (error) {
                 console.log("retrieveRelatedWO: " + JSON.stringify(error.message));
@@ -29,12 +32,24 @@ const WorkOrderRequestView: React.FC = () => {
             }
         }
     }
+    const fetchRequestOrder = async (workOrderId) => {
+
+        if (workOrderId) {
+            try {
+                const req = await workOrderRequestApi.show(workOrderId);
+                setSelectedWOR(req?.data?.data);
+                // console.log("fetchRequestOrder: " + JSON.stringify(req?.data?.data));
+
+                await retrieveRelatedWO(req?.data?.data?.work_order_request?.id);
+            } catch (error) {
+                console.log("fetchRequestOrder error: " + JSON.stringify(error));
+            }
+        }
+    }
 
     useEffect(() => {
-        if (selectedRequest) {
-            retrieveRelatedWO(selectedRequest?.work_order_request?.id);
-        }
-    }, []);
+        fetchRequestOrder(id);
+    }, [id]);
     const getIsAcceptedColor = (is_accepted) => {
 
         switch (is_accepted) {
@@ -76,53 +91,60 @@ const WorkOrderRequestView: React.FC = () => {
         }
     }
 
+    const handleOpenWO=(id)=> {
+        if(hasPermission("work-order.view"))
+        {
+            history.push(`/work-orders/${id}`);
+        }
+    }
+
     return (
         <MasterComponent title={"View Work Order Request"}>
-            {selectedRequest && <>
-                <IonCard className="ion-padding task-card animate__animated  animate__pulse" 
-                // style={{ marginTop: '-10px' }}
+            {selectedWOR && <>
+
+                <IonCard className="ion-padding task-card animate__animated  animate__pulse"
                 >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '10px' }}>
-                        <div>{getIsAcceptedColor(selectedRequest?.work_order_request?.is_accepted)}</div>
-                        <div>{getPriority(selectedRequest.work_order_request?.priority)}</div>
+                        <div>{getIsAcceptedColor(selectedWOR?.work_order_request?.is_accepted)}</div>
+                        <div>{getPriority(selectedWOR.work_order_request?.priority)}</div>
                     </div>
                     <IonCardHeader>
-                        <IonCardTitle>{selectedRequest.work_order_request?.reference_number}
+                        <IonCardTitle>{selectedWOR.work_order_request?.reference_number}
                         </IonCardTitle>
                     </IonCardHeader>
                     <IonItem>
                         <IonLabel> <b>Description: </b></IonLabel>
-                        <IonText>{selectedRequest.work_order_request?.work_order_description} </IonText>
+                        <IonText>{selectedWOR.work_order_request?.work_order_description} </IonText>
                     </IonItem>
                     <IonItem>
                         <IonLabel>  <b>Type: </b></IonLabel>
-                        <IonText>{selectedRequest.work_order_request?.work_order_type.work_order_type}</IonText>
+                        <IonText>{selectedWOR.work_order_request?.work_order_type.work_order_type}</IonText>
                     </IonItem>
                     <IonItem>
                         <IonLabel><b>Date Requested: </b></IonLabel>
                         <IonText className='ion-text-end'>
-                            {formatDate(selectedRequest?.work_order_request?.requested_date)}
+                            {formatDate(selectedWOR?.work_order_request?.requested_date)}
                         </IonText>
                     </IonItem>
                     <IonItem>
                         <IonLabel><b>Location: </b></IonLabel>
                         <IonText className='ion-text-end'>
-                            {selectedRequest?.location?.group}
+                            {selectedWOR?.location?.group}
                             <IonIcon icon={chevronForwardOutline} />
-                            {selectedRequest?.location?.entity}
+                            {selectedWOR?.location?.entity}
                             <IonIcon icon={chevronForwardOutline} />
-                            {selectedRequest?.location?.property}
+                            {selectedWOR?.location?.property}
                             <IonIcon icon={chevronForwardOutline} />
-                            {selectedRequest?.location?.zone}
+                            {selectedWOR?.location?.zone}
                             <IonIcon icon={chevronForwardOutline} />
-                            {selectedRequest?.location?.level}
+                            {selectedWOR?.location?.level}
                             {<IonIcon icon={chevronForwardOutline} /> &&
-                                selectedRequest?.location?.room}
+                                selectedWOR?.location?.room}
                         </IonText>
                     </IonItem>
                     <IonItem>
                         <IonLabel><b> Requested by: </b></IonLabel>
-                        <IonText >{selectedRequest.work_order_request?.requested_by?.profile?.first_name} {selectedRequest.work_order_request?.requested_by?.profile?.last_name} </IonText>
+                        <IonText >{selectedWOR.work_order_request?.requested_by?.profile?.first_name} {selectedWOR.work_order_request?.requested_by?.profile?.last_name} </IonText>
                     </IonItem>
 
                 </IonCard>
@@ -132,31 +154,32 @@ const WorkOrderRequestView: React.FC = () => {
                         <IonCardHeader><b>Work Orders</b></IonCardHeader>
                         <IonAccordionGroup multiple>
                             {workOrderList
-                            .sort((a, b)=> new Date(a.start_date) - new Date(b.end_date))
-                            .map((item, index) => (
-                                <IonAccordion value={item.reference_number} key={index} >
-                                    <IonItem slot="header">
-                                        <IonLabel>{item.reference_number}</IonLabel>
-                                    </IonItem>
-                                    <div className="ion-padding" slot="content" onClick={()=> history.push(`/work-orders/${item.id}`)}>
-                                        <center>
-                                        <IonText>
-                                            {item.end_date === item.start_date
-                                                ? formatDateOnly(item.start_date)
-                                                : `From ${item.start_date} To ${item.end_date}`}
-                                        </IonText>
-                                        <IonLabel>
-                                            <IonChip className="ion-text-uppercase" outline={true} color="warning">
-                                                <IonIcon icon={calendarOutline} />
-                                                <b>{item.day}</b>
-                                            </IonChip>
-                                        </IonLabel>
-                                        {/* <BadgeStatus status={item.status}/> */}
-                                        <BadgeComponent status={item.status} />
-                                        </center>
-                                    </div>
-                                </IonAccordion>
-                            ))}
+                                .sort((a, b) => new Date(a.start_date) - new Date(b.end_date))
+                                .map((item, index) => (
+                                    <IonAccordion value={item.reference_number} key={index} >
+                                        <IonItem slot="header">
+                                            <IonLabel>{item.reference_number}</IonLabel>
+                                        </IonItem>
+                                        <div className="ion-padding" slot="content" 
+                                        onClick={() => handleOpenWO(item.id)}>
+                                            <center>
+                                                <IonText>
+                                                    {item.end_date === item.start_date
+                                                        ? formatDateOnly(item.start_date)
+                                                        : `From ${item.start_date} To ${item.end_date}`}
+                                                </IonText>
+                                                <IonLabel>
+                                                    <IonChip className="ion-text-uppercase" outline={true} color="warning">
+                                                        <IonIcon icon={calendarOutline} />
+                                                        <b>{item.day}</b>
+                                                    </IonChip>
+                                                </IonLabel>
+                                                {/* <BadgeStatus status={item.status}/> */}
+                                                <BadgeComponent status={item.status} />
+                                            </center>
+                                        </div>
+                                    </IonAccordion>
+                                ))}
                         </IonAccordionGroup>
                     </IonCard>
                 }

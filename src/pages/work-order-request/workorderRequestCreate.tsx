@@ -1,4 +1,4 @@
-import { IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonCardSubtitle, IonGrid, IonIcon, IonContent, IonItem, IonLabel, IonList, IonPage, IonModal, IonRadio, IonRadioGroup, IonHeader, IonButtons, IonTextarea, IonDatetimeButton, IonDatetime, useIonToast, IonSelect, IonSelectOption, IonCol, IonRow, IonInput, IonText, IonNote, IonCheckbox, IonSearchbar, IonChip } from '@ionic/react';
+import { IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonCardSubtitle, IonGrid, IonIcon, IonContent, IonItem, IonLabel, IonList, IonPage, IonModal, IonRadio, IonRadioGroup, IonHeader, IonButtons, IonTextarea, IonDatetimeButton, IonDatetime, useIonToast, IonSelect, IonSelectOption, IonCol, IonRow, IonInput, IonText, IonNote, IonCheckbox, IonSearchbar, IonChip, useIonAlert } from '@ionic/react';
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router';
 // import MasterComponent '../../components/MasterComponent';
@@ -9,11 +9,16 @@ import { workOrderCategoryApi, workOrderTypeApi, entityApi, workOrderTaskHistory
 import ModalComponent from '../../components/Modal';
 import { formatDate, hasPermission } from '../../utilities/globalfns';
 import ModalComponent1 from '../../components/ModalComponent1';
+import useErrorAlert from '../../utilities/ErrorAlert';
 
 
 const WorkOrderRequestCreate: React.FC = () => {
     const history = useHistory();
     const location = useLocation();
+
+    const [userData, setUserData] = useState(localStorage.getItem("userData"))
+
+
     const { formData } = location.state ? location.state : { formData: null };
     const [category, setCategory] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -49,8 +54,7 @@ const WorkOrderRequestCreate: React.FC = () => {
     const [searchEndDate, setSearchEndDate] = useState();
     const [searchStatus, setSearchStatus] = useState(); //accepted, new, declined
     const [searchPriority, setSearchPriority] = useState(); //low, med, high
-
-
+    const showError = useErrorAlert();
     const [present] = useIonToast();
 
     const fetchWOCategory = async () => {
@@ -212,16 +216,19 @@ const WorkOrderRequestCreate: React.FC = () => {
 
                 const req = await workOrderRequestApi.store(dataList);
                 console.log("workOrderRequestApi: " + JSON.stringify(req));
+                showError(req?.message);
+                let reqFetch = await fetchWOR();
+                if (reqFetch) {
+                    setOpenCreate(false);
+                }
 
-                clearFields();
             } catch (error) {
-
+                showError(error.response?.data?.message || "Something went wrong");
+            }
+            finally {
+                clearFields();
             }
 
-            let req = await fetchWOR();
-            if (req) {
-                setOpenCreate(false);
-            }
         }
     }
 
@@ -229,11 +236,11 @@ const WorkOrderRequestCreate: React.FC = () => {
         const requestedData = await fetchRequestOrder(taskId);
         // console.log("selectedRequest: " + JSON.stringify(selectedRequest));
         if (taskId && requestedData) {
-            history.push(
-                {
-                    pathname: `/workOrderRequest/${taskId}`,
-                    state: { selectedRequest: requestedData }
-                }
+            history.push(`/workOrderRequest/${taskId}`
+                // {
+                //     pathname: `/workOrderRequest/${taskId}`,
+                //     state: { selectedRequest: requestedData }
+                // }
             )
         }
     }
@@ -253,7 +260,7 @@ const WorkOrderRequestCreate: React.FC = () => {
         setWorkOrderRequests(req.data.data.data);
         setFilteredWOR(req.data.data.data);
         setFilteredCount(req?.data?.data?.data?.length);
-        return req.data.data.data;
+        return req?.data?.data?.data;
     }
 
     // const fetchWORAll = async () => {
@@ -469,12 +476,17 @@ const WorkOrderRequestCreate: React.FC = () => {
                     </IonList>
                 </IonCard>
 
-                <IonButton
-                    disabled={!hasPermission("work-order-request.create")}
-                    expand="block"
-                    onClick={handleSaveWOReq}>
-                    Save <IonIcon slot="start" icon={saveOutline} />
-                </IonButton>
+                <div className='div-space-between-buttons'>
+                    <IonButton fill='outline' onClick={clearFields}>
+                        Clear
+                    </IonButton>
+                    <IonButton
+                        disabled={!hasPermission("work-order-request.create")}
+                        expand="block"
+                        onClick={handleSaveWOReq}>
+                        Save <IonIcon slot="start" icon={saveOutline} />
+                    </IonButton>
+                </div>
             </>
         )
     }
@@ -645,26 +657,21 @@ const WorkOrderRequestCreate: React.FC = () => {
 
     const handleSort = async (criteria) => {
         let filteredResults = workOrderRequests;
-        if(criteria)
-        {
-            if(criteria.key === 'requested_date')
-            {
-                if(criteria.type === 'desc')
-                {
-                    filteredResults = await workOrderRequests?.sort((a, b)=> new Date(b.requested_date) - new Date(a.requested_date))
+        if (criteria) {
+            if (criteria.key === 'requested_date') {
+                if (criteria.type === 'desc') {
+                    filteredResults = await workOrderRequests?.sort((a, b) => new Date(b.requested_date) - new Date(a.requested_date))
                 }
                 else {
-                    filteredResults = await workOrderRequests?.sort((a, b)=> new Date(a.requested_date) - new Date(b.requested_date))
+                    filteredResults = await workOrderRequests?.sort((a, b) => new Date(a.requested_date) - new Date(b.requested_date))
                 }
             }
-            else{
-                if(criteria.key === 'reference_number')
-                {
-                    filteredResults = await workOrderRequests?.sort((a,b) => String(a.reference_number || "").localeCompare(b.reference_number ))
+            else {
+                if (criteria.key === 'reference_number') {
+                    filteredResults = await workOrderRequests?.sort((a, b) => String(a.reference_number || "").localeCompare(b.reference_number))
                 }
-                if(criteria.key === 'work_order_description')
-                {
-                    filteredResults = await workOrderRequests?.sort((a,b) => String(a.work_order_description || "").localeCompare(b.work_order_description ));
+                if (criteria.key === 'work_order_description') {
+                    filteredResults = await workOrderRequests?.sort((a, b) => String(a.work_order_description || "").localeCompare(b.work_order_description));
                 }
             }
         }
@@ -680,32 +687,32 @@ const WorkOrderRequestCreate: React.FC = () => {
 
 
         if (searchStatus || searchPriority || searchStartDate || searchEndDate) {
-            filteredResults = workOrderRequests?.filter((item) => 
+            filteredResults = workOrderRequests?.filter((item) =>
             (
                 // searchStatus && searchStatus!== undefined && 
                 // String(item.is_accepted).localeCompare(searchStatus.toString())
                 parseInt(item.is_accepted) === parseInt(searchStatus)
             )
 
-            // {
+                // {
 
 
-            //     const matchesStatus =
-            //         (searchStatus && searchStatus !== undefined)
-            //             ? parseInt(item.is_accepted) === parseInt(searchStatus)
-            //             : true;
+                //     const matchesStatus =
+                //         (searchStatus && searchStatus !== undefined)
+                //             ? parseInt(item.is_accepted) === parseInt(searchStatus)
+                //             : true;
 
-            //     const matchesPriority =
-            //         (searchPriority && searchPriority !== undefined)
-            //             ? item?.priority?.includes(searchPriority)
-            //             : true;
+                //     const matchesPriority =
+                //         (searchPriority && searchPriority !== undefined)
+                //             ? item?.priority?.includes(searchPriority)
+                //             : true;
 
-            //     const matchesDate = (searchStartDate && searchEndDate && searchStartDate !== undefined && searchEndDate !== undefined) ?
-            //         (searchStartDate && searchStartDate ? (new Date(item?.requested_date) >= new Date(searchStartDate) &&
-            //             new Date(item?.requested_date) <= new Date(searchEndDate)) : true) : true
+                //     const matchesDate = (searchStartDate && searchEndDate && searchStartDate !== undefined && searchEndDate !== undefined) ?
+                //         (searchStartDate && searchStartDate ? (new Date(item?.requested_date) >= new Date(searchStartDate) &&
+                //             new Date(item?.requested_date) <= new Date(searchEndDate)) : true) : true
 
-            //     return matchesStatus && matchesPriority && matchesDate;
-            // }
+                //     return matchesStatus && matchesPriority && matchesDate;
+                // }
 
             );
         }
@@ -840,6 +847,7 @@ const WorkOrderRequestCreate: React.FC = () => {
     }
 
     useEffect(() => {
+        setUserData(JSON.parse(localStorage.getItem("userData")));
         fetchWOR();
         const state: any = history.location.state;
         if (formData || state?.formData) {
@@ -851,14 +859,15 @@ const WorkOrderRequestCreate: React.FC = () => {
     return (
         <MasterComponent title={"Work Order Request"}>
             <IonRow>
-                <IonCol size='8'>
+                <IonCol size='8.5'>
                     <IonSearchbar
+                        color="light"
                         placeholder='Search'
                         value={searchTerm}
                         onIonInput={handleSearch}
                     />
                 </IonCol>
-                <IonCol >
+                <IonCol className='ion-align-items-end'>
                     <IonButton onClick={handleOpenCreate} size="default">
                         <IonIcon icon={addOutline} slot="start" />
                         Add
@@ -881,22 +890,22 @@ const WorkOrderRequestCreate: React.FC = () => {
                 <IonList>
                     <div className='div-overflow'>
                         {filteredWOR.map((task, index) => (
-                            <IonCard key={index} className="task-card minimal-work-order-card animate__animated animate__slideInUp"
+                            <IonCard key={index} className="task-card animate__animated animate__slideInUp"
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginTop: '8px' }}>
+                                {/*<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', marginTop: '8px' }}>
                                     <div>{getIsAcceptedColor(task.is_accepted)}</div>
                                     <div>{getPriority(task.priority)}</div>
                                 </div>
-                                <IonCardHeader>
-                                    <IonCardTitle
-                                        onClick={() => handleOpenRequest(task.id)}>{task.reference_number}
-                                    </IonCardTitle>
+                                 <IonCardHeader>
+                                    <h3 className='section-title'
+                                        onClick={() => handleOpenRequest(task.id)}> {task.reference_number}
+                                    </h3>
                                 </IonCardHeader>
                                 <IonCardContent>
                                     <p> {task.work_order_description} </p>
                                     <IonCardSubtitle>{task.work_order_category} | {task.work_order_type}</IonCardSubtitle>
-                                    {task.is_accepted === "0" &&
+                                    {task.is_accepted === "0" && (!userData?.user?.is_requestor && !userData?.user?.is_assignee) &&
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '10px' }}>
                                             <IonButton color="primary"
                                                 disabled={!hasPermission("work-order-request-schedule.create")}
@@ -909,10 +918,34 @@ const WorkOrderRequestCreate: React.FC = () => {
                                                 onClick={() => handleDecline(task)}>
                                                 <IonIcon icon={closeOutline} />Decline</IonButton>
                                         </div>}
-                                </IonCardContent>
+                                </IonCardContent> */}
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', marginTop: '8px' }}>
+                                    <div>{getIsAcceptedColor(task.is_accepted)}</div>
+                                    <div>{getPriority(task.priority)}</div>
+                                </div>
+                                <h2 className="section-title" onClick={() => handleOpenRequest(task.id)}>
+                                    {task.reference_number}
+                                </h2>
+                                <IonGrid className="ion-padding-start">
+                                    <IonText className="ref-number"> {task.work_order_description} </IonText>
+                                    <IonText >{task.work_order_category} | {task.work_order_type}</IonText>
+                                </IonGrid>
+                                {task.is_accepted === "0" && (!userData?.user?.is_requestor && !userData?.user?.is_assignee) &&
+                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '10px' }}>
+                                        <IonButton color="primary"
+                                            disabled={!hasPermission("work-order-request-schedule.create")}
+                                            onClick={() => handleOpenApprove(task)}>
+                                            <IonIcon icon={checkmarkOutline} />
+                                            Accept</IonButton>
+                                        <IonButton
+                                            disabled={!hasPermission("work-order-request.decline")}
+                                            color="danger"
+                                            onClick={() => handleDecline(task)}>
+                                            <IonIcon icon={closeOutline} />Decline</IonButton>
+                                    </div>}
                             </IonCard>
                         ))}
-                        {/* <IonButton className='ion-padding' expand='block'>See All</IonButton> */}
                     </div>
                 </IonList>
             }
